@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/error/exceptions.dart';
 import '../core/models/user_model.dart';
 import '../core/services/auth_service.dart';
-import '../services/api_client.dart';
+import '../core/services/directus_error_parser.dart';
+import '../services/api_client.dart' hide ApiException;
 import '../services/user_service.dart';
 
 /// Holds the currently authenticated user (null = logged out)
@@ -67,10 +69,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return true;
     } catch (e) {
       print('[AuthNotifier] Login error: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('ApiException', '').trim(),
-      );
+      String errorMessage = 'Email or password is incorrect.';
+      if (e is ApiException) {
+        errorMessage = DirectusErrorParser.getGeneralErrorMessage(e);
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
       return false;
     }
   }
@@ -99,10 +102,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return true;
     } catch (e) {
       print('[AuthNotifier] Register error: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('ApiException', '').trim(),
-      );
+      String errorMessage = 'Something went wrong. Please try again.';
+      if (e is ApiException) {
+        errorMessage = DirectusErrorParser.getGeneralErrorMessage(e);
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
       return false;
     }
   }

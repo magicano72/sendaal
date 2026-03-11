@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/router/app_router.dart';
+import '../../core/services/connectivity_service.dart';
+import '../../core/services/validation_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_widgets.dart';
@@ -22,6 +24,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _obscure = true;
   final _formKey = GlobalKey<FormState>();
 
+  // Field-level error tracking for API errors
+  String? _usernameError;
+  String? _emailError;
+  String? _phoneError;
+
   @override
   void dispose() {
     _firstNameCtrl.dispose();
@@ -33,7 +40,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _register() async {
+    // Clear previous API errors
+    setState(() {
+      _usernameError = null;
+      _emailError = null;
+      _phoneError = null;
+    });
+
     if (!_formKey.currentState!.validate()) return;
+
+    // Check internet connection before API call
+    final connectivity = ConnectivityService();
+    final hasInternet = await connectivity.hasInternetConnection();
+
+    if (!hasInternet) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No internet connection. Please check your network.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
 
     final success = await ref
         .read(authProvider.notifier)
@@ -45,7 +75,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           phone: _phoneCtrl.text.trim(),
         );
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    // Check for field-level errors in the auth error
+    final authError = ref.read(authProvider).error;
+    if (authError != null && !success) {
+      // Try to parse as API error
+      try {
+        if (authError.contains('username') && authError.contains('unique')) {
+          setState(() {
+            _usernameError =
+                'This username is already taken. Please choose another.';
+          });
+          _formKey.currentState?.validate();
+        } else if (authError.contains('email') &&
+            authError.contains('unique')) {
+          setState(() {
+            _emailError =
+                'This email is already registered. Try logging in instead.';
+          });
+          _formKey.currentState?.validate();
+        } else if (authError.contains('phone') &&
+            authError.contains('unique')) {
+          setState(() {
+            _phoneError = 'This phone number is already registered.';
+          });
+          _formKey.currentState?.validate();
+        }
+      } catch (e) {
+        print('Error parsing field error: $e');
+      }
+    }
+
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Account created! Please sign in.'),
@@ -94,30 +156,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     prefixIcon: Icon(Icons.person_outline),
                     hintText: 'e.g. John',
                   ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Name is required';
-                    if (v.length < 2) return 'At least 2 characters';
-                    return null;
-                  },
+                  validator: (v) =>
+                      ValidationService.validateName(v, minLength: 2),
                 ),
                 const SizedBox(height: 16),
 
                 // Username
                 TextFormField(
                   controller: _usernameCtrl,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Username',
-                    prefixIcon: Icon(Icons.alternate_email),
+                    prefixIcon: const Icon(Icons.alternate_email),
                     hintText: 'e.g. john_doe',
+                    errorText: _usernameError,
                   ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Username is required';
-                    if (v.length < 3) return 'At least 3 characters';
-                    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v)) {
-                      return 'Letters, numbers and _ only';
-                    }
-                    return null;
-                  },
+                  validator: (v) => ValidationService.validateUsername(v),
                 ),
                 const SizedBox(height: 16),
 
@@ -125,15 +178,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    errorText: _emailError,
                   ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Email is required';
-                    if (!v.contains('@')) return 'Enter a valid email';
-                    return null;
-                  },
+                  validator: (v) => ValidationService.validateEmail(v),
                 ),
                 const SizedBox(height: 16),
 
@@ -141,17 +191,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Phone Number',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                    hintText: 'e.g. +201234567890',
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    hintText: 'e.g. 01234567890',
+                    errorText: _phoneError,
                   ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty)
-                      return 'Phone number is required';
-                    if (v.length < 7) return 'Enter a valid phone number';
-                    return null;
-                  },
+                  validator: (v) => ValidationService.validatePhone(v),
                 ),
                 const SizedBox(height: 16),
 
@@ -162,6 +208,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     prefixIcon: const Icon(Icons.lock_outline),
+                    hintText:
+                        'Min 8 chars, uppercase, lowercase, number, special',
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscure
@@ -171,16 +219,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Password is required';
-                    if (v.length < 6) return 'At least 6 characters';
-                    return null;
-                  },
+                  validator: (v) => ValidationService.validatePassword(v),
+                  onChanged: (_) => setState(() {}),
                 ),
 
-                if (auth.error != null) ...[
-                  const SizedBox(height: 16),
-                  ErrorBanner(message: auth.error!),
+                // Password strength indicator
+                if (_passwordCtrl.text.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _PasswordStrengthIndicator(password: _passwordCtrl.text),
                 ],
 
                 const SizedBox(height: 28),
@@ -210,6 +256,81 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Password strength indicator widget
+class _PasswordStrengthIndicator extends StatelessWidget {
+  final String password;
+
+  const _PasswordStrengthIndicator({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    final requirements = ValidationService.getPasswordRequirements(password);
+    final metCount = requirements.values.where((v) => v).length;
+    final totalCount = requirements.length;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Password Strength',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              Text(
+                '$metCount/$totalCount',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: metCount == totalCount
+                      ? AppTheme.success
+                      : AppTheme.warning,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...requirements.entries.map((e) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Icon(
+                    e.value ? Icons.check_circle : Icons.radio_button_unchecked,
+                    size: 16,
+                    color: e.value ? AppTheme.success : AppTheme.textHint,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    e.key,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: e.value
+                          ? AppTheme.success
+                          : AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
