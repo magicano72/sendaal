@@ -6,7 +6,7 @@ class AppConstants {
   // ── Account type limits (used in Smart Split algorithm) ───────────────────
   static const Map<String, double> accountTypeLimits = {
     'instapay': 50000,
-    'vodafone_cash': 30000,
+    'digital_wallet': 30000,
     'bank_account': 100000,
     'telda': 20000,
     'other': 10000,
@@ -15,7 +15,7 @@ class AppConstants {
   // ── Account type display labels ───────────────────────────────────────────
   static const Map<String, String> accountTypeLabels = {
     'instapay': 'InstaPay',
-    'vodafone_cash': 'Vodafone Cash',
+    'digital_wallet': 'Digital Wallet',
     'bank_account': 'Bank Account',
     'telda': 'Telda',
     'other': 'Other',
@@ -24,7 +24,7 @@ class AppConstants {
   // ── Account type icons (Material icon codepoints as strings) ─────────────
   static const Map<String, String> accountTypeIcons = {
     'instapay': 'flash_on',
-    'vodafone_cash': 'phone_android',
+    'digital_wallet': 'digital_wallet',
     'bank_account': 'account_balance',
     'telda': 'credit_card',
     'other': 'payment',

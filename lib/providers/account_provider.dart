@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/models/financial_account_model.dart';
+import '../models/financial_account_model.dart';
 import '../services/account_service.dart';
 
 final accountServiceProvider = Provider<AccountService>(

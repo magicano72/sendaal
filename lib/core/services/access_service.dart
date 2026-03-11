@@ -1,4 +1,4 @@
-import 'api_client.dart';
+import '../../services/api_client.dart';
 
 class AccessService {
   final ApiClient apiClient;

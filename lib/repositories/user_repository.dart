@@ -17,4 +17,7 @@ class UserRepository {
         ? _service.searchByPhone(query)
         : _service.searchByUsername(query);
   }
+
+  Future<User> updateAvatar(String userId, String avatarUrl) =>
+      _service.updateAvatar(userId, avatarUrl);
 }

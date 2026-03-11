@@ -28,17 +28,45 @@ class ApiClient {
   static final ApiClient instance = ApiClient._();
 
   // ── Configuration from .env ───────────────────────────────────────────────
-  String get _baseUrl => dotenv.env['BASE_URL'] ?? 'https://api.sendaal.com';
+  String get baseUrl => dotenv.env['BASE_URL'] ?? 'https://api.sendaal.com';
+  String get _baseUrl => baseUrl;
   Duration get _timeout => Duration(
     milliseconds: int.tryParse(dotenv.env['API_TIMEOUT'] ?? '30000') ?? 30000,
   );
 
   // ── Auth token (set after login) ──────────────────────────────────────────
   String? _authToken;
+  String? _refreshToken;
+  DateTime? _tokenExpiresAt;
 
-  void setToken(String token) => _authToken = token;
-  void clearToken() => _authToken = null;
+  void setToken(String token, {String? refreshToken, int? expiresIn}) {
+    _authToken = token;
+    if (refreshToken != null) {
+      _refreshToken = refreshToken;
+    }
+    if (expiresIn != null) {
+      _tokenExpiresAt = DateTime.now().add(Duration(seconds: expiresIn));
+      print('[ApiClient] Token set, expires at: $_tokenExpiresAt');
+    }
+  }
+
+  void clearToken() {
+    _authToken = null;
+    _refreshToken = null;
+    _tokenExpiresAt = null;
+  }
+
   bool get hasToken => _authToken != null;
+  String? get refreshToken => _refreshToken;
+
+  /// Check if token is expired or about to expire (within 60 seconds)
+  bool get isTokenExpired {
+    if (_tokenExpiresAt == null) return false;
+    final timeUntilExpiry = _tokenExpiresAt!
+        .difference(DateTime.now())
+        .inSeconds;
+    return timeUntilExpiry < 60; // Refresh if less than 60 seconds left
+  }
 
   // ── Default headers ───────────────────────────────────────────────────────
   Map<String, String> get _headers => {
@@ -125,6 +153,68 @@ class ApiClient {
           .delete(_buildUri(path), headers: _headers)
           .timeout(_timeout);
       return _parseResponse(response);
+    } on SocketException {
+      throw const ApiException(
+        'No internet connection. Please check your network.',
+      );
+    } on TimeoutException {
+      throw const ApiException('Request timed out. Please try again.');
+    }
+  }
+
+  // ── MULTIPART (for file uploads) ──────────────────────────────────────────
+  Future<dynamic> postMultipart(
+    String path, {
+    required Map<String, String> fields,
+    Map<String, String>? files, // filename -> filepath
+  }) async {
+    print('[ApiClient] MULTIPART POST request: $_baseUrl$path');
+    try {
+      final request = http.MultipartRequest('POST', _buildUri(path));
+
+      // Add headers (without Content-Type, let http package set it)
+      _headers.forEach((key, value) {
+        if (key != 'Content-Type') {
+          request.headers[key] = value;
+        }
+      });
+
+      // Add form fields
+      request.fields.addAll(fields);
+
+      // Add files
+      if (files != null) {
+        for (var filename in files.keys) {
+          final filepath = files[filename]!;
+          request.files.add(
+            await http.MultipartFile.fromPath(filename, filepath),
+          );
+        }
+      }
+
+      final response = await request.send().timeout(_timeout);
+      final responseBody = await response.stream.bytesToString();
+
+      print('[ApiClient] MULTIPART response status: ${response.statusCode}');
+      print('[ApiClient] MULTIPART response body: $responseBody');
+
+      // Parse JSON response
+      dynamic body;
+      try {
+        body = jsonDecode(responseBody);
+      } catch (_) {
+        body = responseBody;
+      }
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return body;
+      }
+
+      // Handle error
+      String message =
+          _extractErrorMessage(body) ??
+          'An unexpected error occurred (HTTP ${response.statusCode})';
+      throw ApiException(message, statusCode: response.statusCode);
     } on SocketException {
       throw const ApiException(
         'No internet connection. Please check your network.',

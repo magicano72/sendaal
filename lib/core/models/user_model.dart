@@ -6,17 +6,25 @@ part 'user_model.g.dart';
 class User {
   final String id;
   final String username;
+  @JsonKey(defaultValue: '')
   final String displayName;
-  final String? profileImage;
+  @JsonKey(name: 'first_name')
+  final String? firstName;
+  @JsonKey(name: 'avatar')
+  final String? avatar;
+  @JsonKey(name: 'phone')
   final String? phone;
+  @JsonKey(defaultValue: false)
   final bool isVerified;
+  @JsonKey(name: 'email')
   final String? email;
 
   User({
     required this.id,
     required this.username,
     required this.displayName,
-    this.profileImage,
+    this.firstName,
+    this.avatar,
     this.phone,
     required this.isVerified,
     this.email,
@@ -29,7 +37,8 @@ class User {
     String? id,
     String? username,
     String? displayName,
-    String? profileImage,
+    String? firstName,
+    String? avatar,
     String? phone,
     bool? isVerified,
     String? email,
@@ -38,7 +47,8 @@ class User {
       id: id ?? this.id,
       username: username ?? this.username,
       displayName: displayName ?? this.displayName,
-      profileImage: profileImage ?? this.profileImage,
+      firstName: firstName ?? this.firstName,
+      avatar: avatar ?? this.avatar,
       phone: phone ?? this.phone,
       isVerified: isVerified ?? this.isVerified,
       email: email ?? this.email,

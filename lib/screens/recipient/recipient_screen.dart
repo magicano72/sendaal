@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/models/financial_account_model.dart';
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/financial_account_model.dart';
 import '../../providers/account_provider.dart';
 import '../../services/smart_split_service.dart';
 import '../../widgets/app_widgets.dart';
@@ -68,7 +68,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.recipient.displayName)),
+      appBar: AppBar(title: Text(widget.recipient.displayName ?? "Recipient")),
       body: accountsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) =>
@@ -152,14 +152,14 @@ class _RecipientHeader extends StatelessWidget {
             CircleAvatar(
               radius: 30,
               backgroundColor: AppTheme.surfaceVariant,
-              backgroundImage: recipient.profileImage != null
-                  ? NetworkImage(recipient.profileImage!)
+              backgroundImage: recipient.avatar != null
+                  ? NetworkImage(recipient.avatar!)
                   : null,
-              child: recipient.profileImage == null
+              child: recipient.avatar == null
                   ? Text(
-                      recipient.displayName.isNotEmpty
-                          ? recipient.displayName[0].toUpperCase()
-                          : '?',
+                      recipient.displayName ??
+                          recipient.username?.substring(0, 1).toUpperCase() ??
+                          '?',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -174,7 +174,7 @@ class _RecipientHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recipient.displayName,
+                    recipient.displayName ?? recipient.username ?? 'Recipient',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -192,7 +192,7 @@ class _RecipientHeader extends StatelessWidget {
                 ],
               ),
             ),
-            if (recipient.isVerified)
+            if (recipient.isVerified == true)
               const Tooltip(
                 message: 'Verified user',
                 child: Icon(Icons.verified, color: AppTheme.primary, size: 20),

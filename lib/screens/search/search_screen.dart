@@ -110,9 +110,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       itemBuilder: (_, i) {
         final user = state.results[i];
         return UserTile(
-          displayName: user.displayName,
-          username: user.username,
-          profileImage: user.profileImage,
+          displayName: user.displayName ?? "",
+          username: user.username ?? "",
+          profileImage: user.avatar,
           onTap: () => _openRecipient(user),
         );
       },

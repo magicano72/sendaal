@@ -1,4 +1,4 @@
-import '../core/models/financial_account_model.dart';
+import '../models/financial_account_model.dart';
 import 'api_client.dart';
 import 'endpoint.dart';
 
@@ -57,11 +57,14 @@ class AccountService {
       Endpoints.financialAccounts,
       body: {
         'user': userId,
-        'type': type,
-        'account_identifier': accountIdentifier,
-        'default_limit': defaultLimit,
+        'type': [type], // API expects type as an array
+        'account_identifier': "$accountIdentifier",
         'priority': priority,
-        'is_visible': true,
+        'created_at': DateTime.now().toIso8601String().split(
+          'T',
+        )[0], // Format: YYYY-MM-DD
+        // 'default_limit': defaultLimit,
+        // 'is_visible': true,
       },
     );
     return FinancialAccount.fromJson(response['data'] as Map<String, dynamic>);

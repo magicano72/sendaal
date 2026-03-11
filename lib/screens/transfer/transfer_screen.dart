@@ -97,8 +97,9 @@ class _SummaryCard extends StatelessWidget {
               radius: 24,
               backgroundColor: AppTheme.surfaceVariant,
               child: Text(
-                recipient.displayName.isNotEmpty
-                    ? recipient.displayName[0].toUpperCase()
+                recipient.displayName != null &&
+                        recipient.displayName!.isNotEmpty
+                    ? recipient.displayName![0].toUpperCase()
                     : '?',
                 style: const TextStyle(
                   fontSize: 18,
@@ -113,7 +114,7 @@ class _SummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recipient.displayName,
+                    recipient.displayName ?? recipient.username ?? 'Recipient',
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
@@ -163,8 +164,8 @@ class _TransferTile extends StatelessWidget {
   const _TransferTile({required this.step, required this.suggestion});
 
   String get _label =>
-      AppConstants.accountTypeLabels[suggestion.accountType] ??
-      suggestion.accountType;
+      AppConstants.accountTypeLabels[suggestion.type.name] ??
+      suggestion.type.name;
 
   String get _amountStr {
     final v = suggestion.amount;

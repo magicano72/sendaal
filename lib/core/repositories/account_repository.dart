@@ -9,7 +9,7 @@ class AccountRepository {
   // Default system limits for split algorithm
   static const Map<String, int> defaultLimits = {
     'instapay': 50000,
-    'vodafone_cash': 30000,
+    'digital_wallet': 30000,
     'bank_account': 100000,
     'telda': 20000,
   };
@@ -53,10 +53,9 @@ class AccountRepository {
 
       suggestions.add(
         SplitSuggestion(
-          accountType: account.type,
-          amount: splitAmount.toInt(),
+          type: account.type,
+          amount: splitAmount.toDouble(),
           accountIdentifier: account.accountIdentifier,
-          priority: account.priority,
         ),
       );
 

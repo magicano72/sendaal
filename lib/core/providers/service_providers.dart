@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sendaal/core/services/user_service.dart';
 
 import '../repositories/index.dart';
 import '../services/index.dart';
 
 /// Provides the API Client instance
 final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient();
+  return ApiClient.instance;
 });
 
 /// Provides Auth Service

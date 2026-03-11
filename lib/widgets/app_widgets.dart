@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_constants.dart';
-import '../core/models/financial_account_model.dart';
 import '../core/models/notification_model.dart' as notification_model;
 import '../core/theme/app_theme.dart';
+import '../models/financial_account_model.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PrimaryButton
@@ -129,7 +129,8 @@ class AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = AppConstants.accountTypeLabels[account.type] ?? account.type;
+    final label =
+        AppConstants.accountTypeLabels[account.type.name] ?? account.type.name;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -227,11 +228,11 @@ class AccountCard extends StatelessWidget {
     );
   }
 
-  IconData _accountIcon(String type) {
-    switch (type.toLowerCase()) {
+  IconData _accountIcon(AccountType type) {
+    switch (type.name) {
       case 'instapay':
         return Icons.flash_on;
-      case 'vodafone_cash':
+      case 'digital_wallet':
         return Icons.phone_android;
       case 'bank_account':
         return Icons.account_balance;

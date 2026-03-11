@@ -11,12 +11,16 @@ class AuthRepository {
     required String email,
     required String password,
     required String username,
+    required String firstName,
+    required String phone,
   }) async {
     try {
       final response = await authService.register(
         email: email,
         password: password,
         username: username,
+        firstName: firstName,
+        phone: phone,
       );
       return User.fromJson(response);
     } catch (e) {

@@ -38,30 +38,32 @@ class NotificationModel {
         body: json['body']?.toString() ?? '',
         type: NotificationType.fromString(json['type']?.toString() ?? 'system'),
         isRead: json['is_read'] == true || json['isRead'] == true,
-        createdAt: DateTime.tryParse(
-                json['date_created']?.toString() ??
-                    json['createdAt']?.toString() ??
-                    '') ??
+        createdAt:
+            DateTime.tryParse(
+              json['date_created']?.toString() ??
+                  json['createdAt']?.toString() ??
+                  '',
+            ) ??
             DateTime.now(),
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'user': userId,
-        'title': title,
-        'body': body,
-        'type': type.name,
-        'is_read': isRead,
-        'date_created': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'user': userId,
+    'title': title,
+    'body': body,
+    'type': type.name,
+    'is_read': isRead,
+    'date_created': createdAt.toIso8601String(),
+  };
 
   NotificationModel copyWith({bool? isRead}) => NotificationModel(
-        id: id,
-        userId: userId,
-        title: title,
-        body: body,
-        type: type,
-        isRead: isRead ?? this.isRead,
-        createdAt: createdAt,
-      );
+    id: id,
+    userId: userId,
+    title: title,
+    body: body,
+    type: type,
+    isRead: isRead ?? this.isRead,
+    createdAt: createdAt,
+  );
 }

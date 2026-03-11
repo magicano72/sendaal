@@ -1,5 +1,5 @@
-import '../core/models/financial_account_model.dart';
 import '../core/models/split_suggestion_model.dart';
+import '../models/financial_account_model.dart';
 
 /// Result returned by the split engine
 class SplitResult {
@@ -71,10 +71,9 @@ class SmartSplitService {
 
       suggestions.add(
         SplitSuggestion(
-          accountType: account.type,
-          amount: allocated.toInt(),
+          type: account.type,
+          amount: allocated.toDouble(),
           accountIdentifier: account.accountIdentifier,
-          priority: account.priority,
         ),
       );
 

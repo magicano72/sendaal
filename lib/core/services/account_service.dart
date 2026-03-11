@@ -1,4 +1,4 @@
-import 'api_client.dart';
+import '../../services/api_client.dart';
 
 class AccountService {
   final ApiClient apiClient;
@@ -6,7 +6,7 @@ class AccountService {
   // System default limits for each account type
   static const Map<String, int> defaultLimits = {
     'instapay': 50000,
-    'vodafone_cash': 30000,
+    'digital_wallet': 30000,
     'bank_account': 100000,
     'telda': 20000,
   };

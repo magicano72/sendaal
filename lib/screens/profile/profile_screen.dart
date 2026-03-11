@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:sendaal/services/api_client.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/user_service.dart';
 import '../../widgets/app_widgets.dart';
 import 'add_account_sheet.dart';
 
@@ -164,53 +167,174 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
 // ─── Profile Header widget ────────────────────────────────────────────────────
 
-class _ProfileHeader extends StatelessWidget {
-  final dynamic user; // UserModel? (nullable)
+class _ProfileHeader extends ConsumerStatefulWidget {
+  final dynamic user; // User? (nullable)
 
   const _ProfileHeader({required this.user});
 
   @override
+  ConsumerState<_ProfileHeader> createState() => _ProfileHeaderState();
+}
+
+class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
+  bool _isUploading = false;
+
+  @override
   Widget build(BuildContext context) {
+    final user = widget.user;
     return Column(
       children: [
-        // Avatar
-        CircleAvatar(
-          radius: 44,
-          backgroundColor: AppTheme.surfaceVariant,
-          backgroundImage: user?.profileImage != null
-              ? NetworkImage(user!.profileImage!)
-              : null,
-          child: user?.profileImage == null
-              ? Text(
-                  user?.displayName?.isNotEmpty == true
-                      ? user!.displayName[0].toUpperCase()
-                      : '?',
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
+        // Avatar with upload button
+        Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.surfaceVariant,
+              ),
+              child: ClipOval(
+                child: user?.avatar != null
+                    ? Image.network(
+                        _buildAvatarUrl(user!.avatar!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to initials if image fails to load
+                          return Center(
+                            child: Text(
+                              user.firstName?.isNotEmpty == true
+                                  ? user.firstName![0].toUpperCase()
+                                  : (user.displayName.isNotEmpty == true
+                                        ? user.displayName[0].toUpperCase()
+                                        : '?'),
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : Center(
+                        child: Text(
+                          user?.firstName?.isNotEmpty == true
+                              ? user!.firstName![0].toUpperCase()
+                              : (user?.displayName.isNotEmpty == true
+                                    ? user!.displayName[0].toUpperCase()
+                                    : '?'),
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            // Upload photo button
+            GestureDetector(
+              onTap: _isUploading ? null : () => _showPhotoOptions(context),
+              child: Opacity(
+                opacity: _isUploading ? 0.7 : 1.0,
+                child: Container(
+                  decoration: BoxDecoration(
                     color: AppTheme.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                )
-              : null,
+                  padding: const EdgeInsets.all(6),
+                  child: _isUploading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.camera_alt_outlined,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
 
+        // First Name
         Text(
-          user?.displayName ?? 'Your Name',
+          user?.firstName ?? user?.displayName ?? 'User',
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
+            color: AppTheme.primaryDark,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           user != null ? '@${user!.username}' : '@username',
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppTheme.textSecondary,
-          ),
+          style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
         ),
+
+        // Email
+        if (user?.email != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.email_outlined,
+                size: 14,
+                color: AppTheme.textHint,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                user!.email!,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
+
+        // Phone
+        if (user?.phone != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.phone_outlined,
+                size: 14,
+                color: AppTheme.textHint,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                user!.phone!,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
 
         if (user?.isVerified == true) ...[
           const SizedBox(height: 6),
@@ -241,8 +365,11 @@ class _ProfileHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppTheme.cardBorder),
           ),
-          child:
-              const Icon(Icons.qr_code_2, size: 48, color: AppTheme.textHint),
+          child: const Icon(
+            Icons.qr_code_2,
+            size: 48,
+            color: AppTheme.textHint,
+          ),
         ),
         const SizedBox(height: 4),
         const Text(
@@ -252,5 +379,111 @@ class _ProfileHeader extends StatelessWidget {
         const SizedBox(height: 16),
       ],
     );
+  }
+
+  String _buildAvatarUrl(String avatarId) {
+    // Get base URL from ApiClient
+    final baseUrl = ApiClient.instance.baseUrl;
+    return '$baseUrl/assets/$avatarId';
+  }
+
+  void _showPhotoOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickPhotoFromCamera();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.image),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickPhotoFromGallery();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickPhotoFromCamera() async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: ImageSource.camera);
+      if (image != null) {
+        await _uploadPhoto(image.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  Future<void> _pickPhotoFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        await _uploadPhoto(image.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  Future<void> _uploadPhoto(String filePath) async {
+    if (widget.user == null) return;
+
+    setState(() => _isUploading = true);
+
+    try {
+      // Upload file to Directus storage
+      final userService = UserService();
+      final updatedUser = await userService.uploadAndUpdateAvatar(
+        userId: widget.user!.id,
+        filePath: filePath,
+      );
+
+      // Update auth provider with new user
+      ref.read(authProvider.notifier).setUser(updatedUser);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile photo updated successfully'),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error uploading photo: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploading = false);
+      }
+    }
   }
 }

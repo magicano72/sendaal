@@ -29,10 +29,18 @@ class AuthService {
     required String email,
     required String password,
     required String username,
+    required String firstName,
+    required String phone,
   }) async {
     await _api.post(
       Endpoints.register,
-      body: {'email': email, 'password': password, 'username': username},
+      body: {
+        'email': email,
+        'password': password,
+        'username': username,
+        'first_name': firstName,
+        'phone': phone,
+      },
     );
   }
 

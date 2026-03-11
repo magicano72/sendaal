@@ -1,4 +1,4 @@
-import '../core/models/financial_account_model.dart';
+import '../models/financial_account_model.dart';
 import '../services/account_service.dart';
 
 /// Repository for financial account data operations

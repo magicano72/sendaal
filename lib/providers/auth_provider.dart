@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/models/user_model.dart';
-import '../services/auth_service.dart';
+import '../core/services/auth_service.dart';
+import '../services/api_client.dart';
+import '../services/user_service.dart';
 
 /// Holds the currently authenticated user (null = logged out)
 class AuthState {
@@ -27,13 +29,19 @@ class AuthState {
 }
 
 /// Provides the AuthService singleton
-final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+final authServiceProvider = Provider<AuthService>(
+  (ref) => AuthService(ApiClient.instance),
+);
+
+/// Provides the UserService singleton
+final userServiceProvider = Provider<UserService>((ref) => UserService());
 
 /// Notifier that manages auth state throughout the app
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
+  final UserService _userService;
 
-  AuthNotifier(this._authService) : super(const AuthState());
+  AuthNotifier(this._authService, this._userService) : super(const AuthState());
 
   Future<bool> login(String email, String password) async {
     print('[AuthNotifier] Starting login for: $email');
@@ -44,8 +52,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
       );
       print('[AuthNotifier] Login response: $response');
-      // TODO: fetch current user after login
-      state = state.copyWith(isLoading: false);
+
+      // Fetch current user after successful login
+      try {
+        final user = await _userService.getCurrentUser();
+        state = state.copyWith(isLoading: false, user: user);
+        print('[AuthNotifier] User fetched successfully: ${user.id}');
+      } catch (e) {
+        print('[AuthNotifier] Error fetching current user: $e');
+        state = state.copyWith(isLoading: false);
+      }
+
       print('[AuthNotifier] Login completed successfully');
       return true;
     } catch (e) {
@@ -58,7 +75,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> register(String email, String password, String username) async {
+  Future<bool> register({
+    required String email,
+    required String password,
+    required String username,
+    required String firstName,
+    required String phone,
+  }) async {
     print(
       '[AuthNotifier] Starting registration for: $email, username: $username',
     );
@@ -68,6 +91,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         email: email,
         password: password,
         username: username,
+        firstName: firstName,
+        phone: phone,
       );
       print('[AuthNotifier] Registration completed successfully');
       state = state.copyWith(isLoading: false);
@@ -78,6 +103,36 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         error: e.toString().replaceFirst('ApiException', '').trim(),
       );
+      return false;
+    }
+  }
+
+  Future<bool> refreshTokenIfNeeded() async {
+    print('[AuthNotifier] Checking if token refresh is needed');
+    try {
+      // Get the refresh token from ApiClient
+      final apiClient = ApiClient.instance;
+
+      // Check if token is expired or about to expire
+      if (!apiClient.isTokenExpired) {
+        print('[AuthNotifier] Token is still valid, no refresh needed');
+        return true;
+      }
+
+      // Check if we have a refresh token
+      if (apiClient.refreshToken == null) {
+        print('[AuthNotifier] No refresh token available');
+        return false;
+      }
+
+      print('[AuthNotifier] Token expired or about to expire, refreshing...');
+      await _authService.refreshToken(apiClient.refreshToken!);
+      print('[AuthNotifier] Token refresh completed successfully');
+      return true;
+    } catch (e) {
+      print('[AuthNotifier] Token refresh failed: $e');
+      // If refresh fails, logout the user
+      await logout();
       return false;
     }
   }
@@ -101,5 +156,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.read(authServiceProvider));
+  return AuthNotifier(
+    ref.read(authServiceProvider),
+    ref.read(userServiceProvider),
+  );
 });

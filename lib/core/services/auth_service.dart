@@ -1,4 +1,4 @@
-import 'api_client.dart';
+import '../../services/api_client.dart';
 
 class AuthService {
   final ApiClient apiClient;
@@ -10,6 +10,8 @@ class AuthService {
     required String email,
     required String password,
     required String username,
+    required String firstName,
+    required String phone,
   }) async {
     print(
       '[AuthService] Attempting to register with email: $email, username: $username',
@@ -17,7 +19,13 @@ class AuthService {
     try {
       final response = await apiClient.post(
         '/users',
-        body: {'email': email, 'password': password, 'username': username},
+        body: {
+          'email': email,
+          'password': password,
+          'username': username,
+          'first_name': firstName,
+          'phone': phone,
+        },
       );
       print('[AuthService] Registration successful: $response');
       return response;
@@ -42,7 +50,11 @@ class AuthService {
       if (response['data'] != null &&
           response['data']['access_token'] != null) {
         print('[AuthService] Setting token from response');
-        apiClient.setToken(response['data']['access_token']);
+        apiClient.setToken(
+          response['data']['access_token'],
+          refreshToken: response['data']['refresh_token'],
+          expiresIn: response['data']['expires'],
+        );
       }
       return response;
     } catch (e) {
@@ -51,16 +63,49 @@ class AuthService {
     }
   }
 
-  /// Logout user - clear token without making API call (Directus refresh token issue)
+  /// Refresh access token using refresh token
+  Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
+    print('[AuthService] Attempting to refresh token');
+    try {
+      final response = await apiClient.post(
+        '/auth/refresh',
+        body: {'refresh_token': refreshToken},
+      );
+      print('[AuthService] Token refresh successful');
+      if (response['data'] != null &&
+          response['data']['access_token'] != null) {
+        print('[AuthService] Setting new token from refresh response');
+        apiClient.setToken(
+          response['data']['access_token'],
+          refreshToken: response['data']['refresh_token'],
+          expiresIn: response['data']['expires'],
+        );
+      }
+      return response;
+    } catch (e) {
+      print('[AuthService] Token refresh error: $e');
+      rethrow;
+    }
+  }
+
+  /// Logout user - clear token and invalidate refresh token
   Future<void> logout() async {
     print('[AuthService] Attempting to logout');
     try {
-      // Try to call logout endpoint, but don't fail if it does
+      // Try to call logout endpoint with refresh token
       try {
-        await apiClient.post('/auth/logout', body: {});
-        print('[AuthService] Logout API call successful');
+        final refreshToken = apiClient.refreshToken;
+        if (refreshToken != null) {
+          await apiClient.post(
+            '/auth/logout',
+            body: {'refresh_token': refreshToken},
+          );
+          print('[AuthService] Logout API call successful');
+        } else {
+          print('[AuthService] No refresh token available for logout');
+        }
       } catch (e) {
-        print('[AuthService] Logout API call failed (expected): $e');
+        print('[AuthService] Logout API call failed: $e');
         // Continue with clearing token anyway
       }
     } finally {

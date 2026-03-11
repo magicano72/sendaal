@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../core/router/app_router.dart';
+import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_widgets.dart';
 
@@ -14,16 +14,20 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _firstNameCtrl = TextEditingController();
   final _usernameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
+    _firstNameCtrl.dispose();
     _usernameCtrl.dispose();
     _emailCtrl.dispose();
+    _phoneCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
@@ -31,10 +35,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(authProvider.notifier).register(
-          _emailCtrl.text.trim(),
-          _passwordCtrl.text,
-          _usernameCtrl.text.trim(),
+    final success = await ref
+        .read(authProvider.notifier)
+        .register(
+          email: _emailCtrl.text.trim(),
+          password: _passwordCtrl.text,
+          username: _usernameCtrl.text.trim(),
+          firstName: _firstNameCtrl.text.trim(),
+          phone: _phoneCtrl.text.trim(),
         );
 
     if (success && mounted) {
@@ -77,6 +85,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 32),
 
+                // First Name
+                TextFormField(
+                  controller: _firstNameCtrl,
+                  keyboardType: TextInputType.name,
+                  decoration: const InputDecoration(
+                    labelText: 'First Name',
+                    prefixIcon: Icon(Icons.person_outline),
+                    hintText: 'e.g. John',
+                  ),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Name is required';
+                    if (v.length < 2) return 'At least 2 characters';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
                 // Username
                 TextFormField(
                   controller: _usernameCtrl,
@@ -112,6 +137,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
+                // Phone
+                TextFormField(
+                  controller: _phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                    hintText: 'e.g. +201234567890',
+                  ),
+                  validator: (v) {
+                    if (v == null || v.isEmpty)
+                      return 'Phone number is required';
+                    if (v.length < 7) return 'Enter a valid phone number';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
                 // Password
                 TextFormField(
                   controller: _passwordCtrl,
@@ -120,9 +163,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     labelText: 'Password',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscure
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined),
+                      icon: Icon(
+                        _obscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
