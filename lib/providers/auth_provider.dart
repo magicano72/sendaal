@@ -10,22 +10,34 @@ import '../services/user_service.dart';
 /// Holds the currently authenticated user (null = logged out)
 class AuthState {
   final User? user;
-  final bool isLoading;
+  final bool isLoading; // Deprecated: kept for backward compatibility
+  final bool isLoginLoading;
+  final bool isRegisterLoading;
   final String? error;
 
-  const AuthState({this.user, this.isLoading = false, this.error});
+  const AuthState({
+    this.user,
+    this.isLoading = false,
+    this.isLoginLoading = false,
+    this.isRegisterLoading = false,
+    this.error,
+  });
 
   bool get isAuthenticated => user != null;
 
   AuthState copyWith({
     User? user,
     bool? isLoading,
+    bool? isLoginLoading,
+    bool? isRegisterLoading,
     String? error,
     bool clearUser = false,
     bool clearError = false,
   }) => AuthState(
     user: clearUser ? null : user ?? this.user,
     isLoading: isLoading ?? this.isLoading,
+    isLoginLoading: isLoginLoading ?? this.isLoginLoading,
+    isRegisterLoading: isRegisterLoading ?? this.isRegisterLoading,
     error: clearError ? null : error ?? this.error,
   );
 }
@@ -47,22 +59,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> login(String email, String password) async {
     print('[AuthNotifier] Starting login for: $email');
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(isLoginLoading: true, clearError: true);
     try {
-      final response = await _authService.login(
-        email: email,
-        password: password,
-      );
+      // Set 30 second timeout for login request
+      final response = await _authService
+          .login(email: email, password: password)
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception('Login request timed out. Please try again.');
+            },
+          );
       print('[AuthNotifier] Login response: $response');
 
       // Fetch current user after successful login
       try {
-        final user = await _userService.getCurrentUser();
-        state = state.copyWith(isLoading: false, user: user);
+        final user = await _userService.getCurrentUser().timeout(
+          const Duration(seconds: 15),
+        );
+        state = state.copyWith(isLoginLoading: false, user: user);
         print('[AuthNotifier] User fetched successfully: ${user.id}');
       } catch (e) {
         print('[AuthNotifier] Error fetching current user: $e');
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(isLoginLoading: false);
       }
 
       print('[AuthNotifier] Login completed successfully');
@@ -72,8 +91,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       String errorMessage = 'Email or password is incorrect.';
       if (e is ApiException) {
         errorMessage = DirectusErrorParser.getGeneralErrorMessage(e);
+      } else if (e.toString().contains('timed out')) {
+        errorMessage =
+            'Request took too long. Please check your connection and try again.';
       }
-      state = state.copyWith(isLoading: false, error: errorMessage);
+      state = state.copyWith(isLoginLoading: false, error: errorMessage);
       return false;
     }
   }
@@ -88,25 +110,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
     print(
       '[AuthNotifier] Starting registration for: $email, username: $username',
     );
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(isRegisterLoading: true, clearError: true);
     try {
-      await _authService.register(
-        email: email,
-        password: password,
-        username: username,
-        firstName: firstName,
-        phone: phone,
-      );
+      // Set 30 second timeout for registration request
+      await _authService
+          .register(
+            email: email,
+            password: password,
+            username: username,
+            firstName: firstName,
+            phone: phone,
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception(
+                'Registration request timed out. Please try again.',
+              );
+            },
+          );
       print('[AuthNotifier] Registration completed successfully');
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isRegisterLoading: false);
       return true;
     } catch (e) {
       print('[AuthNotifier] Register error: $e');
       String errorMessage = 'Something went wrong. Please try again.';
       if (e is ApiException) {
         errorMessage = DirectusErrorParser.getGeneralErrorMessage(e);
+      } else if (e.toString().contains('timed out')) {
+        errorMessage =
+            'Request took too long. Please check your connection and try again.';
       }
-      state = state.copyWith(isLoading: false, error: errorMessage);
+      state = state.copyWith(isRegisterLoading: false, error: errorMessage);
       return false;
     }
   }

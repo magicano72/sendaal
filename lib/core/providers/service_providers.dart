@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sendaal/core/services/user_service.dart';
 
+import '../../services/access_service.dart';
 import '../repositories/index.dart';
-import '../services/index.dart';
+import '../services/index.dart' hide AccessService;
 
 /// Provides the API Client instance
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -30,7 +31,7 @@ final accountServiceProvider = Provider<AccountService>((ref) {
 /// Provides Access Service
 final accessServiceProvider = Provider<AccessService>((ref) {
   final apiClient = ref.watch(apiClientProvider);
-  return AccessService(apiClient);
+  return AccessService(apiClient: apiClient);
 });
 
 /// Provides Notification Service

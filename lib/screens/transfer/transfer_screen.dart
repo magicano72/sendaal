@@ -97,10 +97,7 @@ class _SummaryCard extends StatelessWidget {
               radius: 24,
               backgroundColor: AppTheme.surfaceVariant,
               child: Text(
-                recipient.displayName != null &&
-                        recipient.displayName!.isNotEmpty
-                    ? recipient.displayName![0].toUpperCase()
-                    : '?',
+                recipient.displayName[0].toUpperCase(),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -114,7 +111,7 @@ class _SummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recipient.displayName ?? recipient.username ?? 'Recipient',
+                    recipient.displayName,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,

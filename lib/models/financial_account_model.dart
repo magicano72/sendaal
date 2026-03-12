@@ -48,10 +48,7 @@ class FinancialAccount {
       id: json['id']?.toString() ?? '',
       userId: json['user']?.toString() ?? json['userId']?.toString() ?? '',
       type: AccountType.fromString(typeValue),
-      accountIdentifier:
-          json['account_identifier']?.toString() ??
-          json['accountIdentifier']?.toString() ??
-          '',
+      accountIdentifier: json['account_identifier']?.toString() ?? '',
       defaultLimit:
           double.tryParse(json['default_limit']?.toString() ?? '0') ?? 0,
       priority: json['priority'] is int
@@ -61,15 +58,21 @@ class FinancialAccount {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'user': userId,
-    'type': type.name,
-    'account_identifier': accountIdentifier,
-    'default_limit': defaultLimit,
-    'priority': priority,
-    'is_visible': isVisible,
-  };
+  Map<String, dynamic> toJson() {
+    final json = {
+      'id': id,
+      'user': userId,
+      'type': type.name,
+      'account_identifier': accountIdentifier,
+      'default_limit': defaultLimit,
+      'priority': priority,
+    };
+    // Only include is_visible if it's false (true is the default)
+    if (!isVisible) {
+      json['is_visible'] = false;
+    }
+    return json;
+  }
 
   FinancialAccount copyWith({
     String? id,

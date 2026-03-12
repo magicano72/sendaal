@@ -10,6 +10,7 @@ class Endpoints {
 
   // ── Users ─────────────────────────────────────────────────────────────────
   static const String users = '/users';
+  static const String currentUser = '/users/me';
   static String userById(String id) => '/users/$id';
 
   // ── Financial Accounts ────────────────────────────────────────────────────

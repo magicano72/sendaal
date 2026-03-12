@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sendaal/widgets/access_request_widget.dart'
+    show AccessRequestTile;
 
+import '../../providers/access_request_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/search_provider.dart';
 import '../../widgets/app_widgets.dart';
@@ -22,6 +25,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       final user = ref.read(authProvider).user;
       if (user != null) {
         ref.read(notificationsProvider.notifier).loadNotifications(user.id);
+        ref.read(accessRequestProvider.notifier).loadReceivedRequests(user.id);
       }
     });
   }
@@ -29,6 +33,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(notificationsProvider);
+    final accessRequests = ref.watch(accessRequestProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -55,23 +60,29 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             await ref
                 .read(notificationsProvider.notifier)
                 .loadNotifications(user.id);
+            await ref
+                .read(accessRequestProvider.notifier)
+                .loadReceivedRequests(user.id);
           }
         },
-        child: _buildBody(state),
+        child: _buildBody(state, accessRequests),
       ),
     );
   }
 
-  Widget _buildBody(NotificationsState state) {
-    if (state.isLoading) {
+  Widget _buildBody(
+    NotificationsState notifState,
+    AccessRequestsState accessState,
+  ) {
+    if (notifState.isLoading || accessState.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (state.error != null) {
+    if (notifState.error != null) {
       return Padding(
         padding: const EdgeInsets.all(20),
         child: ErrorBanner(
-          message: state.error!,
+          message: notifState.error!,
           onRetry: () {
             final user = ref.read(authProvider).user;
             if (user != null) {
@@ -84,7 +95,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       );
     }
 
-    if (state.notifications.isEmpty) {
+    // No items at all
+    if (notifState.notifications.isEmpty &&
+        accessState.receivedRequests.isEmpty) {
       return const EmptyState(
         icon: Icons.notifications_none_outlined,
         title: 'No notifications yet',
@@ -94,20 +107,82 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: state.notifications.length,
+      itemCount:
+          accessState.receivedRequests.length +
+          notifState.notifications.length +
+          (accessState.receivedRequests.isNotEmpty ? 1 : 0),
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (_, i) {
-        final notification = state.notifications[i];
-        return NotificationTile(
-          notification: notification,
-          onTap: () {
-            if (!notification.isRead) {
-              ref
-                  .read(notificationsProvider.notifier)
-                  .markAsRead(notification.id);
+        // Section header for access requests
+        if (i == 0 && accessState.receivedRequests.isNotEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              'Access Requests',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          );
+        }
+
+        // Access requests
+        if (accessState.receivedRequests.isNotEmpty) {
+          if (i > 0 && i <= accessState.receivedRequests.length) {
+            final request = accessState.receivedRequests[i - 1];
+            return AccessRequestTile(request: request);
+          }
+
+          // Notifications section header
+          if (i == accessState.receivedRequests.length + 1 &&
+              notifState.notifications.isNotEmpty) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'Notifications',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            );
+          }
+
+          // Notifications
+          if (i > accessState.receivedRequests.length + 1) {
+            final notifIndex = i - accessState.receivedRequests.length - 2;
+            if (notifIndex < notifState.notifications.length) {
+              final notification = notifState.notifications[notifIndex];
+              return NotificationTile(
+                notification: notification,
+                onTap: () {
+                  if (!notification.isRead) {
+                    ref
+                        .read(notificationsProvider.notifier)
+                        .markAsRead(notification.id);
+                  }
+                },
+              );
             }
-          },
-        );
+          }
+        } else {
+          // No access requests, just show notifications
+          if (notifState.notifications.isNotEmpty &&
+              i < notifState.notifications.length) {
+            final notification = notifState.notifications[i];
+            return NotificationTile(
+              notification: notification,
+              onTap: () {
+                if (!notification.isRead) {
+                  ref
+                      .read(notificationsProvider.notifier)
+                      .markAsRead(notification.id);
+                }
+              },
+            );
+          }
+        }
+
+        return const SizedBox.shrink();
       },
     );
   }

@@ -5,9 +5,12 @@ part 'access_request_model.g.dart';
 @JsonSerializable()
 class AccessRequest {
   final String id;
+  @JsonKey(name: 'requester')
   final String requesterId;
+  @JsonKey(name: 'receiver')
   final String receiverId;
   final String status; // pending, approved, rejected
+  @JsonKey(name: 'created_at')
   final String createdAt;
   final String? requesterName;
   final String? requesterUsername;

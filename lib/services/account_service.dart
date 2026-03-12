@@ -52,21 +52,23 @@ class AccountService {
     required String accountIdentifier,
     required double defaultLimit,
     int priority = 0,
+    bool isVisible = true,
   }) async {
-    final response = await _api.post(
-      Endpoints.financialAccounts,
-      body: {
-        'user': userId,
-        'type': [type], // API expects type as an array
-        'account_identifier': "$accountIdentifier",
-        'priority': priority,
-        'created_at': DateTime.now().toIso8601String().split(
-          'T',
-        )[0], // Format: YYYY-MM-DD
-        // 'default_limit': defaultLimit,
-        // 'is_visible': true,
-      },
-    );
+    final body = {
+      'user': userId,
+      'type': type, // API now expects type as a string, not an array
+      'account_identifier': "$accountIdentifier",
+      'priority': priority,
+      'created_at': DateTime.now().toIso8601String().split(
+        'T',
+      )[0], // Format: YYYY-MM-DD
+    };
+    // Only include is_visible if it's false (true is the default)
+    if (!isVisible) {
+      body['is_visible'] = false;
+    }
+
+    final response = await _api.post(Endpoints.financialAccounts, body: body);
     return FinancialAccount.fromJson(response['data'] as Map<String, dynamic>);
   }
 }

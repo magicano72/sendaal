@@ -1,22 +1,24 @@
+import '../../models/access_request_model.dart';
+import '../../services/access_service.dart';
 import '../error/exceptions.dart';
-import '../models/access_request_model.dart';
-import '../services/access_service.dart';
 
 class AccessRequestRepository {
   final AccessService accessService;
 
   AccessRequestRepository(this.accessService);
 
+  /// Create a new access request from requester to receiver
   Future<AccessRequest> createAccessRequest({
     required String requesterId,
     required String receiverId,
+    required int rejectionCount,
   }) async {
     try {
-      final response = await accessService.createAccessRequest(
+      final response = await accessService.createRequest(
         requesterId: requesterId,
         receiverId: receiverId,
       );
-      return AccessRequest.fromJson(response);
+      return response;
     } catch (e) {
       throw ApiException(
         message: 'Failed to create access request: ${e.toString()}',
@@ -24,12 +26,47 @@ class AccessRequestRepository {
     }
   }
 
+  /// Get all access requests received by a user (where receiver = user)
   Future<List<AccessRequest>> getReceivedRequests(String userId) async {
     try {
-      final responses = await accessService.getReceivedRequests(userId);
-      return responses.map((data) => AccessRequest.fromJson(data)).toList();
+      return await accessService.getReceivedRequests(userId);
     } catch (e) {
       throw ApiException(message: 'Failed to fetch requests: ${e.toString()}');
+    }
+  }
+
+  /// Get all access requests sent by a user (where requester = user)
+  Future<List<AccessRequest>> getSentRequests(String userId) async {
+    try {
+      return await accessService.getSentRequests(userId);
+    } catch (e) {
+      throw ApiException(
+        message: 'Failed to fetch sent requests: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Approve an access request
+  Future<AccessRequest> approveRequest(String requestId) async {
+    try {
+      return await accessService.updateStatus(
+        requestId: requestId,
+        status: 'approved',
+      );
+    } catch (e) {
+      throw ApiException(message: 'Failed to approve request: ${e.toString()}');
+    }
+  }
+
+  /// Reject an access request
+  Future<AccessRequest> rejectRequest(String requestId) async {
+    try {
+      return await accessService.updateStatus(
+        requestId: requestId,
+        status: 'rejected',
+      );
+    } catch (e) {
+      throw ApiException(message: 'Failed to reject request: ${e.toString()}');
     }
   }
 }

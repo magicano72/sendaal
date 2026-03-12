@@ -35,7 +35,7 @@ class UserService {
   /// Get current logged-in user profile
   Future<Map<String, dynamic>> getCurrentUser() async {
     try {
-      final result = await apiClient.get('/users/me');
+      final result = await apiClient.get('');
       return result['data'] ?? result;
     } catch (e) {
       rethrow;

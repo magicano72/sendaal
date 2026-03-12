@@ -154,7 +154,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 24), // Login button
                 PrimaryButton(
                   label: 'Sign In',
-                  isLoading: auth.isLoading,
+                  isLoading: auth.isLoginLoading,
                   onPressed: _login,
                 ),
                 const SizedBox(height: 20),

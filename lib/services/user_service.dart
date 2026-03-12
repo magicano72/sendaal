@@ -39,7 +39,7 @@ class UserService {
 
   /// Get current logged-in user profile
   Future<User> getCurrentUser() async {
-    final response = await _api.get('/users/me');
+    final response = await _api.get(Endpoints.currentUser);
     final data = response['data'] as Map<String, dynamic>;
     return User.fromJson(data);
   }

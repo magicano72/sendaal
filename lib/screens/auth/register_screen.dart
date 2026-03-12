@@ -233,7 +233,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 PrimaryButton(
                   label: 'Create Account',
-                  isLoading: auth.isLoading,
+                  isLoading: auth.isRegisterLoading,
                   onPressed: _register,
                 ),
 
