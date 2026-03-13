@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -29,25 +30,50 @@ class User {
     this.phone,
     required this.isVerified,
     this.email,
-  });
-
-  /// Returns a fully-qualified asset URL, or null if no avatar is set.
-  ///
-  /// Handles three cases:
-  ///   • null / empty string  → null (show initials)
-  ///   • already a full URL   → returned as-is
-  ///   • bare UUID            → BASE_URL/assets/<uuid>
-  String? get avatarUrl {
-    final raw = avatar;
-    if (raw == null || raw.trim().isEmpty) return null;
-    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-    final base = dotenv.env['BASE_URL'] ?? '';
-    return '$base/assets/$raw';
+  }) {
+    // 🔍 DEBUG: log every User construction so we can see raw avatar value
+    debugPrint('╔══ User() constructed ══════════════════════');
+    debugPrint('║  id          : $id');
+    debugPrint('║  displayName : $displayName');
+    debugPrint('║  avatar(raw) : $avatar');
+    debugPrint('╚════════════════════════════════════════════');
   }
 
-  /// 1–2 uppercase initials derived from displayName.
-  ///   "Ahmed Faris" → "AF"
-  ///   "Omar"        → "O"
+  String? get avatarUrl {
+    final raw = avatar;
+
+    debugPrint('╔══ avatarUrl getter called ═════════════════');
+    debugPrint('║  avatar(raw) : $raw');
+
+    if (raw == null || raw.trim().isEmpty) {
+      debugPrint('║  result      : null (empty/null raw)');
+      debugPrint('╚════════════════════════════════════════════');
+      return null;
+    }
+
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      debugPrint('║  result      : $raw (already full URL)');
+      debugPrint('╚════════════════════════════════════════════');
+      return raw;
+    }
+
+    // bare UUID — check dotenv
+    final base = dotenv.env['BASE_URL'] ?? '';
+    debugPrint('║  BASE_URL    : "$base"');
+
+    if (base.isEmpty) {
+      debugPrint('║  ⚠️  BASE_URL is EMPTY — dotenv not loaded yet!');
+      debugPrint('╚════════════════════════════════════════════');
+      // Return null → show initials instead of crashing with file:/// URI
+      return null;
+    }
+
+    final url = '$base/assets/$raw';
+    debugPrint('║  result      : $url');
+    debugPrint('╚════════════════════════════════════════════');
+    return url;
+  }
+
   String get initials {
     final parts = displayName.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty || parts.first.isEmpty) return '?';
@@ -55,7 +81,14 @@ class User {
     return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 
-  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  factory User.fromJson(Map<String, dynamic> json) {
+    // 🔍 DEBUG: log raw JSON before deserialization
+    debugPrint('╔══ User.fromJson() ═════════════════════════');
+    debugPrint('║  raw json    : $json');
+    debugPrint('╚════════════════════════════════════════════');
+    return _$UserFromJson(json);
+  }
+
   Map<String, dynamic> toJson() => _$UserToJson(this);
 
   User copyWith({

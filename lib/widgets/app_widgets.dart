@@ -490,18 +490,27 @@ class UserTile extends StatelessWidget {
     this.onTap,
   });
 
+  ImageProvider<Object>? _buildAvatarProvider() {
+    if (profileImage == null || profileImage!.isEmpty) return null;
+    final uri = Uri.tryParse(profileImage!);
+    if (uri == null) return null;
+    final scheme = uri.scheme.toLowerCase();
+    if (scheme != 'http' && scheme != 'https') return null;
+    return NetworkImage(profileImage!);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final avatarProvider = _buildAvatarProvider();
+
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
       leading: CircleAvatar(
         radius: 24,
         backgroundColor: AppTheme.surfaceVariant,
-        backgroundImage: profileImage != null
-            ? NetworkImage(profileImage!)
-            : null,
-        child: profileImage == null
+        backgroundImage: avatarProvider,
+        child: avatarProvider == null
             ? Text(
                 displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
                 style: const TextStyle(

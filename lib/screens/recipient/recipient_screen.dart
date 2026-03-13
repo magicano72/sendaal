@@ -562,12 +562,21 @@ class _RecipientHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ── Resolve avatar URL once, up front ──────────────────────────────────
-    final String base = dotenv.env['BASE_URL'] ?? '';
-    final String? raw = recipient.avatar;
-    final String? avatarUrl = (raw != null && raw.isNotEmpty)
-        ? (raw.startsWith('http') ? raw : '$base/assets/$raw')
-        : null;
+    // 🔍 DEBUG: trace every value before touching NetworkImage
+    debugPrint('╔══ _RecipientHeader.build() ════════════════');
+    debugPrint('║  recipient.avatar    : ${recipient.avatar}');
+    debugPrint('║  dotenv BASE_URL     : "${dotenv.env['BASE_URL']}"');
+    debugPrint('║  recipient.avatarUrl : ${recipient.avatarUrl}');
+    debugPrint('╚════════════════════════════════════════════');
+
+    final String? avatarUrl = recipient.avatarUrl;
+    final bool hasValidAvatar = () {
+      if (avatarUrl == null || avatarUrl.isEmpty) return false;
+      final uri = Uri.tryParse(avatarUrl);
+      if (uri == null) return false;
+      final scheme = uri.scheme.toLowerCase();
+      return scheme == 'http' || scheme == 'https';
+    }();
 
     return Card(
       child: Padding(
@@ -577,19 +586,17 @@ class _RecipientHeader extends StatelessWidget {
             CircleAvatar(
               radius: 30,
               backgroundColor: AppTheme.surfaceVariant,
-              backgroundImage: avatarUrl != null
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: avatarUrl == null
-                  ? Text(
+              backgroundImage: hasValidAvatar ? NetworkImage(avatarUrl!) : null,
+              child: hasValidAvatar
+                  ? null
+                  : Text(
                       recipient.initials,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.primary,
                       ),
-                    )
-                  : null,
+                    ),
             ),
             const SizedBox(width: 14),
             Expanded(
