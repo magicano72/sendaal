@@ -55,10 +55,10 @@ class TransferScreen extends ConsumerWidget {
             label: 'Done',
             backgroundColor: AppTheme.success,
             onPressed: () {
-              // Pop all the way back to the main shell
-              Navigator.of(
+              Navigator.pushNamed(
                 context,
-              ).popUntil((route) => route.settings.name == AppRoutes.home);
+                AppRoutes.transferSuccess,
+              );
             },
           ),
 
@@ -88,6 +88,10 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String? avatarUrl = recipient.avatarUrl;
+    final bool hasAvatar = avatarUrl != null &&
+        avatarUrl.startsWith('http');
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -96,14 +100,21 @@ class _SummaryCard extends StatelessWidget {
             CircleAvatar(
               radius: 24,
               backgroundColor: AppTheme.surfaceVariant,
-              child: Text(
-                recipient.displayName[0].toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.primary,
-                ),
-              ),
+              backgroundImage: hasAvatar ? NetworkImage(avatarUrl!) : null,
+              child: hasAvatar
+                  ? null
+                  : Text(
+                      recipient.displayName.isNotEmpty
+                          ? recipient.displayName[0].toUpperCase()
+                          : (recipient.initials.isNotEmpty
+                              ? recipient.initials[0]
+                              : '?'),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primary,
+                      ),
+                    ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -111,7 +122,9 @@ class _SummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recipient.displayName,
+                    recipient.displayName.isNotEmpty
+                        ? recipient.displayName
+                        : 'Recipient',
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
@@ -119,7 +132,9 @@ class _SummaryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '@${recipient.username}',
+                    recipient.username.isNotEmpty
+                        ? '@${recipient.username}'
+                        : '',
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.textSecondary,

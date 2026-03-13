@@ -9,6 +9,7 @@ import '../../screens/profile/profile_screen.dart';
 import '../../screens/recipient/recipient_screen.dart';
 import '../../screens/search/search_screen.dart';
 import '../../screens/transfer/transfer_screen.dart';
+import '../../screens/transfer/transfer_success_screen.dart';
 
 /// Named route constants — avoids magic strings throughout the app
 class AppRoutes {
@@ -19,6 +20,7 @@ class AppRoutes {
   static const String search = '/search';
   static const String recipient = '/recipient';
   static const String transfer = '/transfer';
+  static const String transferSuccess = '/transfer-success';
   static const String notifications = '/notifications';
 }
 
@@ -45,6 +47,8 @@ class AppRouter {
       case AppRoutes.transfer:
         final args = settings.arguments as TransferArgs;
         return _fade(TransferScreen(args: args));
+      case AppRoutes.transferSuccess:
+        return _fade(const TransferSuccessScreen());
       case AppRoutes.notifications:
         return _fade(const NotificationsScreen());
       default:

@@ -68,16 +68,12 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
             if (parts.length != 2 || parts[1].toLowerCase() != 'instapay.com') {
               return 'Only @instapay.com is allowed for InstaPay handles.';
             }
-            if (!RegExp(
-              r'^(?=.*[a-z])[a-z0-9._-]{3,30}$',
-            ).hasMatch(parts[0])) {
+            if (!RegExp(r'^(?=.*[a-z])[a-z0-9._-]{3,30}$').hasMatch(parts[0])) {
               return 'Handle must be 3-30 lowercase letters/numbers/._-';
             }
             return null;
           }
-          if (!RegExp(
-            r'^(?=.*[a-z])[a-z0-9._-]{3,30}$',
-          ).hasMatch(value)) {
+          if (!RegExp(r'^(?=.*[a-z])[a-z0-9._-]{3,30}$').hasMatch(value)) {
             return 'Use 3-30 lowercase letters/numbers/._- for InstaPay handle.';
           }
           return null;
