@@ -311,6 +311,14 @@ class _SendAccessRequestDialogState
 
                       if (mounted) {
                         if (success) {
+                          // Show success snackbar
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Access request sent successfully'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
                           // Defer navigation until after the current frame
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             if (mounted) {
@@ -318,9 +326,29 @@ class _SendAccessRequestDialogState
                             }
                           });
                         } else {
-                          // Show error message and keep dialog open
+                          final duplicatePending =
+                              errorMsg?.contains('pending request') ?? false;
+
+                          if (duplicatePending && mounted) {
+                            // Show required snackbar and leave button untouched
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'You already have a pending request. Please wait for approval or cancel it first.',
+                                ),
+                                backgroundColor: Colors.orange,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+
+                            Navigator.pop(context, null);
+                            return;
+                          }
+
+                          // Other errors - allow retry inline
                           setState(() {
-                            errorMessage = errorMsg ?? 'Failed to send request';
+                            errorMessage =
+                                errorMsg ?? 'Failed to send request';
                             isLoading = false;
                           });
                         }

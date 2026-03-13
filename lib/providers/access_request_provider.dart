@@ -98,6 +98,19 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
     try {
       final service = _ref.read(accessServiceProvider);
 
+      // Guard: block duplicate pending requests for this sender → receiver
+      final pendingRequest = await service.getPendingRequest(
+        requesterId: requesterId,
+        receiverId: receiverId,
+      );
+
+      if (pendingRequest != null) {
+        return (
+          false,
+          'You already have a pending request. Please wait for approval or cancel it first.',
+        );
+      }
+
       // Check 1: Single active request rule (pending or approved)
       final activeRequest = await service.getActiveRequest(
         requesterId: requesterId,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sendaal/models/access_request_model.dart';
 import 'package:sendaal/providers/access_request_provider.dart';
@@ -65,100 +66,92 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     );
   }
 
-  Future<void> _showAccessRequestDialog(
-    BuildContext context,
-    User? currentUser,
-  ) async {
-    try {
-      // Validate before showing dialog
-      if (!mounted) return;
-
-      // Get fresh currentUser from provider (don't rely on stale parameter)
-      final freshUser = ref.read(authProvider).user;
-
-      // Check if user is authenticated
-      if (freshUser == null || freshUser.id.isEmpty) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User not authenticated'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      final (canSend, errorMsg) = await ref
-          .read(accessRequestProvider.notifier)
-          .canSendRequest(
-            requesterId: freshUser.id,
-            receiverId: widget.recipient.id,
-          );
-
-      if (!canSend) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMsg ?? 'Cannot send request at this time'),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
-        return;
-      }
-
-      // Show dialog
-      if (!mounted) return;
-      final result = await showDialog<bool>(
-        context: context,
-        builder: (context) => SendAccessRequestDialog(
-          recipientId: widget.recipient.id,
-          recipientName: widget.recipient.displayName,
-        ),
-      );
-
-      if (result == true && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Access request sent successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else if (result == false && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to send access request'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+  /// Returns the most recent request to this recipient, or null.
+  AccessRequest? _lastRequest(List<AccessRequest>? sentRequests) {
+    if (sentRequests == null || sentRequests.isEmpty) return null;
+    final matching = sentRequests
+        .where((r) => r.receiverId == widget.recipient.id)
+        .toList();
+    if (matching.isEmpty) return null;
+    return matching.fold<AccessRequest?>(
+      null,
+      (prev, current) =>
+          prev == null || current.createdAt.isAfter(prev.createdAt)
+          ? current
+          : prev,
+    );
   }
 
-  Future<void> _showCancelRequestDialog(
-    BuildContext context,
-    User? currentUser,
-  ) async {
+  /// Consolidate sent requests from local state or FutureProvider.
+  List<AccessRequest>? _resolveSentRequests(
+    List<AccessRequest> localRequests,
+    AsyncValue<List<AccessRequest>> asyncRequests,
+  ) {
+    if (localRequests.isNotEmpty) return localRequests;
+    return asyncRequests.value;
+  }
+
+  Future<void> _showAccessRequestDialog(BuildContext context) async {
+    if (!mounted) return;
+
+    final freshUser = ref.read(authProvider).user;
+
+    if (freshUser == null || freshUser.id.isEmpty) {
+      _showSnackBar(context, 'User not authenticated', Colors.red);
+      return;
+    }
+
+    // ── Step 1: Check for existing pending request on the backend ──────────
+    final (canSend, errorMsg) = await ref
+        .read(accessRequestProvider.notifier)
+        .canSendRequest(
+          requesterId: freshUser.id,
+          receiverId: widget.recipient.id,
+        );
+
+    if (!canSend) {
+      // Show snackbar; do NOT change the button or open dialog.
+      if (mounted) {
+        _showSnackBar(
+          context,
+          errorMsg ??
+              'You already have a pending request. '
+                  'Please wait for approval or cancel it first.',
+          Colors.orange,
+          duration: const Duration(seconds: 4),
+        );
+      }
+      return;
+    }
+
+    // ── Step 2: No pending request – show dialog ────────────────────────────
+    if (!mounted) return;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => SendAccessRequestDialog(
+        recipientId: widget.recipient.id,
+        recipientName: widget.recipient.displayName,
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result == true) {
+      // Force refresh so button switches to "Cancel Request" immediately.
+      ref.invalidate(sentRequestsProvider);
+      _showSnackBar(context, 'Access request sent successfully', Colors.green);
+    } else if (result == false) {
+      _showSnackBar(context, 'Failed to send access request', Colors.red);
+    }
+    // result == null ⇒ user dismissed or dialog handled duplicate internally.
+  }
+
+  Future<void> _showCancelRequestDialog(BuildContext context) async {
     if (!mounted) return;
 
     final currentUser = ref.read(authProvider).user;
     if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User not authenticated'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar(context, 'User not authenticated', Colors.red);
       return;
     }
 
@@ -167,7 +160,8 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Cancel Request?'),
         content: const Text(
-          'Are you sure you want to cancel this access request? The receiver will no longer see it.',
+          'Are you sure you want to cancel this access request? '
+          'The receiver will no longer see it.',
         ),
         actions: [
           TextButton(
@@ -176,82 +170,81 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Cancel Request', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Cancel Request',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
     );
 
-    if (confirmed == true && mounted) {
-      try {
-        final success = await ref
-            .read(accessRequestProvider.notifier)
-            .cancelRequest(
-              requesterId: currentUser.id,
-              receiverId: widget.recipient.id,
-            );
+    if (confirmed != true || !mounted) return;
 
-        if (success && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Access request cancelled'),
-              backgroundColor: Colors.green,
-            ),
+    try {
+      final success = await ref
+          .read(accessRequestProvider.notifier)
+          .cancelRequest(
+            requesterId: currentUser.id,
+            receiverId: widget.recipient.id,
           );
-          // Refresh UI
-          setState(() {});
-        } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to cancel request'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+
+      if (!mounted) return;
+
+      if (success) {
+        // Invalidate so button switches back to "Request Access" immediately.
+        ref.invalidate(sentRequestsProvider);
+        _showSnackBar(context, 'Access request cancelled', Colors.green);
+      } else {
+        _showSnackBar(context, 'Failed to cancel request', Colors.red);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(context, 'Error: ${e.toString()}', Colors.red);
       }
     }
   }
 
+  void _showSnackBar(
+    BuildContext context,
+    String message,
+    Color color, {
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: duration,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Cache current user at build time
     final currentUser = ref.watch(authProvider).user;
 
-    // Prevent viewing own account - redirect to profile
+    // Prevent viewing own account – redirect to profile.
     if (currentUser != null && currentUser.id == widget.recipient.id) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           Navigator.pushReplacementNamed(context, AppRoutes.profile);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('View your account from your profile'),
-              backgroundColor: Colors.blue,
-              duration: Duration(seconds: 2),
-            ),
+          _showSnackBar(
+            context,
+            'View your account from your profile',
+            Colors.blue,
           );
         }
       });
-      // Return a loading state while redirecting
       return Scaffold(
         appBar: AppBar(title: const Text('Profile')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // Check if current user has access to recipient's accounts
     final hasAccessAsync = ref.watch(
       hasAccessToAccountsProvider(widget.recipient.id),
     );
-
     final accountsAsync = ref.watch(
       recipientAccountsProvider(widget.recipient.id),
     );
@@ -263,125 +256,20 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
         error: (e, _) =>
             Center(child: ErrorBanner(message: 'Error checking access: $e')),
         data: (hasAccess) {
-          // If no access and access is NOT pending/approved, show restricted UI
           if (!hasAccess) {
             return _buildAccessRestrictedUI(context, currentUser);
           }
 
-          // User has access, show accounts
           return accountsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
               child: ErrorBanner(message: 'Could not load accounts: $e'),
             ),
             data: (accounts) {
-              // Sort visible accounts by priority before displaying
               final visible = accounts.where((a) => a.isVisible).toList()
                 ..sort((a, b) => a.priority.compareTo(b.priority));
 
-              // Check if already approved
-              final accessRequestState = ref.watch(accessRequestProvider);
-              final sentRequestsAsync = ref.watch(sentRequestsProvider);
-
-              // Get sent requests from either local state or the FutureProvider
-              List<AccessRequest>? sentRequests;
-              if (accessRequestState.sentRequests.isNotEmpty) {
-                sentRequests = accessRequestState.sentRequests;
-              } else {
-                sentRequests = sentRequestsAsync.value;
-              }
-
-              final isAlreadyApproved = sentRequests?.any(
-                    (r) =>
-                        r.receiverId == widget.recipient.id &&
-                        r.status.name == 'approved',
-                  ) ??
-                  false;
-
-              return ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                children: [
-                  // ── Recipient profile card ────────────────────────────────────
-                  _RecipientHeader(recipient: widget.recipient),
-                  const SizedBox(height: 24),
-
-                  // ── Accounts ──────────────────────────────────────────────────
-                  const Text(
-                    'Payment Accounts',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  if (visible.isEmpty)
-                    const EmptyState(
-                      icon: Icons.block_outlined,
-                      title: 'No visible accounts',
-                      subtitle: 'This user has no visible payment accounts.',
-                    )
-                  else
-                    ...visible.map((a) => AccountCard(account: a)),
-
-                  const SizedBox(height: 28),
-
-                  // ── Amount Input ──────────────────────────────────────────────
-                  AmountInputField(
-                    controller: _amountCtrl,
-                    errorText: _amountError,
-                    onChanged: (_) {
-                      if (_amountError != null) {
-                        setState(() => _amountError = null);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // ── Split button ──────────────────────────────────────────────
-                  PrimaryButton(
-                    label: 'Split Automatically',
-                    icon: const Icon(Icons.auto_fix_high, color: Colors.white),
-                    onPressed: visible.isEmpty
-                        ? null
-                        : () => _splitAndNavigate(visible),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // ── Request Access button ─────────────────────────────────────
-                  if (!isAlreadyApproved)
-                    _buildAccessRequestButton(context, currentUser)
-                  else
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        border: Border.all(
-                          color: Colors.green.withOpacity(0.3),
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.check_circle, color: Colors.green),
-                          SizedBox(width: 8),
-                          Text(
-                            'Access Granted',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              );
+              return _buildAccessGrantedBody(context, visible);
             },
           );
         },
@@ -389,157 +277,91 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     );
   }
 
-  /// Build the access request button with state-aware UI (enabled/disabled/cooldown)
-  Widget _buildAccessRequestButton(BuildContext context, User? currentUser) {
-    // Watch both local state and the FutureProvider for real-time updates
-    final accessRequestState = ref.watch(accessRequestProvider);
+  // ── Body when access is granted ──────────────────────────────────────────
+
+  Widget _buildAccessGrantedBody(
+    BuildContext context,
+    List<FinancialAccount> visible,
+  ) {
+    // Single source of truth for request state.
+    final accessState = ref.watch(accessRequestProvider);
     final sentRequestsAsync = ref.watch(sentRequestsProvider);
 
-    // Get sent requests from either local state or the FutureProvider
-    List<AccessRequest>? sentRequests;
-    bool isLoading = false;
+    final sentRequests = _resolveSentRequests(
+      accessState.sentRequests,
+      sentRequestsAsync,
+    );
+    final lastRequest = _lastRequest(sentRequests);
+    final isApproved = lastRequest?.status == AccessStatus.approved;
 
-    // Prioritize local state for immediate updates, then fall back to FutureProvider
-    if (accessRequestState.sentRequests.isNotEmpty) {
-      sentRequests = accessRequestState.sentRequests;
-    } else {
-      isLoading = sentRequestsAsync.isLoading;
-      sentRequests = sentRequestsAsync.value;
-    }
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      children: [
+        _RecipientHeader(recipient: widget.recipient),
+        const SizedBox(height: 24),
 
-    if (sentRequests == null || sentRequests.isEmpty) {
-      if (isLoading) {
-        return OutlinedButton.icon(
-          onPressed: null,
-          icon: const SizedBox(
-            height: 18,
-            width: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
+        const Text(
+          'Payment Accounts',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
           ),
-          label: const Text('Loading...'),
-        );
-      }
-      // No requests found, show request button
-      return OutlinedButton.icon(
-        onPressed: () => _showAccessRequestDialog(context, currentUser),
-        icon: const Icon(Icons.lock_open_outlined),
-        label: const Text('Request Account Access'),
-      );
-    }
-
-    // Find pending or recently rejected request to this recipient
-    final lastRequest =
-        sentRequests
-            .where((r) => r.receiverId == widget.recipient.id)
-            .isEmpty
-        ? null
-        : sentRequests
-              .where((r) => r.receiverId == widget.recipient.id)
-              .fold<AccessRequest?>(
-                null,
-                (prev, current) =>
-                    prev == null || current.createdAt.isAfter(prev.createdAt)
-                    ? current
-                    : prev,
-              );
-
-    // Check if in cooldown (pending request within 1 hour)
-    bool isInCooldown = false;
-    int minutesRemaining = 0;
-
-    if (lastRequest != null && lastRequest.status == AccessStatus.pending) {
-      final timeSinceRequest = DateTime.now().difference(
-        lastRequest.createdAt,
-      );
-      const cooldownDuration = Duration(hours: 1);
-
-      if (timeSinceRequest < cooldownDuration) {
-        isInCooldown = true;
-        minutesRemaining =
-            (cooldownDuration.inMinutes - timeSinceRequest.inMinutes);
-      }
-    }
-
-    // If approved, hide button (access already granted)
-    if (lastRequest != null && lastRequest.status == AccessStatus.approved) {
-      return const SizedBox.shrink();
-    }
-
-    // If in cooldown/pending, show cancel option with helpful message
-    if (isInCooldown && lastRequest?.status == AccessStatus.pending) {
-      return Tooltip(
-        message:
-            'Request pending approval. Click to cancel or wait $minutesRemaining minutes.',
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () =>
-                        _showCancelRequestDialog(context, currentUser),
-                    icon: const Icon(Icons.close),
-                    label: const Text('Cancel Request'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'Your request is pending approval. Click Cancel to revoke it, or wait $minutesRemaining minutes.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.orange.shade700,
-                ),
-              ),
-            ),
-          ],
         ),
-      );
-    }
+        const SizedBox(height: 10),
 
-    // Normal state - show enabled button
-    return OutlinedButton.icon(
-      onPressed: () => _showAccessRequestDialog(context, currentUser),
-      icon: const Icon(Icons.lock_open_outlined),
-      label: const Text('Request Account Access'),
+        if (visible.isEmpty)
+          const EmptyState(
+            icon: Icons.block_outlined,
+            title: 'No visible accounts',
+            subtitle: 'This user has no visible payment accounts.',
+          )
+        else
+          ...visible.map((a) => AccountCard(account: a)),
+
+        const SizedBox(height: 28),
+
+        AmountInputField(
+          controller: _amountCtrl,
+          errorText: _amountError,
+          onChanged: (_) {
+            if (_amountError != null) setState(() => _amountError = null);
+          },
+        ),
+        const SizedBox(height: 20),
+
+        PrimaryButton(
+          label: 'Split Automatically',
+          icon: const Icon(Icons.auto_fix_high, color: Colors.white),
+          onPressed: visible.isEmpty ? null : () => _splitAndNavigate(visible),
+        ),
+        const SizedBox(height: 12),
+
+        // ── Access button / approved badge ────────────────────────────────
+        if (isApproved)
+          _buildApprovedBadge()
+        else
+          _buildRequestButton(
+            context,
+            lastRequest,
+            sentRequestsAsync.isLoading,
+          ),
+      ],
     );
   }
 
-  /// Build UI when user doesn't have access to recipient's accounts
+  // ── Restricted UI (no access yet) ────────────────────────────────────────
+
   Widget _buildAccessRestrictedUI(BuildContext context, User? currentUser) {
-    // Check if already approved
-    final accessRequestState = ref.watch(accessRequestProvider);
+    final accessState = ref.watch(accessRequestProvider);
     final sentRequestsAsync = ref.watch(sentRequestsProvider);
 
-    // Get sent requests from either local state or the FutureProvider
-    List<AccessRequest>? sentRequests;
-    if (accessRequestState.sentRequests.isNotEmpty) {
-      sentRequests = accessRequestState.sentRequests;
-    } else {
-      sentRequests = sentRequestsAsync.value;
-    }
-
-    final isAlreadyApproved = sentRequests?.any(
-          (r) =>
-              r.receiverId == widget.recipient.id &&
-              r.status.name == 'approved',
-        ) ??
-        false;
+    final sentRequests = _resolveSentRequests(
+      accessState.sentRequests,
+      sentRequestsAsync,
+    );
+    final lastRequest = _lastRequest(sentRequests);
+    final isApproved = lastRequest?.status == AccessStatus.approved;
 
     return Center(
       child: SingleChildScrollView(
@@ -564,93 +386,93 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
               ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 32),
-            if (isAlreadyApproved)
-              Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: const [
-                        Icon(Icons.check_circle, color: Colors.green),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Request approved! You can now see their accounts.',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              )
-            else
-              Column(
-                children: [
-                  Text(
-                    'To send money, request access to their accounts:',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildAccessRequestButtonForRestricted(context, currentUser),
-                ],
+            if (isApproved)
+              _buildApprovedBanner()
+            else ...[
+              Text(
+                'To send money, request access to their accounts:',
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
               ),
+              const SizedBox(height: 24),
+              _buildRequestButton(
+                context,
+                lastRequest,
+                sentRequestsAsync.isLoading,
+                filled: true,
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  /// Build the access request button for restricted UI with state-aware UI
-  Widget _buildAccessRequestButtonForRestricted(
+  // ── Shared button builder ─────────────────────────────────────────────────
+
+  /// Renders the correct button variant based on [lastRequest] status.
+  ///
+  /// [filled] – use FilledButton style (restricted UI); otherwise OutlinedButton.
+  Widget _buildRequestButton(
     BuildContext context,
-    User? currentUser,
-  ) {
-    // Watch both local state and the FutureProvider for real-time updates
-    final accessRequestState = ref.watch(accessRequestProvider);
-    final sentRequestsAsync = ref.watch(sentRequestsProvider);
-
-    // Get sent requests from either local state or the FutureProvider
-    List<AccessRequest>? sentRequests;
-    bool isLoading = false;
-
-    // Prioritize local state for immediate updates, then fall back to FutureProvider
-    if (accessRequestState.sentRequests.isNotEmpty) {
-      sentRequests = accessRequestState.sentRequests;
-    } else {
-      isLoading = sentRequestsAsync.isLoading;
-      sentRequests = sentRequestsAsync.value;
+    AccessRequest? lastRequest,
+    bool isLoading, {
+    bool filled = false,
+  }) {
+    // ── Loading ──────────────────────────────────────────────────────────────
+    if (isLoading && lastRequest == null) {
+      final loadingIndicator = SizedBox(
+        height: 18,
+        width: 18,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: filled
+              ? const AlwaysStoppedAnimation<Color>(Colors.white)
+              : null,
+        ),
+      );
+      return filled
+          ? FilledButton.icon(
+              onPressed: null,
+              icon: loadingIndicator,
+              label: const Text('Loading...'),
+            )
+          : OutlinedButton.icon(
+              onPressed: null,
+              icon: loadingIndicator,
+              label: const Text('Loading...'),
+            );
     }
 
-    if (sentRequests == null || sentRequests.isEmpty) {
-      if (isLoading) {
-        return FilledButton.icon(
-          onPressed: null,
-          icon: const SizedBox(
-            height: 18,
-            width: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+    // ── Pending – show Cancel button ─────────────────────────────────────────
+    if (lastRequest?.status == AccessStatus.pending) {
+      return Tooltip(
+        textStyle: Theme.of(context).textTheme.bodySmall,
+        message:
+            'Request pending approval. Tap to cancel if you no longer need it.',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _showCancelRequestDialog(context),
+              icon: const Icon(Icons.close),
+              label: const Text('Cancel Request'),
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
             ),
-          ),
-          label: const Text('Loading...'),
-        );
-      }
-      // No requests found, show request button
+            const SizedBox(height: 8),
+            _pendingNotice(context),
+          ],
+        ),
+      );
+    }
+
+    // ── Default – Request Access ──────────────────────────────────────────────
+    if (filled) {
       return FilledButton.icon(
-        onPressed: () => _showAccessRequestDialog(context, currentUser),
+        onPressed: () => _showAccessRequestDialog(context),
         icon: const Icon(Icons.lock_open_outlined),
         label: const Text('Request Access'),
         style: FilledButton.styleFrom(
@@ -658,99 +480,81 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
         ),
       );
     }
+    return OutlinedButton.icon(
+      onPressed: () => _showAccessRequestDialog(context),
+      icon: const Icon(Icons.lock_open_outlined),
+      label: const Text('Request Account Access'),
+    );
+  }
 
-    // Find most recent request to this recipient
-    final lastRequest =
-        sentRequests
-            .where((r) => r.receiverId == widget.recipient.id)
-            .isEmpty
-        ? null
-        : sentRequests
-              .where((r) => r.receiverId == widget.recipient.id)
-              .fold<AccessRequest?>(
-                null,
-                (prev, current) =>
-                    prev == null || current.createdAt.isAfter(prev.createdAt)
-                    ? current
-                    : prev,
-              );
+  Widget _pendingNotice(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.1),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        'Your request is pending approval. Tap Cancel to revoke it.',
+        textAlign: TextAlign.center,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: Colors.orange.shade700),
+      ),
+    );
+  }
 
-    // Check if in cooldown (pending request within 1 hour)
-    bool isInCooldown = false;
-    int minutesRemaining = 0;
-
-    if (lastRequest != null && lastRequest.status == AccessStatus.pending) {
-      final timeSinceRequest = DateTime.now().difference(
-        lastRequest.createdAt,
-      );
-      const cooldownDuration = Duration(hours: 1);
-
-      if (timeSinceRequest < cooldownDuration) {
-        isInCooldown = true;
-        minutesRemaining =
-            (cooldownDuration.inMinutes - timeSinceRequest.inMinutes);
-      }
-    }
-
-    // If approved, hide button (access already granted)
-    if (lastRequest != null && lastRequest.status == AccessStatus.approved) {
-      return const SizedBox.shrink();
-    }
-
-    // If in cooldown/pending, show cancel option with helpful message
-    if (isInCooldown && lastRequest?.status == AccessStatus.pending) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () =>
-                      _showCancelRequestDialog(context, currentUser),
-                  icon: const Icon(Icons.close),
-                  label: const Text('Cancel Request'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                  ),
-                ),
-              ),
-            ],
+  Widget _buildApprovedBadge() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.check_circle, color: Colors.green),
+          SizedBox(width: 8),
+          Text(
+            'Access Granted',
+            style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
-              border: Border.all(color: Colors.orange.withOpacity(0.3)),
-              borderRadius: BorderRadius.circular(8),
-            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildApprovedBanner() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: const [
+          Icon(Icons.check_circle, color: Colors.green),
+          SizedBox(width: 12),
+          Expanded(
             child: Text(
-              'Your request is pending approval. Click Cancel to revoke it, or wait $minutesRemaining minutes.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.orange.shade700,
+              'Request approved! You can now see their accounts.',
+              style: TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
         ],
-      );
-    }
-
-    // Normal state - show enabled button
-    return FilledButton.icon(
-      onPressed: () => _showAccessRequestDialog(context, currentUser),
-      icon: const Icon(Icons.lock_open_outlined),
-      label: const Text('Request Access'),
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
       ),
     );
   }
 }
 
 // ─── Recipient header ─────────────────────────────────────────────────────────
-
 class _RecipientHeader extends StatelessWidget {
   final User recipient;
 
@@ -758,6 +562,13 @@ class _RecipientHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ── Resolve avatar URL once, up front ──────────────────────────────────
+    final String base = dotenv.env['BASE_URL'] ?? '';
+    final String? raw = recipient.avatar;
+    final String? avatarUrl = (raw != null && raw.isNotEmpty)
+        ? (raw.startsWith('http') ? raw : '$base/assets/$raw')
+        : null;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -766,14 +577,14 @@ class _RecipientHeader extends StatelessWidget {
             CircleAvatar(
               radius: 30,
               backgroundColor: AppTheme.surfaceVariant,
-              backgroundImage: recipient.avatar != null
-                  ? NetworkImage(recipient.avatar!)
+              backgroundImage: avatarUrl != null
+                  ? NetworkImage(avatarUrl)
                   : null,
-              child: recipient.avatar == null
+              child: avatarUrl == null
                   ? Text(
-                      recipient.displayName,
+                      recipient.initials,
                       style: const TextStyle(
-                        fontSize: 22,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.primary,
                       ),

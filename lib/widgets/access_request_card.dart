@@ -179,9 +179,7 @@ class AccessRequestCard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
-                  request.status.name == 'approved'
-                      ? '✓ Access Granted'
-                      : '✗ Request Rejected',
+                  request.status.name == 'approved' ? '✓ Access Granted' : '',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: request.status.name == 'approved'
                         ? Colors.green

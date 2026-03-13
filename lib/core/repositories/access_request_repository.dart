@@ -14,6 +14,19 @@ class AccessRequestRepository {
     required int rejectionCount,
   }) async {
     try {
+      // Backend-side guard: prevent duplicate pending requests
+      final existingPending = await accessService.getPendingRequest(
+        requesterId: requesterId,
+        receiverId: receiverId,
+      );
+
+      if (existingPending != null) {
+        throw ApiException(
+          message:
+              'You already have a pending request. Please wait for approval or cancel it first.',
+        );
+      }
+
       final response = await accessService.createRequest(
         requesterId: requesterId,
         receiverId: receiverId,
