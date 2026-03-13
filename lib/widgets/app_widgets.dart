@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/models/notification_model.dart' as notification_model;
@@ -117,6 +118,8 @@ class AccountCard extends StatelessWidget {
   final bool showStar;
   final ValueChanged<bool>? onToggleVisibility;
   final VoidCallback? onStar;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const AccountCard({
     super.key,
@@ -125,6 +128,8 @@ class AccountCard extends StatelessWidget {
     this.showStar = false,
     this.onToggleVisibility,
     this.onStar,
+    this.onEdit,
+    this.onDelete,
   });
 
   @override
@@ -132,7 +137,7 @@ class AccountCard extends StatelessWidget {
     final label =
         AppConstants.accountTypeLabels[account.type.name] ?? account.type.name;
 
-    return Card(
+    final card = Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -225,6 +230,53 @@ class AccountCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+
+    // If no swipe actions are provided, return plain card
+    if (onEdit == null && onDelete == null) return card;
+
+    return Slidable(
+      key: ValueKey('account-${account.id}'),
+      closeOnScroll: true,
+      startActionPane: onEdit == null
+          ? null
+          : ActionPane(
+              motion: const DrawerMotion(),
+              extentRatio: 0.26,
+              children: [
+                SlidableAction(
+                  onPressed: (_) => onEdit!.call(),
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  icon: Icons.edit_outlined,
+                  label: 'Edit',
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                ),
+              ],
+            ),
+      endActionPane: onDelete == null
+          ? null
+          : ActionPane(
+              motion: const DrawerMotion(),
+              extentRatio: 0.26,
+              children: [
+                SlidableAction(
+                  onPressed: (_) => onDelete!.call(),
+                  backgroundColor: AppTheme.error,
+                  foregroundColor: Colors.white,
+                  icon: Icons.delete_outline,
+                  label: 'Delete',
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                ),
+              ],
+            ),
+      child: card,
     );
   }
 

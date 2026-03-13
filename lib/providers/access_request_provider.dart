@@ -326,6 +326,66 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
       return false;
     }
   }
+
+  /// Hide/clear a request card from UI (requester or receiver side)
+  /// Only allowed when status is approved or rejected
+  Future<bool> hideRequest({
+    required String requestId,
+    required bool isReceived,
+  }) async {
+    final existing = isReceived
+        ? state.receivedRequests.firstWhere(
+            (r) => r.id == requestId,
+            orElse: () => AccessRequest(
+              id: '',
+              requesterId: '',
+              receiverId: '',
+              status: AccessStatus.pending,
+              createdAt: DateTime.now(),
+            ),
+          )
+        : state.sentRequests.firstWhere(
+            (r) => r.id == requestId,
+            orElse: () => AccessRequest(
+              id: '',
+              requesterId: '',
+              receiverId: '',
+              status: AccessStatus.pending,
+              createdAt: DateTime.now(),
+            ),
+          );
+
+    if (existing.id.isEmpty || !existing.canHide) return false;
+
+    final prevReceived = state.receivedRequests;
+    final prevSent = state.sentRequests;
+
+    // Optimistically remove from UI
+    state = state.copyWith(
+      receivedRequests: isReceived
+          ? prevReceived.where((r) => r.id != requestId).toList()
+          : prevReceived,
+      sentRequests: isReceived
+          ? prevSent
+          : prevSent.where((r) => r.id != requestId).toList(),
+    );
+
+    try {
+      if (isReceived) {
+        await _repository.hideForReceiver(requestId);
+      } else {
+        await _repository.hideForRequester(requestId);
+      }
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        receivedRequests: prevReceived,
+        sentRequests: prevSent,
+        error: e is ApiException ? e.message : 'Failed to hide request',
+      );
+      return false;
+    }
+  }
 }
 
 /// Provider for access request state
@@ -350,7 +410,10 @@ final hasAccessToAccountsProvider = FutureProvider.family<bool, String>((
   try {
     // Get repository to check for approved requests
     final repository = ref.read(accessRequestRepositoryProvider);
-    final requests = await repository.getReceivedRequests(receiverId);
+    final requests = await repository.getReceivedRequests(
+      receiverId,
+      includeHidden: true,
+    );
 
     // Check if there's an approved request from currentUserId
     return requests.any(

@@ -15,6 +15,8 @@ class AccessRequest {
   final AccessStatus status;
   final DateTime createdAt;
   final int rejectionCount;
+  final bool visibleForRequester;
+  final bool visibleForReceiver;
 
   const AccessRequest({
     required this.id,
@@ -23,6 +25,8 @@ class AccessRequest {
     required this.status,
     required this.createdAt,
     this.rejectionCount = 0,
+    this.visibleForRequester = true,
+    this.visibleForReceiver = true,
   });
 
   factory AccessRequest.fromJson(Map<String, dynamic> json) => AccessRequest(
@@ -37,6 +41,12 @@ class AccessRequest {
         DateTime.now(),
     rejectionCount:
         int.tryParse(json['rejection_count']?.toString() ?? '0') ?? 0,
+    visibleForRequester:
+        json['visible_for_requester'] != false &&
+        json['visibleForRequester'] != false,
+    visibleForReceiver:
+        json['visible_for_receiver'] != false &&
+        json['visibleForReceiver'] != false,
   );
 
   Map<String, dynamic> toJson() => {
@@ -45,7 +55,32 @@ class AccessRequest {
     'receiver': receiverId,
     'status': status.name,
     'created_at': createdAt.toIso8601String().split('T')[0],
+    'visible_for_requester': visibleForRequester,
+    'visible_for_receiver': visibleForReceiver,
   };
+
+  bool get canHide =>
+      status == AccessStatus.approved || status == AccessStatus.rejected;
+
+  AccessRequest copyWith({
+    String? id,
+    String? requesterId,
+    String? receiverId,
+    AccessStatus? status,
+    DateTime? createdAt,
+    int? rejectionCount,
+    bool? visibleForRequester,
+    bool? visibleForReceiver,
+  }) => AccessRequest(
+    id: id ?? this.id,
+    requesterId: requesterId ?? this.requesterId,
+    receiverId: receiverId ?? this.receiverId,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+    rejectionCount: rejectionCount ?? this.rejectionCount,
+    visibleForRequester: visibleForRequester ?? this.visibleForRequester,
+    visibleForReceiver: visibleForReceiver ?? this.visibleForReceiver,
+  );
 }
 
 /// A contact in a user's address book

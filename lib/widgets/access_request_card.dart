@@ -21,6 +21,7 @@ class AccessRequestCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPending = request.status.name == 'pending';
+    final canHide = request.canHide;
     final statusColor = _getStatusColor();
 
     // Fetch user info (requester if received, receiver if sent)
@@ -37,6 +38,7 @@ class AccessRequestCard extends ConsumerWidget {
           ref,
           userName: 'User ${userIdToFetch.substring(0, 8)}...',
           isPending: isPending,
+          canHide: canHide,
           statusColor: statusColor,
           isReceived: isReceived,
           labelText: labelText,
@@ -47,6 +49,7 @@ class AccessRequestCard extends ConsumerWidget {
         ref,
         userName: user.username,
         isPending: isPending,
+        canHide: canHide,
         statusColor: statusColor,
         isReceived: isReceived,
         labelText: labelText,
@@ -59,6 +62,7 @@ class AccessRequestCard extends ConsumerWidget {
     WidgetRef ref, {
     required String userName,
     required bool isPending,
+    required bool canHide,
     required Color statusColor,
     required bool isReceived,
     required String labelText,
@@ -176,17 +180,31 @@ class AccessRequestCard extends ConsumerWidget {
                 ],
               )
             else
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  request.status.name == 'approved' ? '✓ Access Granted' : '',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: request.status.name == 'approved'
-                        ? Colors.green
-                        : Colors.red,
-                    fontWeight: FontWeight.w600,
+              Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        request.status.name == 'approved'
+                            ? '✓ Access Granted'
+                            : 'Request rejected',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: request.status.name == 'approved'
+                              ? Colors.green
+                              : Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  if (canHide)
+                    TextButton.icon(
+                      onPressed: () => _clearRequest(context, ref),
+                      icon: const Icon(Icons.hide_source, size: 16),
+                      label: const Text('Hide'),
+                    ),
+                ],
               ),
           ],
         ),
@@ -272,6 +290,28 @@ class AccessRequestCard extends ConsumerWidget {
         SnackBar(
           content: Text(errorMsg ?? 'Failed to reject request'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _clearRequest(BuildContext context, WidgetRef ref) async {
+    final notifier = ref.read(accessRequestProvider.notifier);
+    final success = await notifier.hideRequest(
+      requestId: request.id,
+      isReceived: isReceived,
+    );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? 'Request hidden from your view'
+                : 'Unable to hide request',
+          ),
+          backgroundColor: success ? Colors.blueGrey : Colors.red,
           duration: const Duration(seconds: 2),
         ),
       );

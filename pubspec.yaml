@@ -54,6 +54,7 @@ dependencies:
   cached_network_image: ^3.3.1
   image_picker: ^1.0.0
   shimmer: ^3.0.0
+  flutter_slidable: ^3.1.0
   google_fonts: ^6.1.0
 
   # JSON Serialization

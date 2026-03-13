@@ -61,6 +61,68 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
       state = state.copyWith(error: 'Failed to update account: $e');
     }
   }
+
+  Future<FinancialAccount?> updateAccount({
+    required String accountId,
+    required String type,
+    required String accountIdentifier,
+    required double defaultLimit,
+    required int priority,
+    required bool isVisible,
+  }) async {
+    try {
+      final updated = await _service.updateAccount(
+        accountId: accountId,
+        type: type,
+        accountIdentifier: accountIdentifier,
+        defaultLimit: defaultLimit,
+        priority: priority,
+        isVisible: isVisible,
+      );
+
+      state = state.copyWith(
+        accounts: state.accounts
+            .map((a) => a.id == accountId ? updated : a)
+            .toList(),
+      );
+
+      return updated;
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to update account: $e');
+      return null;
+    }
+  }
+
+  Future<void> deleteAccount(String accountId) async {
+    final previous = state.accounts;
+    state = state.copyWith(
+      accounts: previous.where((a) => a.id != accountId).toList(),
+    );
+
+    try {
+      await _service.deleteAccount(accountId);
+    } catch (e) {
+      // Revert on failure
+      state = state.copyWith(
+        accounts: previous,
+        error: 'Failed to delete account: $e',
+      );
+      rethrow;
+    }
+  }
+
+  Future<void> updatePriority(String accountId, int priority) async {
+    try {
+      final updated = await _service.updatePriority(accountId, priority);
+      state = state.copyWith(
+        accounts: state.accounts
+            .map((a) => a.id == accountId ? updated : a)
+            .toList(),
+      );
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to update priority: $e');
+    }
+  }
 }
 
 final accountsProvider = StateNotifierProvider<AccountsNotifier, AccountsState>(

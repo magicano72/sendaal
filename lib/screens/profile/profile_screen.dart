@@ -6,11 +6,13 @@ import 'package:sendaal/services/api_client.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/financial_account_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/user_service.dart';
 import '../../widgets/app_widgets.dart';
 import 'add_account_sheet.dart';
+import 'edit_account_screen.dart';
 
 /// My Profile Screen — shows the current user's profile and financial accounts
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -142,9 +144,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         .toggleVisibility(account.id, account.isVisible);
                   },
                   onStar: () {
-                    // Toggle priority between 0 (starred) and 1
-                    // TODO: call update priority with account.priority == 0 ? 1 : 0
+                    final newPriority = account.priority == 0 ? 1 : 0;
+                    ref
+                        .read(accountsProvider.notifier)
+                        .updatePriority(account.id, newPriority);
                   },
+                  onEdit: () => _openEditAccount(account),
+                  onDelete: () => _confirmDeleteAccount(account),
                 ),
               ),
           ],
@@ -162,6 +168,70 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       builder: (_) => const AddAccountSheet(),
     );
+  }
+
+  Future<void> _openEditAccount(FinancialAccount account) async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => EditAccountScreen(account: account)),
+    );
+
+    final user = ref.read(authProvider).user;
+    if (updated == true && user != null) {
+      await ref.read(accountsProvider.notifier).loadAccounts(user.id);
+    }
+  }
+
+  Future<void> _confirmDeleteAccount(FinancialAccount account) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete account?'),
+        content: Text(
+          'This will remove ${account.accountIdentifier} from your profile.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final user = ref.read(authProvider).user;
+    try {
+      await ref.read(accountsProvider.notifier).deleteAccount(account.id);
+
+      if (user != null) {
+        await ref.read(accountsProvider.notifier).loadAccounts(user.id);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account deleted'),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
   }
 }
 
@@ -354,29 +424,6 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
             ],
           ),
         ],
-
-        // QR placeholder
-        const SizedBox(height: 16),
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: AppTheme.surfaceVariant,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.cardBorder),
-          ),
-          child: const Icon(
-            Icons.qr_code_2,
-            size: 48,
-            color: AppTheme.textHint,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'QR Code (coming soon)',
-          style: TextStyle(fontSize: 11, color: AppTheme.textHint),
-        ),
-        const SizedBox(height: 16),
       ],
     );
   }

@@ -5,6 +5,7 @@ import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/main_shell.dart';
 import '../../screens/notifications/notifications_screen.dart';
+import '../../screens/profile/edit_account_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/recipient/recipient_screen.dart';
 import '../../screens/search/search_screen.dart';
@@ -17,6 +18,7 @@ class AppRoutes {
   static const String register = '/register';
   static const String home = '/home';
   static const String profile = '/profile';
+  static const String editAccount = '/edit-account';
   static const String search = '/search';
   static const String recipient = '/recipient';
   static const String transfer = '/transfer';
@@ -39,6 +41,9 @@ class AppRouter {
         return _fade(const MainShell());
       case AppRoutes.profile:
         return _fade(const ProfileScreen());
+      case AppRoutes.editAccount:
+        final account = settings.arguments as FinancialAccount;
+        return _fade(EditAccountScreen(account: account));
       case AppRoutes.search:
         return _fade(const SearchScreen());
       case AppRoutes.recipient:

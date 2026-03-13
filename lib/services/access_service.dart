@@ -20,6 +20,8 @@ class AccessService {
         'requester': requesterId,
         'receiver': receiverId,
         'status': 'pending',
+        'visible_for_requester': true,
+        'visible_for_receiver': true,
       },
     );
     return AccessRequest.fromJson(response['data'] as Map<String, dynamic>);
@@ -38,10 +40,16 @@ class AccessService {
   }
 
   /// Get all requests received by a user (receiver perspective)
-  Future<List<AccessRequest>> getReceivedRequests(String userId) async {
+  Future<List<AccessRequest>> getReceivedRequests(
+    String userId, {
+    bool includeHidden = false,
+  }) async {
     final response = await _api.get(
       Endpoints.accessRequests,
-      queryParams: {'filter[receiver][_eq]': userId},
+      queryParams: {
+        'filter[receiver][_eq]': userId,
+        if (!includeHidden) 'filter[visible_for_receiver][_eq]': 'true',
+      },
     );
     final list = response['data'] as List<dynamic>? ?? [];
     return list
@@ -50,10 +58,16 @@ class AccessService {
   }
 
   /// Get all requests sent by a user (requester perspective)
-  Future<List<AccessRequest>> getSentRequests(String userId) async {
+  Future<List<AccessRequest>> getSentRequests(
+    String userId, {
+    bool includeHidden = false,
+  }) async {
     final response = await _api.get(
       Endpoints.accessRequests,
-      queryParams: {'filter[requester][_eq]': userId},
+      queryParams: {
+        'filter[requester][_eq]': userId,
+        if (!includeHidden) 'filter[visible_for_requester][_eq]': 'true',
+      },
     );
     final list = response['data'] as List<dynamic>? ?? [];
     return list
@@ -151,5 +165,23 @@ class AccessService {
   /// Delete/Cancel an access request
   Future<void> deleteRequest(String requestId) async {
     await _api.delete(Endpoints.accessRequestById(requestId));
+  }
+
+  /// Hide a request for the requester (UI clear)
+  Future<AccessRequest> hideForRequester(String requestId) async {
+    final response = await _api.patch(
+      Endpoints.accessRequestById(requestId),
+      body: {'visible_for_requester': false},
+    );
+    return AccessRequest.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  /// Hide a request for the receiver (UI clear)
+  Future<AccessRequest> hideForReceiver(String requestId) async {
+    final response = await _api.patch(
+      Endpoints.accessRequestById(requestId),
+      body: {'visible_for_receiver': false},
+    );
+    return AccessRequest.fromJson(response['data'] as Map<String, dynamic>);
   }
 }

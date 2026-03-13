@@ -40,18 +40,30 @@ class AccessRequestRepository {
   }
 
   /// Get all access requests received by a user (where receiver = user)
-  Future<List<AccessRequest>> getReceivedRequests(String userId) async {
+  Future<List<AccessRequest>> getReceivedRequests(
+    String userId, {
+    bool includeHidden = false,
+  }) async {
     try {
-      return await accessService.getReceivedRequests(userId);
+      return await accessService.getReceivedRequests(
+        userId,
+        includeHidden: includeHidden,
+      );
     } catch (e) {
       throw ApiException(message: 'Failed to fetch requests: ${e.toString()}');
     }
   }
 
   /// Get all access requests sent by a user (where requester = user)
-  Future<List<AccessRequest>> getSentRequests(String userId) async {
+  Future<List<AccessRequest>> getSentRequests(
+    String userId, {
+    bool includeHidden = false,
+  }) async {
     try {
-      return await accessService.getSentRequests(userId);
+      return await accessService.getSentRequests(
+        userId,
+        includeHidden: includeHidden,
+      );
     } catch (e) {
       throw ApiException(
         message: 'Failed to fetch sent requests: ${e.toString()}',
@@ -80,6 +92,24 @@ class AccessRequestRepository {
       );
     } catch (e) {
       throw ApiException(message: 'Failed to reject request: ${e.toString()}');
+    }
+  }
+
+  /// Hide a request for the requester (UI only)
+  Future<AccessRequest> hideForRequester(String requestId) async {
+    try {
+      return await accessService.hideForRequester(requestId);
+    } catch (e) {
+      throw ApiException(message: 'Failed to hide request: ${e.toString()}');
+    }
+  }
+
+  /// Hide a request for the receiver (UI only)
+  Future<AccessRequest> hideForReceiver(String requestId) async {
+    try {
+      return await accessService.hideForReceiver(requestId);
+    } catch (e) {
+      throw ApiException(message: 'Failed to hide request: ${e.toString()}');
     }
   }
 }

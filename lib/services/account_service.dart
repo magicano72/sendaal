@@ -72,4 +72,34 @@ class AccountService {
     final response = await _api.post(Endpoints.financialAccounts, body: body);
     return FinancialAccount.fromJson(response['data'] as Map<String, dynamic>);
   }
+
+  /// Update an existing financial account
+  Future<FinancialAccount> updateAccount({
+    required String accountId,
+    required String type,
+    required String accountIdentifier,
+    required double defaultLimit,
+    int priority = 0,
+    bool isVisible = true,
+  }) async {
+    final body = <String, dynamic>{
+      'type': type,
+      'account_identifier': accountIdentifier,
+      'default_limit': defaultLimit,
+      'priority': priority,
+      'is_visible': isVisible,
+    };
+
+    final response = await _api.patch(
+      '${Endpoints.financialAccounts}/$accountId',
+      body: body,
+    );
+
+    return FinancialAccount.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  /// Delete a financial account
+  Future<void> deleteAccount(String accountId) async {
+    await _api.delete('${Endpoints.financialAccounts}/$accountId');
+  }
 }

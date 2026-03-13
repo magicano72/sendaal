@@ -19,6 +19,7 @@ class AddAccountSheet extends ConsumerStatefulWidget {
 class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
   String _selectedType = 'instapay';
   String _instapayIdType = 'handle'; // 'handle' | 'phone'
+  String _bankIdType = 'account'; // 'account' | 'iban'
   final _identifierCtrl = TextEditingController();
   final _limitCtrl = TextEditingController();
   double _defaultLimit = AppConstants.accountTypeLimits['instapay'] ?? 10000;
@@ -51,10 +52,18 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
         }
         return null;
       case 'bank_account':
-        if (!RegExp(r'^[0-9]{8,30}$').hasMatch(value)) {
-          return 'Bank account should be 8-30 digits.';
+        if (_bankIdType == 'iban') {
+          final iban = value.toUpperCase();
+          if (!RegExp(r'^EG\d{27}$').hasMatch(iban)) {
+            return 'IBAN must start with EG followed by 27 digits.';
+          }
+          return null;
+        } else {
+          if (!RegExp(r'^[0-9]{8,30}$').hasMatch(value)) {
+            return 'Bank account should be 8-30 digits.';
+          }
+          return null;
         }
-        return null;
       case 'instapay':
         if (_instapayIdType == 'phone') {
           if (!RegExp(r'^(010|011|012|015)\d{8}$').hasMatch(value)) {
@@ -87,7 +96,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
   }
 
   Future<void> _save() async {
-    final identifier = _identifierCtrl.text.trim();
+    var identifier = _identifierCtrl.text.trim();
     final limitText = _limitCtrl.text.trim();
 
     final idError = _validateIdentifier(identifier);
@@ -96,12 +105,15 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
       return;
     }
 
-    // Normalize InstaPay: append @instapay.com only for non-numeric handles
+    // Normalize InstaPay: append @instapay only for non-numeric handles
     String normalizedIdentifier = identifier;
     if (_selectedType == 'instapay' && _instapayIdType == 'handle') {
       if (!identifier.toLowerCase().contains('@')) {
         normalizedIdentifier = '$identifier@instapay';
       }
+    }
+    if (_selectedType == 'bank_account' && _bankIdType == 'iban') {
+      normalizedIdentifier = normalizedIdentifier.toUpperCase();
     }
 
     final parsedLimit = double.tryParse(limitText);
@@ -196,6 +208,9 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
                 if (v != 'instapay') {
                   _instapayIdType = 'handle';
                 }
+                if (v != 'bank_account') {
+                  _bankIdType = 'account';
+                }
               });
             },
           ),
@@ -227,6 +242,29 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
             const SizedBox(height: 12),
           ],
 
+          if (_selectedType == 'bank_account') ...[
+            DropdownButtonFormField<String>(
+              value: _bankIdType,
+              decoration: const InputDecoration(
+                labelText: 'Bank Identifier Type',
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'account',
+                  child: Text('Account Number'),
+                ),
+                DropdownMenuItem(value: 'iban', child: Text('IBAN')),
+              ],
+              onChanged: (v) {
+                if (v == null) return;
+                setState(() {
+                  _bankIdType = v;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+
           // Identifier field
           TextFormField(
             controller: _identifierCtrl,
@@ -234,10 +272,12 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
               labelText: 'Account Identifier',
               hintText: _selectedType == 'instapay'
                   ? (_instapayIdType == 'handle'
-                        ? 'e.g. matrix or matrix@instapay'
+                        ? 'e.g. x or x@instapay'
                         : 'e.g. 01012345678')
                   : _selectedType == 'bank_account'
-                  ? 'e.g. 1234567890'
+                  ? (_bankIdType == 'iban'
+                        ? 'EG380019000500000000263180002'
+                        : 'e.g. 1234567890')
                   : 'e.g. 01012345678',
               prefixIcon: const Icon(Icons.tag),
             ),
