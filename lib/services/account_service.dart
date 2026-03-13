@@ -57,7 +57,8 @@ class AccountService {
     final body = {
       'user': userId,
       'type': type, // API now expects type as a string, not an array
-      'account_identifier': "$accountIdentifier",
+      'account_identifier': accountIdentifier,
+      'default_limit': defaultLimit,
       'priority': priority,
       'created_at': DateTime.now().toIso8601String().split(
         'T',

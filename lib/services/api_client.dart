@@ -38,6 +38,7 @@ class ApiClient {
   String? _authToken;
   String? _refreshToken;
   DateTime? _tokenExpiresAt;
+  bool _isRefreshing = false;
 
   void setToken(String token, {String? refreshToken, int? expiresIn}) {
     _authToken = token;
@@ -84,15 +85,117 @@ class ApiClient {
     );
   }
 
+  Future<void> _refreshIfExpired() async {
+    if (!isTokenExpired || _refreshToken == null) return;
+    await _tryRefreshToken();
+  }
+
+  Future<bool> _tryRefreshToken() async {
+    if (_refreshToken == null) return false;
+
+    // If a refresh is already running, wait for it to complete.
+    if (_isRefreshing) {
+      while (_isRefreshing) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      return _authToken != null;
+    }
+
+    _isRefreshing = true;
+    try {
+      final response = await http
+          .post(
+            _buildUri('/auth/refresh'),
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'refresh_token': _refreshToken}),
+          )
+          .timeout(_timeout);
+
+      final body = _parseResponse(response);
+      final data = body is Map ? body['data'] as Map<String, dynamic>? : null;
+      if (data == null || data['access_token'] == null) {
+        clearToken();
+        throw const ApiException(
+          'Session expired. Please log in again.',
+          statusCode: 401,
+        );
+      }
+
+      setToken(
+        data['access_token'].toString(),
+        refreshToken: data['refresh_token']?.toString() ?? _refreshToken,
+        expiresIn: data['expires'] is int
+            ? data['expires'] as int
+            : int.tryParse('${data['expires']}'),
+      );
+      return true;
+    } catch (e) {
+      clearToken();
+      if (e is ApiException) rethrow;
+      throw const ApiException(
+        'Session expired. Please log in again.',
+        statusCode: 401,
+      );
+    } finally {
+      _isRefreshing = false;
+    }
+  }
+
+  bool _looksLikeTokenExpired(String body) {
+    final lower = body.toLowerCase();
+    if (lower.contains('token expired')) return true;
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map) {
+        final message = decoded['message']?.toString().toLowerCase();
+        if (message != null && message.contains('token expired')) return true;
+        final errors = decoded['errors'];
+        if (errors is List && errors.isNotEmpty) {
+          final first = errors.first;
+          final msg = first['message']?.toString().toLowerCase();
+          final code =
+              first['extensions']?['code']?.toString().toLowerCase();
+          if (msg != null && msg.contains('token expired')) return true;
+          if (code != null && code.contains('token_expired')) return true;
+        }
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  Future<dynamic> _sendWithRefreshRetry(
+    Future<http.Response> Function() send,
+  ) async {
+    // Pre-emptively refresh if we know the token is expiring.
+    await _refreshIfExpired();
+
+    http.Response response = await send();
+
+    // Retry once on explicit token-expired responses.
+    if (response.statusCode == 401 &&
+        _refreshToken != null &&
+        _looksLikeTokenExpired(response.body)) {
+      final refreshed = await _tryRefreshToken();
+      if (refreshed) {
+        response = await send();
+      }
+    }
+
+    return _parseResponse(response);
+  }
+
   // ── GET ───────────────────────────────────────────────────────────────────
   Future<dynamic> get(String path, {Map<String, String>? queryParams}) async {
     print('[ApiClient] GET request: $_baseUrl$path');
     try {
-      final response = await http
-          .get(_buildUri(path, queryParams), headers: _headers)
-          .timeout(_timeout);
-      print('[ApiClient] GET response status: ${response.statusCode}');
-      return _parseResponse(response);
+      return await _sendWithRefreshRetry(
+        () => http
+            .get(_buildUri(path, queryParams), headers: _headers)
+            .timeout(_timeout),
+      );
     } on SocketException {
       throw const ApiException(
         'No internet connection. Please check your network.',
@@ -107,16 +210,15 @@ class ApiClient {
     print('[ApiClient] POST request: $_baseUrl$path');
     print('[ApiClient] POST body: $body');
     try {
-      final response = await http
-          .post(
-            _buildUri(path),
-            headers: _headers,
-            body: body != null ? jsonEncode(body) : null,
-          )
-          .timeout(_timeout);
-      print('[ApiClient] POST response status: ${response.statusCode}');
-      print('[ApiClient] POST response body: ${response.body}');
-      return _parseResponse(response);
+      return await _sendWithRefreshRetry(
+        () => http
+            .post(
+              _buildUri(path),
+              headers: _headers,
+              body: body != null ? jsonEncode(body) : null,
+            )
+            .timeout(_timeout),
+      );
     } on SocketException {
       throw const ApiException(
         'No internet connection. Please check your network.',
@@ -129,14 +231,15 @@ class ApiClient {
   // ── PATCH ─────────────────────────────────────────────────────────────────
   Future<dynamic> patch(String path, {Map<String, dynamic>? body}) async {
     try {
-      final response = await http
-          .patch(
-            _buildUri(path),
-            headers: _headers,
-            body: body != null ? jsonEncode(body) : null,
-          )
-          .timeout(_timeout);
-      return _parseResponse(response);
+      return await _sendWithRefreshRetry(
+        () => http
+            .patch(
+              _buildUri(path),
+              headers: _headers,
+              body: body != null ? jsonEncode(body) : null,
+            )
+            .timeout(_timeout),
+      );
     } on SocketException {
       throw const ApiException(
         'No internet connection. Please check your network.',
@@ -149,10 +252,11 @@ class ApiClient {
   // ── DELETE ────────────────────────────────────────────────────────────────
   Future<dynamic> delete(String path) async {
     try {
-      final response = await http
-          .delete(_buildUri(path), headers: _headers)
-          .timeout(_timeout);
-      return _parseResponse(response);
+      return await _sendWithRefreshRetry(
+        () => http
+            .delete(_buildUri(path), headers: _headers)
+            .timeout(_timeout),
+      );
     } on SocketException {
       throw const ApiException(
         'No internet connection. Please check your network.',
@@ -170,33 +274,51 @@ class ApiClient {
   }) async {
     print('[ApiClient] MULTIPART POST request: $_baseUrl$path');
     try {
-      final request = http.MultipartRequest('POST', _buildUri(path));
+      await _refreshIfExpired();
 
-      // Add headers (without Content-Type, let http package set it)
-      _headers.forEach((key, value) {
-        if (key != 'Content-Type') {
-          request.headers[key] = value;
+      Future<({int statusCode, String body})> sendRequest() async {
+        final request = http.MultipartRequest('POST', _buildUri(path));
+
+        // Add headers (without Content-Type, let http package set it)
+        _headers.forEach((key, value) {
+          if (key != 'Content-Type') {
+            request.headers[key] = value;
+          }
+        });
+
+        // Add form fields
+        request.fields.addAll(fields);
+
+        // Add files
+        if (files != null) {
+          for (var filename in files.keys) {
+            final filepath = files[filename]!;
+            request.files.add(
+              await http.MultipartFile.fromPath(filename, filepath),
+            );
+          }
         }
-      });
 
-      // Add form fields
-      request.fields.addAll(fields);
+        final streamed = await request.send().timeout(_timeout);
+        final responseBody = await streamed.stream.bytesToString();
 
-      // Add files
-      if (files != null) {
-        for (var filename in files.keys) {
-          final filepath = files[filename]!;
-          request.files.add(
-            await http.MultipartFile.fromPath(filename, filepath),
-          );
+        print('[ApiClient] MULTIPART response status: ${streamed.statusCode}');
+        print('[ApiClient] MULTIPART response body: $responseBody');
+        return (statusCode: streamed.statusCode, body: responseBody);
+      }
+
+      var result = await sendRequest();
+
+      if (result.statusCode == 401 &&
+          _refreshToken != null &&
+          _looksLikeTokenExpired(result.body)) {
+        final refreshed = await _tryRefreshToken();
+        if (refreshed) {
+          result = await sendRequest();
         }
       }
 
-      final response = await request.send().timeout(_timeout);
-      final responseBody = await response.stream.bytesToString();
-
-      print('[ApiClient] MULTIPART response status: ${response.statusCode}');
-      print('[ApiClient] MULTIPART response body: $responseBody');
+      final responseBody = result.body;
 
       // Parse JSON response
       dynamic body;
@@ -206,15 +328,15 @@ class ApiClient {
         body = responseBody;
       }
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (result.statusCode >= 200 && result.statusCode < 300) {
         return body;
       }
 
       // Handle error
       String message =
           _extractErrorMessage(body) ??
-          'An unexpected error occurred (HTTP ${response.statusCode})';
-      throw ApiException(message, statusCode: response.statusCode);
+          'An unexpected error occurred (HTTP ${result.statusCode})';
+      throw ApiException(message, statusCode: result.statusCode);
     } on SocketException {
       throw const ApiException(
         'No internet connection. Please check your network.',
