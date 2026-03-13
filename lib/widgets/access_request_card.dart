@@ -188,11 +188,15 @@ class AccessRequestCard extends ConsumerWidget {
                       child: Text(
                         request.status.name == 'approved'
                             ? '✓ Access Granted'
-                            : 'Request rejected',
+                            : request.status.name == 'rejected'
+                            ? 'Request rejected'
+                            : 'Request pending',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: request.status.name == 'approved'
-                              ? Colors.green
-                              : Colors.red,
+                              ? AppTheme.success
+                              : request.status.name == 'rejected'
+                              ? AppTheme.error
+                              : AppTheme.warning,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

@@ -64,6 +64,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     Navigator.pushNamed(context, AppRoutes.recipient, arguments: user);
   }
 
+  Future<void> _refreshHome() async {
+    final user = ref.read(authProvider).user;
+    if (user != null) {
+      await Future.wait([
+        ref
+            .read(accessRequestProvider.notifier)
+            .loadReceivedRequests(user.id),
+        ref.read(accessRequestProvider.notifier).loadSentRequests(user.id),
+        ref.read(notificationsProvider.notifier).loadNotifications(user.id),
+      ]);
+    }
+
+    final query = ref.read(searchProvider).query;
+    if (query.isNotEmpty) {
+      await ref.read(searchProvider.notifier).search(query);
+    } else {
+      // Clear suggestions/errors; access requests will still show.
+      ref.read(searchProvider.notifier).clear();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchState = ref.watch(searchProvider);
@@ -83,8 +104,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
 
-          // ── Results / States ───────────────────────────────────────────────
-          Expanded(child: _buildBody(searchState)),
+          // ── Results / States with pull-to-refresh ─────────────────────────
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refreshHome,
+              child: _buildBody(searchState),
+            ),
+          ),
         ],
       ),
     );
@@ -93,17 +119,29 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget _buildBody(SearchState state) {
     // Loading
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: const [
+          SizedBox(height: 200),
+          Center(child: CircularProgressIndicator()),
+        ],
+      );
     }
 
     // Error
     if (state.error != null) {
-      return Padding(
-        padding: const EdgeInsets.all(20),
-        child: ErrorBanner(
-          message: state.error!,
-          onRetry: () => ref.read(searchProvider.notifier).search(state.query),
-        ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: ErrorBanner(
+              message: state.error!,
+              onRetry: () =>
+                  ref.read(searchProvider.notifier).search(state.query),
+            ),
+          ),
+        ],
       );
     }
 
@@ -123,6 +161,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       }
 
       return SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         child: Center(
           child: Column(
             children: [
@@ -260,10 +299,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     // No results
     if (state.results.isEmpty) {
-      return EmptyState(
-        icon: Icons.search_off_outlined,
-        title: 'No users found',
-        subtitle: 'Try searching for "${state.query}" differently.',
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          const SizedBox(height: 60),
+          EmptyState(
+            icon: Icons.search_off_outlined,
+            title: 'No users found',
+            subtitle: 'Try searching for "${state.query}" differently.',
+          ),
+        ],
       );
     }
 

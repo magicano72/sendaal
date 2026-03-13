@@ -73,12 +73,16 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
         .where((r) => r.receiverId == widget.recipient.id)
         .toList();
     if (matching.isEmpty) return null;
-    return matching.fold<AccessRequest?>(
-      null,
-      (prev, current) =>
-          prev == null || current.createdAt.isAfter(prev.createdAt)
-          ? current
-          : prev,
+    // Prioritize any pending request regardless of date precision.
+    final pending = matching.where((r) => r.status == AccessStatus.pending);
+    if (pending.isNotEmpty) {
+      return pending.reduce(
+        (a, b) => a.createdAt.isAfter(b.createdAt) ? a : b,
+      );
+    }
+    // Otherwise pick the most recent by creation date.
+    return matching.reduce(
+      (a, b) => a.createdAt.isAfter(b.createdAt) ? a : b,
     );
   }
 
@@ -139,6 +143,9 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     if (result == true) {
       // Force refresh so button switches to "Cancel Request" immediately.
       ref.invalidate(sentRequestsProvider);
+      await ref
+          .read(accessRequestProvider.notifier)
+          .loadSentRequests(freshUser.id);
       _showSnackBar(context, 'Access request sent successfully', Colors.green);
     } else if (result == false) {
       _showSnackBar(context, 'Failed to send access request', Colors.red);
@@ -286,6 +293,12 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     // Single source of truth for request state.
     final accessState = ref.watch(accessRequestProvider);
     final sentRequestsAsync = ref.watch(sentRequestsProvider);
+    final currentUser = ref.watch(authProvider).user;
+    final rejectionCountAsync = currentUser == null
+        ? const AsyncValue.data(0)
+        : ref.watch(
+            rejectionCountProvider((currentUser.id, widget.recipient.id)),
+          );
 
     final sentRequests = _resolveSentRequests(
       accessState.sentRequests,
@@ -345,6 +358,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
             context,
             lastRequest,
             sentRequestsAsync.isLoading,
+            rejectionCountAsync: rejectionCountAsync,
           ),
       ],
     );
@@ -355,6 +369,11 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
   Widget _buildAccessRestrictedUI(BuildContext context, User? currentUser) {
     final accessState = ref.watch(accessRequestProvider);
     final sentRequestsAsync = ref.watch(sentRequestsProvider);
+    final rejectionCountAsync = currentUser == null
+        ? const AsyncValue.data(0)
+        : ref.watch(
+            rejectionCountProvider((currentUser.id, widget.recipient.id)),
+          );
 
     final sentRequests = _resolveSentRequests(
       accessState.sentRequests,
@@ -401,6 +420,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
                 context,
                 lastRequest,
                 sentRequestsAsync.isLoading,
+                rejectionCountAsync: rejectionCountAsync,
                 filled: true,
               ),
             ],
@@ -419,31 +439,12 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     BuildContext context,
     AccessRequest? lastRequest,
     bool isLoading, {
+    AsyncValue<int> rejectionCountAsync = const AsyncValue.data(0),
     bool filled = false,
   }) {
     // ── Loading ──────────────────────────────────────────────────────────────
     if (isLoading && lastRequest == null) {
-      final loadingIndicator = SizedBox(
-        height: 18,
-        width: 18,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: filled
-              ? const AlwaysStoppedAnimation<Color>(Colors.white)
-              : null,
-        ),
-      );
-      return filled
-          ? FilledButton.icon(
-              onPressed: null,
-              icon: loadingIndicator,
-              label: const Text('Loading...'),
-            )
-          : OutlinedButton.icon(
-              onPressed: null,
-              icon: loadingIndicator,
-              label: const Text('Loading...'),
-            );
+      return _buildLoadingButton(filled);
     }
 
     // ── Pending – show Cancel button ─────────────────────────────────────────
@@ -469,6 +470,17 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
       );
     }
 
+    final rejectionCount = rejectionCountAsync.value ?? 0;
+    final rejectionLoading = rejectionCountAsync.isLoading;
+
+    // ── Access denied after 3 rejections ────────────────────────────────────
+    if (rejectionLoading) {
+      return _buildLoadingButton(filled, label: 'Checking access...');
+    }
+    if (rejectionCount >= 3) {
+      return _buildAccessDenied(filled);
+    }
+
     // ── Default – Request Access ──────────────────────────────────────────────
     if (filled) {
       return FilledButton.icon(
@@ -485,6 +497,55 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
       icon: const Icon(Icons.lock_open_outlined),
       label: const Text('Request Account Access'),
     );
+  }
+
+  Widget _buildLoadingButton(bool filled, {String label = 'Loading...'}) {
+    final loadingIndicator = SizedBox(
+      height: 18,
+      width: 18,
+      child: CircularProgressIndicator(
+        strokeWidth: 2,
+        valueColor:
+            filled ? const AlwaysStoppedAnimation<Color>(Colors.white) : null,
+      ),
+    );
+    return filled
+        ? FilledButton.icon(
+            onPressed: null,
+            icon: loadingIndicator,
+            label: Text(label),
+          )
+        : OutlinedButton.icon(
+            onPressed: null,
+            icon: loadingIndicator,
+            label: Text(label),
+          );
+  }
+
+  Widget _buildAccessDenied(bool filled) {
+    final child = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: const [
+        Icon(Icons.block, size: 18),
+        SizedBox(width: 8),
+        Text('Access Denied'),
+      ],
+    );
+
+    return filled
+        ? FilledButton(
+            onPressed: null,
+            style: FilledButton.styleFrom(backgroundColor: Colors.grey.shade400),
+            child: child,
+          )
+        : OutlinedButton(
+            onPressed: null,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.grey,
+              side: BorderSide(color: Colors.grey.shade400),
+            ),
+            child: child,
+          );
   }
 
   Widget _pendingNotice(BuildContext context) {

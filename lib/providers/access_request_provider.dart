@@ -469,6 +469,17 @@ final getLastSentRequestProvider =
       );
     });
 
+/// Rejection count for a requester → receiver pair
+final rejectionCountProvider =
+    FutureProvider.family<int, (String, String)>((ref, params) async {
+      final (requesterId, receiverId) = params;
+      final service = ref.read(accessServiceProvider);
+      return service.getRejectionCount(
+        requesterId: requesterId,
+        receiverId: receiverId,
+      );
+    });
+
 /// Provider to get all sent requests for current user
 final sentRequestsProvider = FutureProvider<List<AccessRequest>>((ref) async {
   final currentUser = ref.watch(authProvider).user;
