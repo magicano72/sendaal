@@ -15,6 +15,7 @@ class Endpoints {
 
   // ── Financial Accounts ────────────────────────────────────────────────────
   static const String financialAccounts = '/items/financial_accounts';
+  static const String systemLimits = '/items/system_limits';
 
   // ── Access Requests ───────────────────────────────────────────────────────
   static const String accessRequests = '/items/access_requests';

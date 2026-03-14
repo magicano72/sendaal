@@ -58,7 +58,7 @@ class AccountService {
       'user': userId,
       'type': type, // API now expects type as a string, not an array
       'account_identifier': accountIdentifier,
-      'default_limit': defaultLimit,
+      'limit': defaultLimit,
       'priority': priority,
       'created_at': DateTime.now().toIso8601String().split(
         'T',
@@ -85,7 +85,7 @@ class AccountService {
     final body = <String, dynamic>{
       'type': type,
       'account_identifier': accountIdentifier,
-      'default_limit': defaultLimit,
+      'limit': defaultLimit,
       'priority': priority,
       'is_visible': isVisible,
     };

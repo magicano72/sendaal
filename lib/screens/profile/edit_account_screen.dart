@@ -186,10 +186,12 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
             DropdownButtonFormField<String>(
               value: _selectedType,
               decoration: const InputDecoration(labelText: 'Account Type'),
-              items: AppConstants.accountTypeLabels.entries
+              items: AppConstants.accountTypeLimits.keys
                   .map(
-                    (e) =>
-                        DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    (key) => DropdownMenuItem(
+                      value: key,
+                      child: Text(AppConstants.displayLabel(key)),
+                    ),
                   )
                   .toList(),
               onChanged: (v) {

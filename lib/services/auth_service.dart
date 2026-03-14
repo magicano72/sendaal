@@ -25,14 +25,14 @@ class AuthService {
   }
 
   /// Register a new user account
-  Future<void> register({
+  Future<String> register({
     required String email,
     required String password,
     required String username,
     required String firstName,
     required String phone,
   }) async {
-    await _api.post(
+    final response = await _api.post(
       Endpoints.register,
       body: {
         'email': email,
@@ -42,6 +42,8 @@ class AuthService {
         'phone': phone,
       },
     );
+    final data = response['data'] as Map<String, dynamic>? ?? {};
+    return data['id']?.toString() ?? '';
   }
 
   /// Log out and clear the stored token

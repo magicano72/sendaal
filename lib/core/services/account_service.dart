@@ -1,15 +1,8 @@
 import '../../services/api_client.dart';
+import '../constants/app_constants.dart';
 
 class AccountService {
   final ApiClient apiClient;
-
-  // System default limits for each account type
-  static const Map<String, int> defaultLimits = {
-    'instapay': 50000,
-    'digital_wallet': 30000,
-    'bank_account': 100000,
-    'telda': 20000,
-  };
 
   AccountService(this.apiClient);
 
@@ -32,7 +25,8 @@ class AccountService {
 
   /// Get limit for account type
   static int getLimitForType(String accountType) {
-    return defaultLimits[accountType.toLowerCase()] ?? 0;
+    final limit = AppConstants.limitForAccountType(accountType);
+    return limit.toInt();
   }
 
   /// Calculate smart split suggestion

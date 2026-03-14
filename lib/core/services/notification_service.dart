@@ -12,7 +12,7 @@ class NotificationService {
         '/items/notifications',
         queryParams: {
           'filter[user][_eq]': userId,
-          'sort': '-createdAt',
+          'sort': '-created_at',
           'limit': '50',
         },
       );
@@ -30,7 +30,7 @@ class NotificationService {
   Future<Map<String, dynamic>> markAsRead(String notificationId) async {
     return await apiClient.patch(
       '/items/notifications/$notificationId',
-      body: {'isRead': true},
+      body: {'is_read': true},
     );
   }
 
@@ -39,7 +39,7 @@ class NotificationService {
     try {
       final notifications = await getNotifications(userId);
       final unreadNotifications = notifications
-          .where((n) => n['isRead'] != true)
+          .where((n) => n['is_read'] != true)
           .toList();
 
       for (var notification in unreadNotifications) {

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/models/notification_model.dart';
 import '../core/models/user_model.dart';
+import '../services/local_notification_service.dart';
 import '../services/notification_service.dart';
 import '../services/user_service.dart';
 
@@ -109,6 +110,7 @@ class NotificationsState {
 
 class NotificationsNotifier extends StateNotifier<NotificationsState> {
   final NotificationService _service;
+  final Set<String> _notifiedIds = {};
 
   NotificationsNotifier(this._service) : super(const NotificationsState());
 
@@ -116,6 +118,18 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final list = await _service.getNotifications(userId);
+      // Trigger local push for any new unread notifications
+      for (final n in list) {
+        if (n.isRead == false && !_notifiedIds.contains(n.id)) {
+          _notifiedIds.add(n.id);
+          await LocalNotificationService.showNotification(
+            id: n.id,
+            title: n.title,
+            body: n.body,
+            payload: n.id,
+          );
+        }
+      }
       state = state.copyWith(isLoading: false, notifications: list);
     } catch (e) {
       state = state.copyWith(

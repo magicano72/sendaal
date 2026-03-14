@@ -28,7 +28,7 @@ class AuthService {
         },
       );
       print('[AuthService] Registration successful: $response');
-      return response;
+      return response is Map<String, dynamic> ? response : {};
     } catch (e) {
       print('[AuthService] Registration error: $e');
       rethrow;

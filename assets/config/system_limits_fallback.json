@@ -1,0 +1,9 @@
+{
+  "data": [
+    { "account_name": "instapay", "daily_limit": 50000 },
+    { "account_name": "digital_wallet", "daily_limit": 30000 },
+    { "account_name": "bank_account", "daily_limit": 100000 },
+    { "account_name": "telda", "daily_limit": 20000 },
+    { "account_name": "other", "daily_limit": 10000 }
+  ]
+}

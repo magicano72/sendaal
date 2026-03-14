@@ -6,14 +6,6 @@ import '../services/account_service.dart';
 class AccountRepository {
   final AccountService accountService;
 
-  // Default system limits for split algorithm
-  static const Map<String, int> defaultLimits = {
-    'instapay': 50000,
-    'digital_wallet': 30000,
-    'bank_account': 100000,
-    'telda': 20000,
-  };
-
   AccountRepository(this.accountService);
 
   Future<List<FinancialAccount>> getUserAccounts(String userId) async {

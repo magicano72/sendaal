@@ -49,8 +49,7 @@ class FinancialAccount {
       userId: json['user']?.toString() ?? json['userId']?.toString() ?? '',
       type: AccountType.fromString(typeValue),
       accountIdentifier: json['account_identifier']?.toString() ?? '',
-      defaultLimit:
-          double.tryParse(json['default_limit']?.toString() ?? '0') ?? 0,
+      defaultLimit: double.tryParse(json['limit']?.toString() ?? '0') ?? 0,
       priority: json['priority'] is int
           ? json['priority']
           : int.tryParse(json['priority']?.toString() ?? '0') ?? 0,
@@ -64,7 +63,7 @@ class FinancialAccount {
       'user': userId,
       'type': type.name,
       'account_identifier': accountIdentifier,
-      'default_limit': defaultLimit,
+      'limit': defaultLimit,
       'priority': priority,
     };
     // Only include is_visible if it's false (true is the default)

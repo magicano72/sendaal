@@ -1,8 +1,3 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'notification_model.g.dart';
-
-@JsonSerializable()
 class Notification {
   final String id;
   final String userId;
@@ -24,9 +19,32 @@ class Notification {
     this.relatedId,
   });
 
-  factory Notification.fromJson(Map<String, dynamic> json) =>
-      _$NotificationFromJson(json);
-  Map<String, dynamic> toJson() => _$NotificationToJson(this);
+  factory Notification.fromJson(Map<String, dynamic> json) {
+    return Notification(
+      id: json['id']?.toString() ?? '',
+      userId:
+          json['user']?.toString() ?? json['userId']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      body: json['body']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'system',
+      isRead: json['is_read'] == true || json['isRead'] == true,
+      createdAt:
+          json['created_at']?.toString() ?? json['createdAt']?.toString() ?? '',
+      relatedId:
+          json['related_id']?.toString() ?? json['relatedId']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'user': userId,
+        'title': title,
+        'body': body,
+        'type': type,
+        'is_read': isRead,
+        'created_at': createdAt,
+        'related_id': relatedId,
+      };
 
   Notification copyWith({
     String? id,

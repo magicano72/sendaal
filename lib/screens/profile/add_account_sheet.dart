@@ -22,7 +22,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
   String _bankIdType = 'account'; // 'account' | 'iban'
   final _identifierCtrl = TextEditingController();
   final _limitCtrl = TextEditingController();
-  double _defaultLimit = AppConstants.accountTypeLimits['instapay'] ?? 10000;
+  double _defaultLimit = AppConstants.limitForAccountType('instapay');
   int _priority = 2; // Default priority
   bool _isLoading = false;
   String? _error;
@@ -190,17 +190,17 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
           DropdownButtonFormField<String>(
             value: _selectedType,
             decoration: const InputDecoration(labelText: 'Account Type'),
-            items: AppConstants.accountTypeLabels.entries
+            items: AppConstants.accountTypeLimits.keys
                 .map(
-                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                  (key) => DropdownMenuItem(
+                    value: key,
+                    child: Text(AppConstants.displayLabel(key)),
+                  ),
                 )
                 .toList(),
             onChanged: (v) {
               if (v == null) return;
-              final newDefault =
-                  AppConstants.accountTypeLimits[v] ??
-                  AppConstants.accountTypeLimits[_selectedType] ??
-                  _defaultLimit;
+              final newDefault = AppConstants.limitForAccountType(v);
               setState(() {
                 _selectedType = v;
                 _defaultLimit = newDefault;

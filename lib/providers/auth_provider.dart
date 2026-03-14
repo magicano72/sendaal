@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/error/exceptions.dart';
@@ -5,6 +7,7 @@ import '../core/models/user_model.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/directus_error_parser.dart';
 import '../services/api_client.dart' hide ApiException;
+import '../services/notification_service.dart';
 import '../services/user_service.dart';
 
 /// Holds the currently authenticated user (null = logged out)
@@ -47,6 +50,10 @@ final authServiceProvider = Provider<AuthService>(
   (ref) => AuthService(ApiClient.instance),
 );
 
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => NotificationService(apiClient: ApiClient.instance),
+);
+
 /// Provides the UserService singleton
 final userServiceProvider = Provider<UserService>((ref) => UserService());
 
@@ -54,8 +61,13 @@ final userServiceProvider = Provider<UserService>((ref) => UserService());
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
   final UserService _userService;
+  final NotificationService _notificationService;
 
-  AuthNotifier(this._authService, this._userService) : super(const AuthState());
+  AuthNotifier(
+    this._authService,
+    this._userService,
+    this._notificationService,
+  ) : super(const AuthState());
 
   Future<bool> login(String email, String password) async {
     print('[AuthNotifier] Starting login for: $email');
@@ -113,7 +125,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isRegisterLoading: true, clearError: true);
     try {
       // Set 30 second timeout for registration request
-      await _authService
+      final userId = await _authService
           .register(
             email: email,
             password: password,
@@ -129,6 +141,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
               );
             },
           );
+      final createdId = (userId['data'] is Map &&
+              (userId['data']['id'] != null))
+          ? userId['data']['id'].toString()
+          : '';
+      if (createdId.isNotEmpty) {
+        // Fire-and-forget welcome notification; errors shouldn’t block signup
+        unawaited(_notificationService.createWelcomeNotification(createdId));
+      }
       print('[AuthNotifier] Registration completed successfully');
       state = state.copyWith(isRegisterLoading: false);
       return true;
@@ -198,5 +218,6 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
     ref.read(authServiceProvider),
     ref.read(userServiceProvider),
+    ref.read(notificationServiceProvider),
   );
 });
