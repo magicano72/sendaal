@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/models/index.dart';
+import '../../core/models/index.dart' hide AccessRequest;
+import '../../models/access_request_model.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/main_shell.dart';
@@ -8,6 +9,7 @@ import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/profile/edit_account_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/recipient/recipient_screen.dart';
+import '../../screens/requests/requester_details_screen.dart';
 import '../../screens/search/search_screen.dart';
 import '../../screens/transfer/transfer_screen.dart';
 import '../../screens/transfer/transfer_success_screen.dart';
@@ -24,6 +26,7 @@ class AppRoutes {
   static const String transfer = '/transfer';
   static const String transferSuccess = '/transfer-success';
   static const String notifications = '/notifications';
+  static const String requesterDetails = '/requester-details';
 }
 
 /// Central router configuration.
@@ -56,6 +59,9 @@ class AppRouter {
         return _fade(const TransferSuccessScreen());
       case AppRoutes.notifications:
         return _fade(const NotificationsScreen());
+      case AppRoutes.requesterDetails:
+        final request = settings.arguments as AccessRequest;
+        return _fade(RequesterDetailsScreen(request: request));
       default:
         return _fade(const LoginScreen());
     }
