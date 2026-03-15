@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/services/connectivity_service.dart';
@@ -64,52 +65,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 40.h),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
 
                 // Logo / Brand
                 Center(
                   child: Container(
-                    width: 72,
-                    height: 72,
+                    width: 72.w,
+                    height: 72.w,
                     decoration: BoxDecoration(
                       color: AppTheme.primary,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(20.r),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.send_rounded,
                       color: Colors.white,
-                      size: 36,
+                      size: 36.r,
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
-                const Center(
+                Center(
                   child: Text(
                     'Sendaal',
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 28.sp,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.textPrimary,
                     ),
                   ),
                 ),
-                const Center(
+                Center(
                   child: Text(
                     'Smart payment splitting',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       color: AppTheme.textSecondary,
                     ),
                   ),
                 ),
-                const SizedBox(height: 48),
+                SizedBox(height: 48.h),
 
                 // Email
                 TextFormField(
@@ -121,7 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   validator: (v) => ValidationService.validateEmail(v),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
 
                 // Password
                 TextFormField(
@@ -148,29 +149,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 // Error message
                 if (auth.error != null) ...[
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   ErrorBanner(message: auth.error!),
                 ],
-                const SizedBox(height: 24), // Login button
+                SizedBox(height: 24.h), // Login button
                 PrimaryButton(
                   label: 'Sign In',
                   isLoading: auth.isLoginLoading,
                   onPressed: _login,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20.h),
 
                 // Register link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       "Don't have an account?",
-                      style: TextStyle(color: AppTheme.textSecondary),
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 14.sp,
+                      ),
                     ),
                     TextButton(
                       onPressed: () =>
                           Navigator.pushNamed(context, AppRoutes.register),
-                      child: const Text('Sign Up'),
+                      child: Text(
+                        'Sign Up',
+                        style: TextStyle(fontSize: 14.sp),
+                      ),
                     ),
                   ],
                 ),

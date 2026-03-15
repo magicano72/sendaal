@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../core/router/app_router.dart';
 import '../core/theme/app_theme.dart';
 import '../models/access_request_model.dart';
-import '../providers/auth_provider.dart';
 import '../providers/access_request_provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import 'shimmer_widgets.dart';
 
@@ -43,7 +44,7 @@ class AccessRequestCard extends ConsumerWidget {
     final labelText = isReceived ? 'From: @' : 'To: @';
 
     return userAsync.when(
-      loading: () => const ShimmerCard(height: 140),
+      loading: () => ShimmerCard(height: 140.h),
       error: (error, stackTrace) {
         // Fallback UI if user fetch fails
         return _buildCard(
@@ -85,13 +86,15 @@ class AccessRequestCard extends ConsumerWidget {
   }) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       elevation: 1,
       child: InkWell(
-        onTap: canOpenDetails ? () => _openRequesterDetails(context, request) : null,
-        borderRadius: BorderRadius.circular(12),
+        onTap: canOpenDetails
+            ? () => _openRequesterDetails(context, request)
+            : null,
+        borderRadius: BorderRadius.circular(12.r),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -108,49 +111,48 @@ class AccessRequestCard extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                isReceived ? 'Access Request' : 'Request Status',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
+                                isReceived
+                                    ? 'Access Request'
+                                    : 'Request Status',
+                                style: Theme.of(context).textTheme.titleSmall
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            SizedBox(width: 6.w),
                             Icon(
                               Icons.chevron_right,
-                              size: 18,
+                              size: 18.r,
                               color: canOpenDetails
-                                  ? AppTheme.textHint
-                                  : AppTheme.textHint.withOpacity(0.3),
+                                  ? AppTheme.primary
+                                  : AppTheme.primary.withOpacity(0.3),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4.h),
                         Text(
                           '$labelText$userName',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppTheme.textSecondary,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppTheme.textSecondary),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 5.h,
                     ),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(16.r),
                       border: Border.all(color: statusColor.withOpacity(0.3)),
                     ),
                     child: Text(
                       request.status.name.toUpperCase(),
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 11.sp,
                         fontWeight: FontWeight.w600,
                         color: statusColor,
                       ),
@@ -158,26 +160,26 @@ class AccessRequestCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
 
               // Date row
               Row(
                 children: [
                   Icon(
                     Icons.calendar_today_outlined,
-                    size: 14,
+                    size: 14.r,
                     color: AppTheme.textSecondary,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   Text(
                     _formatDate(request.createdAt),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
 
               // Action buttons - ONLY show if received and pending
               if (showActions)
@@ -185,31 +187,32 @@ class AccessRequestCard extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _rejectRequest(context, ref, request.id),
-                        icon: const Icon(Icons.close, size: 16),
-                        label: const Text(
+                        onPressed: () =>
+                            _rejectRequest(context, ref, request.id),
+                        icon: Icon(Icons.close, size: 16.r),
+                        label: Text(
                           'Reject',
-                          style: TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: 13.sp),
                         ),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: EdgeInsets.symmetric(vertical: 8.h),
                           side: const BorderSide(color: Colors.red),
                           foregroundColor: Colors.red,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12.w),
                     Expanded(
                       child: FilledButton.icon(
                         onPressed: () =>
                             _approveRequest(context, ref, request.id),
-                        icon: const Icon(Icons.check, size: 16),
-                        label: const Text(
+                        icon: Icon(Icons.check, size: 16.r),
+                        label: Text(
                           'Approve',
-                          style: TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: 13.sp),
                         ),
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: EdgeInsets.symmetric(vertical: 8.h),
                           backgroundColor: AppTheme.primary,
                         ),
                       ),
@@ -221,19 +224,20 @@ class AccessRequestCard extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
                         child: Text(
                           request.status.name == 'approved'
                               ? 'Access granted'
                               : request.status.name == 'rejected'
-                                  ? 'Request rejected'
-                                  : 'Request pending',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              ? 'Request rejected'
+                              : 'Request pending',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 color: request.status.name == 'approved'
                                     ? AppTheme.success
                                     : request.status.name == 'rejected'
-                                        ? AppTheme.error
-                                        : AppTheme.warning,
+                                    ? AppTheme.error
+                                    : AppTheme.accent,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
@@ -242,8 +246,8 @@ class AccessRequestCard extends ConsumerWidget {
                     if (canHide)
                       TextButton.icon(
                         onPressed: () => _clearRequest(context, ref),
-                        icon: const Icon(Icons.hide_source, size: 16),
-                        label: const Text('Hide'),
+                        icon: Icon(Icons.hide_source, size: 16.r),
+                        label: Text('Hide', style: TextStyle(fontSize: 13.sp)),
                       ),
                   ],
                 ),

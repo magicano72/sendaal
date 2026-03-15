@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../core/theme/app_theme.dart';
 import '../models/access_request_model.dart';
@@ -16,7 +17,7 @@ class AccessRequestTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -33,7 +34,7 @@ class AccessRequestTile extends ConsumerWidget {
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         'From: ${request.requesterId.substring(0, 8)}...',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -44,38 +45,38 @@ class AccessRequestTile extends ConsumerWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
                   ),
                   decoration: BoxDecoration(
                     color: _statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(20.r),
                   ),
                   child: Text(
                     request.status.name.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: TextStyle(
+                      fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
 
             // Date
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 16),
-                const SizedBox(width: 8),
+                Icon(Icons.calendar_today_outlined, size: 16.r),
+                SizedBox(width: 8.w),
                 Text(
                   '${request.createdAt.year}-${request.createdAt.month.toString().padLeft(2, '0')}-${request.createdAt.day.toString().padLeft(2, '0')}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
 
             // Action buttons (only if pending)
             if (request.status == AccessStatus.pending)
@@ -84,20 +85,20 @@ class AccessRequestTile extends ConsumerWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _rejectRequest(context, ref, request.id),
-                      icon: const Icon(Icons.close, size: 18),
-                      label: const Text('Reject'),
+                      icon: Icon(Icons.close, size: 18.r),
+                      label: Text('Reject', style: TextStyle(fontSize: 13.sp)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12.w),
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () =>
                           _approveRequest(context, ref, request.id),
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text('Approve'),
+                      icon: Icon(Icons.check, size: 18.r),
+                      label: Text('Approve', style: TextStyle(fontSize: 13.sp)),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppTheme.primary,
                       ),
@@ -107,7 +108,7 @@ class AccessRequestTile extends ConsumerWidget {
               )
             else
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: EdgeInsets.symmetric(vertical: 12.h),
                 child: Text(
                   request.status == AccessStatus.approved
                       ? '✓ Access Granted'
@@ -226,45 +227,48 @@ class _SendAccessRequestDialogState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Request access to ${widget.recipientName}\'s accounts?'),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceVariant,
-                borderRadius: BorderRadius.circular(8),
+                color: AppTheme.accent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
               ),
-              child: const Text(
+              child: Text(
                 'They will be able to approve or reject your request',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: AppTheme.textSecondary,
+                ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             // Show error message if request failed
             if (errorMessage != null)
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
                   color: Colors.red.withOpacity(0.1),
                   border: Border.all(color: Colors.red.withOpacity(0.3)),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.error_outline,
                           color: Colors.red,
-                          size: 20,
+                          size: 20.r,
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
                             errorMessage!,
                             style: TextStyle(
                               color: Colors.red.shade700,
-                              fontSize: 12,
+                              fontSize: 12.sp,
                             ),
                           ),
                         ),
@@ -273,7 +277,7 @@ class _SendAccessRequestDialogState
                   ],
                 ),
               ),
-            if (errorMessage != null) const SizedBox(height: 16),
+            if (errorMessage != null) SizedBox(height: 16.h),
             // Show rejection count warning if applicable
             if (auth.user != null && errorMessage == null)
               _buildRejectionWarning(context, auth.user!.id),
@@ -347,8 +351,7 @@ class _SendAccessRequestDialogState
 
                           // Other errors - allow retry inline
                           setState(() {
-                            errorMessage =
-                                errorMsg ?? 'Failed to send request';
+                            errorMessage = errorMsg ?? 'Failed to send request';
                             isLoading = false;
                           });
                         }
@@ -356,12 +359,12 @@ class _SendAccessRequestDialogState
                     }
                   },
             child: (isLoading || accessRequest.isCreating)
-                ? const SizedBox(
-                    height: 16,
-                    width: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                ? SizedBox(
+                    height: 16.w,
+                    width: 16.w,
+                    child: CircularProgressIndicator(strokeWidth: 2.w),
                   )
-                : const Text('Send Request'),
+                : Text('Send Request', style: TextStyle(fontSize: 14.sp)),
           ),
       ],
     );
@@ -389,16 +392,16 @@ class _SendAccessRequestDialogState
 
         if (rejectionCount >= 3) {
           return Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
               color: Colors.red.withOpacity(0.1),
               border: Border.all(color: Colors.red.withOpacity(0.3)),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             child: Row(
               children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 20),
-                const SizedBox(width: 12),
+                Icon(Icons.error_outline, color: Colors.red, size: 20.r),
+                SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
                     'You have reached the rejection limit. You cannot send more requests to this user.',
@@ -416,16 +419,16 @@ class _SendAccessRequestDialogState
         final warningColor = remaining == 1 ? Colors.red : Colors.orange;
 
         return Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             color: warningColor.withOpacity(0.1),
             border: Border.all(color: warningColor.withOpacity(0.3)),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8.r),
           ),
           child: Row(
             children: [
-              Icon(Icons.warning_outlined, color: warningColor, size: 20),
-              const SizedBox(width: 12),
+              Icon(Icons.warning_outlined, color: warningColor, size: 20.r),
+              SizedBox(width: 12.w),
               Expanded(
                 child: Text(
                   'This user has rejected your request $rejectionCount time${rejectionCount != 1 ? 's' : ''}. You have $remaining more attempt${remaining != 1 ? 's' : ''} before being permanently blocked.',

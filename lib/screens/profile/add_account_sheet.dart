@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
@@ -154,10 +155,10 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        left: 24.w,
+        right: 24.w,
+        top: 24.h,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24.h,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -166,25 +167,25 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
           // Handle bar
           Center(
             child: Container(
-              width: 40,
-              height: 4,
+              width: 40.w,
+              height: 4.h,
               decoration: BoxDecoration(
                 color: AppTheme.divider,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(2.r),
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
 
-          const Text(
+          Text(
             'Add Payment Account',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 18.sp,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
 
           // Account type dropdown
           DropdownButtonFormField<String>(
@@ -214,7 +215,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
               });
             },
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
 
           if (_selectedType == 'instapay') ...[
             DropdownButtonFormField<String>(
@@ -239,7 +240,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
                 });
               },
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
           ],
 
           if (_selectedType == 'bank_account') ...[
@@ -262,7 +263,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
                 });
               },
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
           ],
 
           // Identifier field
@@ -283,7 +284,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
             ),
             keyboardType: TextInputType.text,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
 
           // Default limit field
           TextFormField(
@@ -296,7 +297,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
 
           // Priority field
           Row(
@@ -304,8 +305,8 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
               Expanded(
                 child: Text(
                   'Priority: $_priority',
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: TextStyle(
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -321,11 +322,11 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
           ),
 
           if (_error != null) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             ErrorBanner(message: _error!),
           ],
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           PrimaryButton(
             label: 'Save Account',

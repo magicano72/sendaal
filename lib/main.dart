@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -25,14 +26,21 @@ class SendaalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Sendaal',
-      debugShowCheckedModeBanner: false,
-      navigatorKey: LocalNotificationService.navigatorKey,
-      theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
-      onGenerateRoute: AppRouter.generateRoute,
-      initialRoute: AppRoutes.login,
+    return ScreenUtilInit(
+      designSize: const Size(390, 844),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'Sendaal',
+          debugShowCheckedModeBanner: false,
+          navigatorKey: LocalNotificationService.navigatorKey,
+          theme: AppTheme.lightTheme,
+          home: const LoginScreen(),
+          onGenerateRoute: AppRouter.generateRoute,
+          initialRoute: AppRoutes.login,
+        );
+      },
     );
   }
 }

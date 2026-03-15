@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sendaal/models/access_request_model.dart';
 import 'package:sendaal/providers/access_request_provider.dart';
 import 'package:sendaal/providers/auth_provider.dart';
@@ -76,14 +77,10 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     // Prioritize any pending request regardless of date precision.
     final pending = matching.where((r) => r.status == AccessStatus.pending);
     if (pending.isNotEmpty) {
-      return pending.reduce(
-        (a, b) => a.createdAt.isAfter(b.createdAt) ? a : b,
-      );
+      return pending.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b);
     }
     // Otherwise pick the most recent by creation date.
-    return matching.reduce(
-      (a, b) => a.createdAt.isAfter(b.createdAt) ? a : b,
-    );
+    return matching.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b);
   }
 
   /// Consolidate sent requests from local state or FutureProvider.
@@ -308,20 +305,20 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     final isApproved = lastRequest?.status == AccessStatus.approved;
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       children: [
         _RecipientHeader(recipient: widget.recipient),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
 
-        const Text(
+        Text(
           'Payment Accounts',
           style: TextStyle(
-            fontSize: 15,
+            fontSize: 15.sp,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
 
         if (visible.isEmpty)
           const EmptyState(
@@ -332,7 +329,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
         else
           ...visible.map((a) => AccountCard(account: a)),
 
-        const SizedBox(height: 28),
+        SizedBox(height: 28.h),
 
         AmountInputField(
           controller: _amountCtrl,
@@ -341,14 +338,14 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
             if (_amountError != null) setState(() => _amountError = null);
           },
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20.h),
 
         PrimaryButton(
           label: 'Split Automatically',
-          icon: const Icon(Icons.auto_fix_high, color: Colors.white),
+          icon: Icon(Icons.auto_fix_high, color: Colors.white, size: 20.r),
           onPressed: visible.isEmpty ? null : () => _splitAndNavigate(visible),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
 
         // ── Access button / approved badge ────────────────────────────────
         if (isApproved)
@@ -384,19 +381,19 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
 
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.lock_outline, size: 64, color: AppTheme.textSecondary),
-            const SizedBox(height: 24),
+            Icon(Icons.lock_outline, size: 64.r, color: AppTheme.textSecondary),
+            SizedBox(height: 24.h),
             Text(
               'Accounts Not Visible',
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               '${widget.recipient.displayName} has not granted you access to their accounts.',
               textAlign: TextAlign.center,
@@ -404,7 +401,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32.h),
             if (isApproved)
               _buildApprovedBanner()
             else ...[
@@ -415,7 +412,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
                   context,
                 ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               _buildRequestButton(
                 context,
                 lastRequest,
@@ -459,11 +456,11 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
           children: [
             OutlinedButton.icon(
               onPressed: () => _showCancelRequestDialog(context),
-              icon: const Icon(Icons.close),
-              label: const Text('Cancel Request'),
+              icon: Icon(Icons.close, size: 18.r),
+              label: Text('Cancel Request', style: TextStyle(fontSize: 14.sp)),
               style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             _pendingNotice(context),
           ],
         ),
@@ -485,57 +482,60 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     if (filled) {
       return FilledButton.icon(
         onPressed: () => _showAccessRequestDialog(context),
-        icon: const Icon(Icons.lock_open_outlined),
-        label: const Text('Request Access'),
+        icon: Icon(Icons.lock_open_outlined, size: 18.r),
+        label: Text('Request Access', style: TextStyle(fontSize: 14.sp)),
         style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 12.h),
         ),
       );
     }
     return OutlinedButton.icon(
       onPressed: () => _showAccessRequestDialog(context),
-      icon: const Icon(Icons.lock_open_outlined),
-      label: const Text('Request Account Access'),
+      icon: Icon(Icons.lock_open_outlined, size: 18.r),
+      label: Text('Request Account Access', style: TextStyle(fontSize: 14.sp)),
     );
   }
 
   Widget _buildLoadingButton(bool filled, {String label = 'Loading...'}) {
     final loadingIndicator = SizedBox(
-      height: 18,
-      width: 18,
+      height: 18.w,
+      width: 18.w,
       child: CircularProgressIndicator(
-        strokeWidth: 2,
-        valueColor:
-            filled ? const AlwaysStoppedAnimation<Color>(Colors.white) : null,
+        strokeWidth: 2.w,
+        valueColor: filled
+            ? const AlwaysStoppedAnimation<Color>(Colors.white)
+            : null,
       ),
     );
     return filled
         ? FilledButton.icon(
             onPressed: null,
             icon: loadingIndicator,
-            label: Text(label),
+            label: Text(label, style: TextStyle(fontSize: 14.sp)),
           )
         : OutlinedButton.icon(
             onPressed: null,
             icon: loadingIndicator,
-            label: Text(label),
+            label: Text(label, style: TextStyle(fontSize: 14.sp)),
           );
   }
 
   Widget _buildAccessDenied(bool filled) {
     final child = Row(
       mainAxisSize: MainAxisSize.min,
-      children: const [
-        Icon(Icons.block, size: 18),
-        SizedBox(width: 8),
-        Text('Access Denied'),
+      children: [
+        Icon(Icons.block, size: 18.r),
+        SizedBox(width: 8.w),
+        Text('Access Denied', style: TextStyle(fontSize: 14.sp)),
       ],
     );
 
     return filled
         ? FilledButton(
             onPressed: null,
-            style: FilledButton.styleFrom(backgroundColor: Colors.grey.shade400),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.grey.shade400,
+            ),
             child: child,
           )
         : OutlinedButton(
@@ -550,11 +550,11 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
 
   Widget _pendingNotice(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: Colors.orange.withOpacity(0.1),
         border: Border.all(color: Colors.orange.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6.r),
       ),
       child: Text(
         'Your request is pending approval. Tap Cancel to revoke it.',
@@ -568,20 +568,24 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
 
   Widget _buildApprovedBadge() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Colors.green.withOpacity(0.1),
         border: Border.all(color: Colors.green.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.check_circle, color: Colors.green),
-          SizedBox(width: 8),
+        children: [
+          Icon(Icons.check_circle, color: Colors.green, size: 18.r),
+          SizedBox(width: 8.w),
           Text(
             'Access Granted',
-            style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: Colors.green,
+              fontWeight: FontWeight.w600,
+              fontSize: 14.sp,
+            ),
           ),
         ],
       ),
@@ -590,22 +594,23 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
 
   Widget _buildApprovedBanner() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.green.withOpacity(0.1),
         border: Border.all(color: Colors.green.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
-        children: const [
-          Icon(Icons.check_circle, color: Colors.green),
-          SizedBox(width: 12),
+        children: [
+          Icon(Icons.check_circle, color: Colors.green, size: 18.r),
+          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               'Request approved! You can now see their accounts.',
               style: TextStyle(
                 color: Colors.green,
                 fontWeight: FontWeight.w600,
+                fontSize: 14.sp,
               ),
             ),
           ),
@@ -641,42 +646,42 @@ class _RecipientHeader extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Row(
           children: [
             CircleAvatar(
-              radius: 30,
-              backgroundColor: AppTheme.surfaceVariant,
+              radius: 30.r,
+              backgroundColor: AppTheme.primary.withOpacity(0.1),
               backgroundImage: hasValidAvatar ? NetworkImage(avatarUrl!) : null,
               child: hasValidAvatar
                   ? null
                   : Text(
                       recipient.initials,
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.primary,
                       ),
                     ),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     recipient.displayName,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2.h),
                   Text(
                     '@${recipient.username}',
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: TextStyle(
+                      fontSize: 13.sp,
                       color: AppTheme.textSecondary,
                     ),
                   ),

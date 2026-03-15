@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/models/split_suggestion_model.dart';
@@ -29,18 +30,18 @@ class TransferScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Transfer Instructions')),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
         children: [
           // ── Summary card ──────────────────────────────────────────────────
           _SummaryCard(recipient: recipient, total: total),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
 
           // ── Instructions ──────────────────────────────────────────────────
-          const Text(
+          Text(
             'Follow these steps to complete your transfer:',
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
 
           // ── Transfer tiles ────────────────────────────────────────────────
           ...suggestions.asMap().entries.map(
@@ -48,27 +49,24 @@ class TransferScreen extends ConsumerWidget {
                 _TransferTile(step: entry.key + 1, suggestion: entry.value),
           ),
 
-          const SizedBox(height: 28),
+          SizedBox(height: 28.h),
 
           // ── Done button ───────────────────────────────────────────────────
           PrimaryButton(
             label: 'Done',
             backgroundColor: AppTheme.success,
             onPressed: () {
-              Navigator.pushNamed(
-                context,
-                AppRoutes.transferSuccess,
-              );
+              Navigator.pushNamed(context, AppRoutes.transferSuccess);
             },
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
 
           // Disclaimer
-          const Center(
+          Center(
             child: Text(
               'Complete transfers manually in each payment app.',
-              style: TextStyle(fontSize: 12, color: AppTheme.textHint),
+              style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary),
               textAlign: TextAlign.center,
             ),
           ),
@@ -89,17 +87,16 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String? avatarUrl = recipient.avatarUrl;
-    final bool hasAvatar = avatarUrl != null &&
-        avatarUrl.startsWith('http');
+    final bool hasAvatar = avatarUrl != null && avatarUrl.startsWith('http');
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Row(
           children: [
             CircleAvatar(
-              radius: 24,
-              backgroundColor: AppTheme.surfaceVariant,
+              radius: 24.r,
+              backgroundColor: AppTheme.primary.withOpacity(0.1),
               backgroundImage: hasAvatar ? NetworkImage(avatarUrl!) : null,
               child: hasAvatar
                   ? null
@@ -107,16 +104,16 @@ class _SummaryCard extends StatelessWidget {
                       recipient.displayName.isNotEmpty
                           ? recipient.displayName[0].toUpperCase()
                           : (recipient.initials.isNotEmpty
-                              ? recipient.initials[0]
-                              : '?'),
-                      style: const TextStyle(
-                        fontSize: 18,
+                                ? recipient.initials[0]
+                                : '?'),
+                      style: TextStyle(
+                        fontSize: 18.sp,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.primary,
                       ),
                     ),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,9 +122,9 @@ class _SummaryCard extends StatelessWidget {
                     recipient.displayName.isNotEmpty
                         ? recipient.displayName
                         : 'Recipient',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 15,
+                      fontSize: 15.sp,
                       color: AppTheme.textPrimary,
                     ),
                   ),
@@ -135,8 +132,8 @@ class _SummaryCard extends StatelessWidget {
                     recipient.username.isNotEmpty
                         ? '@${recipient.username}'
                         : '',
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: TextStyle(
+                      fontSize: 12.sp,
                       color: AppTheme.textSecondary,
                     ),
                   ),
@@ -146,14 +143,17 @@ class _SummaryCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
+                Text(
                   'Total',
-                  style: TextStyle(fontSize: 11, color: AppTheme.textHint),
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
                 Text(
                   '${total.toStringAsFixed(total.truncateToDouble() == total ? 0 : 2)} EGP',
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.primary,
                   ),
@@ -189,7 +189,7 @@ class _TransferTile extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$label copied to clipboard'),
-        duration: const Duration(seconds: 2),
+        duration: Duration(seconds: 2),
       ),
     );
   }
@@ -197,9 +197,9 @@ class _TransferTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12.h),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -207,8 +207,8 @@ class _TransferTile extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 28,
-                  height: 28,
+                  width: 28.w,
+                  height: 28.w,
                   decoration: const BoxDecoration(
                     color: AppTheme.primary,
                     shape: BoxShape.circle,
@@ -216,19 +216,19 @@ class _TransferTile extends StatelessWidget {
                   child: Center(
                     child: Text(
                       '$step',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
+                        fontSize: 13.sp,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 Text(
                   _label,
-                  style: const TextStyle(
-                    fontSize: 15,
+                  style: TextStyle(
+                    fontSize: 15.sp,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary,
                   ),
@@ -236,18 +236,18 @@ class _TransferTile extends StatelessWidget {
                 const Spacer(),
                 // Amount badge
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 4.h,
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.accent.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
                     _amountStr,
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: TextStyle(
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.accent,
                     ),
@@ -255,7 +255,7 @@ class _TransferTile extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: 14.h),
 
             // Copy row: Account number
             _CopyRow(
@@ -268,7 +268,7 @@ class _TransferTile extends StatelessWidget {
                 'Account number',
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
 
             // Copy row: Amount
             _CopyRow(
@@ -301,20 +301,23 @@ class _CopyRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppTheme.textHint),
-        const SizedBox(width: 8),
+        Icon(icon, size: 16.r, color: AppTheme.textSecondary),
+        SizedBox(width: 8.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: const TextStyle(fontSize: 11, color: AppTheme.textHint),
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 14,
+                style: TextStyle(
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
                   color: AppTheme.textPrimary,
                 ),
@@ -324,11 +327,11 @@ class _CopyRow extends StatelessWidget {
         ),
         TextButton.icon(
           onPressed: onCopy,
-          icon: const Icon(Icons.copy, size: 14),
-          label: const Text('Copy', style: TextStyle(fontSize: 13)),
+          icon: Icon(Icons.copy, size: 14.r),
+          label: Text('Copy', style: TextStyle(fontSize: 13.sp)),
           style: TextButton.styleFrom(
             foregroundColor: AppTheme.primary,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
           ),
         ),
       ],

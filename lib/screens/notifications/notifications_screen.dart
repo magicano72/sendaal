@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sendaal/widgets/access_request_widget.dart'
     show AccessRequestTile;
 
@@ -80,7 +81,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     if (notifState.error != null) {
       return Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20.w),
         child: ErrorBanner(
           message: notifState.error!,
           onRetry: () {
@@ -106,17 +107,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       itemCount:
           accessState.receivedRequests.length +
           notifState.notifications.length +
           (accessState.receivedRequests.isNotEmpty ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => SizedBox(height: 8.h),
       itemBuilder: (_, i) {
         // Section header for access requests
         if (i == 0 && accessState.receivedRequests.isNotEmpty) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.symmetric(vertical: 8.h),
             child: Text(
               'Access Requests',
               style: Theme.of(
@@ -137,7 +138,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           if (i == accessState.receivedRequests.length + 1 &&
               notifState.notifications.isNotEmpty) {
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: EdgeInsets.symmetric(vertical: 8.h),
               child: Text(
                 'Notifications',
                 style: Theme.of(

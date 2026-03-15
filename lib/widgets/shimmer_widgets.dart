@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../core/theme/app_theme.dart';
@@ -18,15 +19,27 @@ class ShimmerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaledRadius = BorderRadius.only(
+      topLeft: Radius.circular(borderRadius.topLeft.x.r),
+      topRight: Radius.circular(borderRadius.topRight.x.r),
+      bottomLeft: Radius.circular(borderRadius.bottomLeft.x.r),
+      bottomRight: Radius.circular(borderRadius.bottomRight.x.r),
+    );
+
     return Shimmer.fromColors(
-      baseColor: AppTheme.surfaceVariant.withOpacity(0.5),
+      baseColor: AppTheme.primary.withOpacity(0.5),
       highlightColor: AppTheme.surface,
       child: Container(
-        margin: margin,
-        height: height,
+        margin: EdgeInsets.only(
+          left: margin.left.w,
+          right: margin.right.w,
+          top: margin.top.h,
+          bottom: margin.bottom.h,
+        ),
+        height: height.h,
         decoration: BoxDecoration(
           color: AppTheme.surface,
-          borderRadius: borderRadius,
+          borderRadius: scaledRadius,
         ),
       ),
     );
@@ -46,50 +59,50 @@ class AccessRequestShimmer extends StatelessWidget {
         children: [
           // Header shimmer
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
             child: Shimmer.fromColors(
-              baseColor: AppTheme.surfaceVariant.withOpacity(0.5),
+              baseColor: AppTheme.primary.withOpacity(0.5),
               highlightColor: AppTheme.surface,
               child: Container(
-                height: 24,
-                width: 150,
+                height: 24.h,
+                width: 150.w,
                 decoration: BoxDecoration(
                   color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
             ),
           ),
           // Card shimmers
-          ...List.generate(count, (_) => const ShimmerCard(height: 140)),
-          const SizedBox(height: 16),
+          ...List.generate(count, (_) => ShimmerCard(height: 140.h)),
+          SizedBox(height: 16.h),
           // Prompt shimmer
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20.w),
             child: Column(
               children: [
                 Shimmer.fromColors(
-                  baseColor: AppTheme.surfaceVariant.withOpacity(0.5),
+                  baseColor: AppTheme.primary.withOpacity(0.5),
                   highlightColor: AppTheme.surface,
                   child: Container(
-                    height: 32,
-                    width: 200,
+                    height: 32.h,
+                    width: 200.w,
                     decoration: BoxDecoration(
                       color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 Shimmer.fromColors(
-                  baseColor: AppTheme.surfaceVariant.withOpacity(0.5),
+                  baseColor: AppTheme.primary.withOpacity(0.5),
                   highlightColor: AppTheme.surface,
                   child: Container(
-                    height: 20,
+                    height: 20.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(6.r),
                     ),
                   ),
                 ),
@@ -110,7 +123,7 @@ class FullPageShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
-        children: List.generate(5, (_) => const ShimmerCard(height: 150)),
+        children: List.generate(5, (_) => ShimmerCard(height: 150.h)),
       ),
     );
   }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/services/connectivity_service.dart';
 import '../../core/services/validation_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/app_widgets.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -22,6 +22,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
+  bool _agreedToTerms = false;
   final _formKey = GlobalKey<FormState>();
 
   // Field-level error tracking for API errors
@@ -48,6 +49,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     if (!_formKey.currentState!.validate()) return;
+
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please agree to the Terms of Service and Privacy Policy.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     // Check internet connection before API call
     final connectivity = ConnectivityService();
@@ -80,7 +93,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     // Check for field-level errors in the auth error
     final authError = ref.read(authProvider).error;
     if (authError != null && !success) {
-      // Try to parse as API error
       try {
         if (authError.contains('username') && authError.contains('unique')) {
           setState(() {
@@ -103,7 +115,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           _formKey.currentState?.validate();
         }
       } catch (e) {
-        print('Error parsing field error: $e');
+        debugPrint('Error parsing field error: $e');
       }
     }
 
@@ -123,148 +135,442 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Join Sendaal',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Create your account to start splitting payments.',
-                  style: TextStyle(color: AppTheme.textSecondary),
-                ),
-                const SizedBox(height: 32),
-
-                // First Name
-                TextFormField(
-                  controller: _firstNameCtrl,
-                  keyboardType: TextInputType.name,
-                  decoration: const InputDecoration(
-                    labelText: 'First Name',
-                    prefixIcon: Icon(Icons.person_outline),
-                    hintText: 'e.g. John',
-                  ),
-                  validator: (v) =>
-                      ValidationService.validateName(v, minLength: 2),
-                ),
-                const SizedBox(height: 16),
-
-                // Username
-                TextFormField(
-                  controller: _usernameCtrl,
-                  decoration: InputDecoration(
-                    labelText: 'Username',
-                    prefixIcon: const Icon(Icons.alternate_email),
-                    hintText: 'e.g. john_doe',
-                    errorText: _usernameError,
-                  ),
-                  validator: (v) => ValidationService.validateUsername(v),
-                ),
-                const SizedBox(height: 16),
-
-                // Email
-                TextFormField(
-                  controller: _emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    errorText: _emailError,
-                  ),
-                  validator: (v) => ValidationService.validateEmail(v),
-                ),
-                const SizedBox(height: 16),
-
-                // Phone
-                TextFormField(
-                  controller: _phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    prefixIcon: const Icon(Icons.phone_outlined),
-                    hintText: 'e.g. 01234567890',
-                    errorText: _phoneError,
-                  ),
-                  validator: (v) => ValidationService.validatePhone(v),
-                ),
-                const SizedBox(height: 16),
-
-                // Password
-                TextFormField(
-                  controller: _passwordCtrl,
-                  obscureText: _obscure,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    hintText:
-                        'Min 8 chars, uppercase, lowercase, number, special',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscure
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
-                  ),
-                  validator: (v) => ValidationService.validatePassword(v),
-                  onChanged: (_) => setState(() {}),
-                ),
-
-                // Password strength indicator
-                if (_passwordCtrl.text.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  _PasswordStrengthIndicator(password: _passwordCtrl.text),
-                ],
-
-                const SizedBox(height: 28),
-
-                PrimaryButton(
-                  label: 'Create Account',
-                  isLoading: auth.isRegisterLoading,
-                  onPressed: _register,
-                ),
-
-                const SizedBox(height: 20),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+        child: Column(
+          children: [
+            // ── Scrollable content ──────────────────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                child: Column(
                   children: [
-                    const Text(
-                      'Already have an account?',
-                      style: TextStyle(color: AppTheme.textSecondary),
+                    // White card
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 20.r,
+                            offset: Offset(0, 4.h),
+                          ),
+                        ],
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24.w,
+                        vertical: 28.h,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── Back arrow + title row ─────────────────────
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Icon(
+                                    Icons.arrow_back,
+                                    size: 22.r,
+                                    color: const Color(0xFF1A1A2E),
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Text(
+                                  'Create Account',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF1A1A2E),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: 24.h),
+
+                            // ── Headline ───────────────────────────────────
+                            Text(
+                              'Join Sendaal',
+                              style: TextStyle(
+                                fontSize: 26.sp,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF1A1A2E),
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            SizedBox(height: 6.h),
+                            Text(
+                              'Fill in your details to get started with\nyour new account.',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: const Color(0xFF8A94A6),
+                                height: 1.5,
+                              ),
+                            ),
+
+                            SizedBox(height: 28.h),
+
+                            // ── First Name ─────────────────────────────────
+                            _FieldLabel(label: 'First Name'),
+                            SizedBox(height: 8.h),
+                            TextFormField(
+                              controller: _firstNameCtrl,
+                              keyboardType: TextInputType.name,
+                              textCapitalization: TextCapitalization.words,
+                              style: TextStyle(
+                                fontSize: 15.sp,
+                                color: const Color(0xFF1A1A2E),
+                              ),
+                              decoration: _inputDecoration(hint: 'e.g. John'),
+                              validator: (v) => ValidationService.validateName(
+                                v,
+                                minLength: 2,
+                              ),
+                            ),
+
+                            SizedBox(height: 18.h),
+
+                            // ── Username ───────────────────────────────────
+                            _FieldLabel(label: 'Username'),
+                            SizedBox(height: 8.h),
+                            TextFormField(
+                              controller: _usernameCtrl,
+                              style: TextStyle(
+                                fontSize: 15.sp,
+                                color: const Color(0xFF1A1A2E),
+                              ),
+                              decoration: _inputDecoration(
+                                hint: 'Enter your username',
+                                errorText: _usernameError,
+                              ),
+                              validator: (v) =>
+                                  ValidationService.validateUsername(v),
+                            ),
+
+                            SizedBox(height: 18.h),
+
+                            // ── Email ──────────────────────────────────────
+                            _FieldLabel(label: 'Email Address'),
+                            SizedBox(height: 8.h),
+                            TextFormField(
+                              controller: _emailCtrl,
+                              keyboardType: TextInputType.emailAddress,
+                              style: TextStyle(
+                                fontSize: 15.sp,
+                                color: const Color(0xFF1A1A2E),
+                              ),
+                              decoration: _inputDecoration(
+                                hint: 'email@example.com',
+                                errorText: _emailError,
+                              ),
+                              validator: (v) =>
+                                  ValidationService.validateEmail(v),
+                            ),
+
+                            SizedBox(height: 18.h),
+
+                            // ── Phone ──────────────────────────────────────
+                            _FieldLabel(label: 'Phone Number'),
+                            SizedBox(height: 8.h),
+                            TextFormField(
+                              controller: _phoneCtrl,
+                              keyboardType: TextInputType.phone,
+                              style: TextStyle(
+                                fontSize: 15.sp,
+                                color: const Color(0xFF1A1A2E),
+                              ),
+                              decoration: _inputDecoration(
+                                hint: '+1 (555) 000-0000',
+                                errorText: _phoneError,
+                              ),
+                              validator: (v) =>
+                                  ValidationService.validatePhone(v),
+                            ),
+
+                            SizedBox(height: 18.h),
+
+                            // ── Password ───────────────────────────────────
+                            _FieldLabel(label: 'Password'),
+                            SizedBox(height: 8.h),
+                            TextFormField(
+                              controller: _passwordCtrl,
+                              obscureText: _obscure,
+                              style: TextStyle(
+                                fontSize: 15.sp,
+                                color: const Color(0xFF1A1A2E),
+                              ),
+                              decoration:
+                                  _inputDecoration(
+                                    hint: 'Create a strong password',
+                                  ).copyWith(
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscure
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
+                                        size: 20.r,
+                                        color: const Color(0xFF8A94A6),
+                                      ),
+                                      onPressed: () =>
+                                          setState(() => _obscure = !_obscure),
+                                    ),
+                                  ),
+                              validator: (v) =>
+                                  ValidationService.validatePassword(v),
+                              onChanged: (_) => setState(() {}),
+                            ),
+
+                            // Password strength indicator
+                            if (_passwordCtrl.text.isNotEmpty) ...[
+                              SizedBox(height: 12.h),
+                              _PasswordStrengthIndicator(
+                                password: _passwordCtrl.text,
+                              ),
+                            ],
+
+                            SizedBox(height: 20.h),
+
+                            // ── Terms checkbox ─────────────────────────────
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 22.w,
+                                  height: 22.h,
+                                  child: Checkbox(
+                                    value: _agreedToTerms,
+                                    onChanged: (v) => setState(
+                                      () => _agreedToTerms = v ?? false,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4.r),
+                                    ),
+                                    side: BorderSide(
+                                      color: const Color(0xFFCDD5DF),
+                                      width: 1.5.w,
+                                    ),
+                                    activeColor: const Color(0xFF2563EB),
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                                SizedBox(width: 10.w),
+                                Expanded(
+                                  child: Text.rich(
+                                    TextSpan(
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        color: const Color(0xFF4A5568),
+                                        height: 1.5,
+                                      ),
+                                      children: [
+                                        const TextSpan(text: 'I agree to the '),
+                                        TextSpan(
+                                          text: 'Terms of Service',
+                                          style: TextStyle(
+                                            color: const Color(0xFF2563EB),
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 13.sp,
+                                          ),
+                                        ),
+                                        const TextSpan(text: ' and '),
+                                        TextSpan(
+                                          text: 'Privacy Policy',
+                                          style: TextStyle(
+                                            color: const Color(0xFF2563EB),
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 13.sp,
+                                          ),
+                                        ),
+                                        const TextSpan(text: '.'),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: 28.h),
+
+                            // ── Register button ────────────────────────────
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54.h,
+                              child: ElevatedButton.icon(
+                                onPressed: auth.isRegisterLoading
+                                    ? null
+                                    : _register,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2563EB),
+                                  disabledBackgroundColor: const Color(
+                                    0xFF2563EB,
+                                  ).withOpacity(0.6),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14.r),
+                                  ),
+                                ),
+                                icon: auth.isRegisterLoading
+                                    ? SizedBox(
+                                        width: 20.r,
+                                        height: 20.r,
+                                        child: const CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Icon(Icons.person_add_alt_1, size: 20.r),
+                                label: Text(
+                                  auth.isRegisterLoading
+                                      ? 'Creating...'
+                                      : 'Register',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: 20.h),
+
+                            // ── Login link ─────────────────────────────────
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Already have an account?',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: const Color(0xFF8A94A6),
+                                  ),
+                                ),
+                                SizedBox(width: 4.w),
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(context),
+                                  child: Text(
+                                    'Login',
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      color: const Color(0xFF2563EB),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Sign In'),
+
+                    SizedBox(height: 24.h),
+
+                    // ── Sendaal branding ─────────────────────────────────────
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 36.r,
+                          height: 36.r,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8A94A6),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'S',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Text(
+                          'SENDAAL',
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                            color: const Color(0xFF4A5568),
+                          ),
+                        ),
+                      ],
                     ),
+
+                    SizedBox(height: 12.h),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
+      ),
+    );
+  }
+
+  /// Shared input decoration factory
+  InputDecoration _inputDecoration({required String hint, String? errorText}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(fontSize: 14.sp, color: const Color(0xFFB0BAC8)),
+      errorText: errorText,
+      errorStyle: TextStyle(fontSize: 11.sp),
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      filled: true,
+      fillColor: Colors.white,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: const Color(0xFFE2E8F0), width: 1.5.w),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: const Color(0xFF2563EB), width: 1.5.w),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: Colors.red.shade400, width: 1.5.w),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: BorderSide(color: Colors.red.shade400, width: 1.5.w),
       ),
     );
   }
 }
 
-/// Password strength indicator widget
+// ── Field label widget ─────────────────────────────────────────────────────────
+
+class _FieldLabel extends StatelessWidget {
+  final String label;
+  const _FieldLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: TextStyle(
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF1A1A2E),
+      ),
+    );
+  }
+}
+
+// ── Password strength indicator ────────────────────────────────────────────────
+
 class _PasswordStrengthIndicator extends StatelessWidget {
   final String password;
-
   const _PasswordStrengthIndicator({required this.password});
 
   @override
@@ -274,10 +580,11 @@ class _PasswordStrengthIndicator extends StatelessWidget {
     final totalCount = requirements.length;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(8),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.w),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,51 +592,51 @@ class _PasswordStrengthIndicator extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Password Strength',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
+                  color: const Color(0xFF1A1A2E),
                 ),
               ),
               Text(
                 '$metCount/$totalCount',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
                   color: metCount == totalCount
                       ? AppTheme.success
-                      : AppTheme.warning,
-                  fontWeight: FontWeight.w600,
+                      : AppTheme.error,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          ...requirements.entries.map((e) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
+          SizedBox(height: 8.h),
+          ...requirements.entries.map(
+            (e) => Padding(
+              padding: EdgeInsets.only(bottom: 6.h),
               child: Row(
                 children: [
                   Icon(
                     e.value ? Icons.check_circle : Icons.radio_button_unchecked,
-                    size: 16,
-                    color: e.value ? AppTheme.success : AppTheme.textHint,
+                    size: 15.r,
+                    color: e.value ? AppTheme.success : const Color(0xFFB0BAC8),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   Text(
                     e.key,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       color: e.value
                           ? AppTheme.success
-                          : AppTheme.textSecondary,
+                          : const Color(0xFF8A94A6),
                     ),
                   ),
                 ],
               ),
-            );
-          }),
+            ),
+          ),
         ],
       ),
     );

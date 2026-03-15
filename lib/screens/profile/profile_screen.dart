@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sendaal/services/api_client.dart';
 
@@ -65,11 +66,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           }
         },
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
           children: [
             // ── Profile Header ─────────────────────────────────────────────
             _ProfileHeader(user: user),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
 
             // ── Share Profile ──────────────────────────────────────────────
             if (user != null)
@@ -82,38 +83,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SnackBar(content: Text('Profile link copied!')),
                   );
                 },
-                icon: const Icon(Icons.share_outlined, size: 18),
-                label: const Text('Share Profile'),
+                icon: Icon(Icons.share_outlined, size: 18.r),
+                label: Text('Share Profile', style: TextStyle(fontSize: 14.sp)),
                 style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 44),
+                  minimumSize: Size(double.infinity, 44.h),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                 ),
               ),
 
-            const SizedBox(height: 28),
+            SizedBox(height: 28.h),
 
             // ── Accounts Section ───────────────────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Payment Accounts',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary,
                   ),
                 ),
                 TextButton.icon(
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add'),
+                  icon: Icon(Icons.add, size: 18.r),
+                  label: Text('Add', style: TextStyle(fontSize: 14.sp)),
                   onPressed: () => _showAddAccountSheet(context),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
 
             if (accountsState.isLoading)
               const Center(child: CircularProgressIndicator())
@@ -163,8 +164,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       builder: (_) => const AddAccountSheet(),
     );
@@ -259,11 +260,11 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
           alignment: Alignment.bottomRight,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 88.w,
+              height: 88.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.surfaceVariant,
+                color: AppTheme.primary.withOpacity(0.1),
               ),
               child: ClipOval(
                 child: user?.avatar != null
@@ -279,8 +280,8 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
                                   : (user.displayName.isNotEmpty == true
                                         ? user.displayName[0].toUpperCase()
                                         : '?'),
-                              style: const TextStyle(
-                                fontSize: 32,
+                              style: TextStyle(
+                                fontSize: 32.sp,
                                 fontWeight: FontWeight.w700,
                                 color: AppTheme.primary,
                               ),
@@ -295,8 +296,8 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
                               : (user?.displayName.isNotEmpty == true
                                     ? user!.displayName[0].toUpperCase()
                                     : '?'),
-                          style: const TextStyle(
-                            fontSize: 32,
+                          style: TextStyle(
+                            fontSize: 32.sp,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.primary,
                           ),
@@ -316,66 +317,66 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                        blurRadius: 8.r,
+                        offset: Offset(0, 2.h),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(6),
+                  padding: EdgeInsets.all(6.w),
                   child: _isUploading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
+                      ? SizedBox(
+                          width: 18.w,
+                          height: 18.w,
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
                               Colors.white,
                             ),
-                            strokeWidth: 2,
+                            strokeWidth: 2.w,
                           ),
                         )
-                      : const Icon(
+                      : Icon(
                           Icons.camera_alt_outlined,
                           color: Colors.white,
-                          size: 18,
+                          size: 18.r,
                         ),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
 
         // First Name
         Text(
           user?.firstName ?? user?.displayName ?? 'User',
-          style: const TextStyle(
-            fontSize: 20,
+          style: TextStyle(
+            fontSize: 20.sp,
             fontWeight: FontWeight.w700,
-            color: AppTheme.primaryDark,
+            color: AppTheme.textPrimary,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4.h),
         Text(
           user != null ? '@${user!.username}' : '@username',
-          style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+          style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
         ),
 
         // Email
         if (user?.email != null) ...[
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.email_outlined,
-                size: 14,
-                color: AppTheme.textHint,
+                size: 14.r,
+                color: AppTheme.textPrimary,
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4.w),
               Text(
                 user!.email!,
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  fontSize: 12.sp,
                   color: AppTheme.textSecondary,
                 ),
               ),
@@ -385,20 +386,16 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
 
         // Phone
         if (user?.phone != null) ...[
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.phone_outlined,
-                size: 14,
-                color: AppTheme.textHint,
-              ),
-              const SizedBox(width: 4),
+              Icon(Icons.phone_outlined, size: 14.r, color: AppTheme.primary),
+              SizedBox(width: 4.w),
               Text(
                 user!.phone!,
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  fontSize: 12.sp,
                   color: AppTheme.textSecondary,
                 ),
               ),
@@ -407,16 +404,16 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
         ],
 
         if (user?.isVerified == true) ...[
-          const SizedBox(height: 6),
-          const Row(
+          SizedBox(height: 6.h),
+          Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.verified, color: AppTheme.primary, size: 16),
-              SizedBox(width: 4),
+              Icon(Icons.verified, color: AppTheme.primary, size: 16.r),
+              SizedBox(width: 4.w),
               Text(
                 'Verified',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 12.sp,
                   color: AppTheme.primary,
                   fontWeight: FontWeight.w500,
                 ),
@@ -439,21 +436,24 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
       context: context,
       isScrollControlled: true,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take Photo'),
+              leading: Icon(Icons.camera_alt, size: 22.r),
+              title: Text('Take Photo', style: TextStyle(fontSize: 15.sp)),
               onTap: () {
                 Navigator.pop(context);
                 _pickPhotoFromCamera();
               },
             ),
             ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('Choose from Gallery'),
+              leading: Icon(Icons.image, size: 22.r),
+              title: Text(
+                'Choose from Gallery',
+                style: TextStyle(fontSize: 15.sp),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _pickPhotoFromGallery();

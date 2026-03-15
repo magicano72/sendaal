@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'profile/profile_screen.dart';
-import 'search/search_screen.dart';
-import 'notifications/notifications_screen.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/search_provider.dart';
+import 'notifications/notifications_screen.dart';
+import 'profile/profile_screen.dart';
+import 'search/search_screen.dart';
 
 /// Main app shell with bottom navigation bar.
 /// Manages the 3 primary tabs: Search, Profile, Notifications.
@@ -27,19 +27,15 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final unreadCount =
-        ref.watch(notificationsProvider).unreadCount;
+    final unreadCount = ref.watch(notificationsProvider).unreadCount;
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (i) => setState(() => _currentIndex = i),
         backgroundColor: AppTheme.surface,
-        indicatorColor: AppTheme.surfaceVariant,
+        indicatorColor: AppTheme.accent,
         destinations: [
           const NavigationDestination(
             icon: Icon(Icons.search_outlined),
@@ -60,8 +56,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             selectedIcon: Badge(
               isLabelVisible: unreadCount > 0,
               label: Text('$unreadCount'),
-              child: const Icon(Icons.notifications,
-                  color: AppTheme.primary),
+              child: const Icon(Icons.notifications, color: AppTheme.primary),
             ),
             label: 'Alerts',
           ),

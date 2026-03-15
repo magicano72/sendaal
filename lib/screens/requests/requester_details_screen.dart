@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sendaal/screens/requests/status_banar.dart';
 
 import '../../core/models/user_model.dart';
@@ -46,7 +47,7 @@ class _RequesterDetailsScreenState
         title: const Text('Requester Details'),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: EdgeInsets.only(right: 12.w),
             child: Center(child: StatusChip(status: _request.status)),
           ),
         ],
@@ -55,7 +56,7 @@ class _RequesterDetailsScreenState
         child: userAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20.w),
             child: ErrorBanner(
               message: 'Unable to load requester details.',
               onRetry: () => ref.refresh(userProvider(requesterId)),
@@ -160,28 +161,28 @@ class _RequesterDetailsBody extends StatelessWidget {
     final email = (user.email ?? '').trim();
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.w),
       children: [
         Center(
           child: CircleAvatar(
-            radius: 40,
-            backgroundColor: AppTheme.surfaceVariant,
+            radius: 40.r,
+            backgroundColor: AppTheme.primary.withOpacity(0.1),
             backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
                 ? NetworkImage(avatarUrl)
                 : null,
             child: (avatarUrl == null || avatarUrl.isEmpty)
                 ? Text(
                     user.initials,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppTheme.primary,
                       fontWeight: FontWeight.w700,
-                      fontSize: 18,
+                      fontSize: 18.sp,
                     ),
                   )
                 : null,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         Center(
           child: Text(
             user.displayName.isNotEmpty ? user.displayName : 'Unknown user',
@@ -190,7 +191,7 @@ class _RequesterDetailsBody extends StatelessWidget {
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4.h),
         Center(
           child: Text(
             '@${user.username}',
@@ -200,11 +201,11 @@ class _RequesterDetailsBody extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20.h),
         Card(
           margin: EdgeInsets.zero,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             child: Column(
               children: [
                 _InfoRow(
@@ -214,19 +215,19 @@ class _RequesterDetailsBody extends StatelessWidget {
                       ? user.displayName
                       : 'Not provided',
                 ),
-                const Divider(height: 20),
+                Divider(height: 20.h),
                 _InfoRow(
                   icon: Icons.alternate_email,
                   label: 'Username',
                   value: '@${user.username}',
                 ),
-                const Divider(height: 20),
+                Divider(height: 20.h),
                 _InfoRow(
                   icon: Icons.phone_outlined,
                   label: 'Phone Number',
                   value: phone.isNotEmpty ? phone : 'Not provided',
                 ),
-                const Divider(height: 20),
+                Divider(height: 20.h),
                 _InfoRow(
                   icon: Icons.email_outlined,
                   label: 'Email',
@@ -236,22 +237,22 @@ class _RequesterDetailsBody extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         StatusBanner(status: request.status),
         if (canAct) ...[
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: isProcessing ? null : onReject,
                   icon: pendingAction == _ActionType.reject && isProcessing
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                      ? SizedBox(
+                          width: 14.w,
+                          height: 14.w,
+                          child: CircularProgressIndicator(strokeWidth: 2.w),
                         )
-                      : const Icon(Icons.close, size: 18),
+                      : Icon(Icons.close, size: 18.r),
                   label: Text(
                     pendingAction == _ActionType.reject && isProcessing
                         ? 'Rejecting...'
@@ -260,24 +261,24 @@ class _RequesterDetailsBody extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: EdgeInsets.symmetric(vertical: 10.h),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               Expanded(
                 child: FilledButton.icon(
                   onPressed: isProcessing ? null : onApprove,
                   icon: pendingAction == _ActionType.approve && isProcessing
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
+                      ? SizedBox(
+                          width: 14.w,
+                          height: 14.w,
                           child: CircularProgressIndicator(
-                            strokeWidth: 2,
+                            strokeWidth: 2.w,
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.check, size: 18),
+                      : Icon(Icons.check, size: 18.r),
                   label: Text(
                     pendingAction == _ActionType.approve && isProcessing
                         ? 'Approving...'
@@ -285,7 +286,7 @@ class _RequesterDetailsBody extends StatelessWidget {
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: EdgeInsets.symmetric(vertical: 10.h),
                   ),
                 ),
               ),
@@ -293,7 +294,7 @@ class _RequesterDetailsBody extends StatelessWidget {
           ),
         ],
         if (!canAct) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
             'Only the receiver can change the request status.',
             style: Theme.of(
@@ -301,7 +302,7 @@ class _RequesterDetailsBody extends StatelessWidget {
             ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
           ),
         ],
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           'Only information you are allowed to see is shown here.',
           style: Theme.of(
@@ -329,8 +330,8 @@ class _InfoRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: AppTheme.primary),
-        const SizedBox(width: 12),
+        Icon(icon, size: 20.r, color: AppTheme.primary),
+        SizedBox(width: 12.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,7 +343,7 @@ class _InfoRow extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4.h),
               Text(
                 value,
                 style: Theme.of(

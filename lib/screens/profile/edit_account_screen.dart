@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
@@ -179,7 +180,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
         title: const Text('Edit Account'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -207,7 +208,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
                 });
               },
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
 
             if (_selectedType == 'instapay') ...[
               DropdownButtonFormField<String>(
@@ -232,7 +233,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
                   });
                 },
               ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
           ],
 
             if (_selectedType == 'bank_account') ...[
@@ -258,7 +259,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
                   });
                 },
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
             ],
 
             TextFormField(
@@ -278,7 +279,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
               ),
               keyboardType: TextInputType.text,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
 
             TextFormField(
               controller: _limitCtrl,
@@ -290,23 +291,26 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
 
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Visible on profile'),
+              title: Text(
+                'Visible on profile',
+                style: TextStyle(fontSize: 14.sp),
+              ),
               value: _isVisible,
               onChanged: (value) => setState(() => _isVisible = value),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
 
             Row(
               children: [
                 Expanded(
                   child: Text(
                     'Priority: $_priority',
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: TextStyle(
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -322,11 +326,11 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
             ),
 
             if (_error != null) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
               ErrorBanner(message: _error!),
             ],
 
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
             PrimaryButton(
               label: 'Save Changes',
               isLoading: _isSaving,

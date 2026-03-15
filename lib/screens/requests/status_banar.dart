@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sendaal/models/access_request_model.dart';
 
 import '../../core/theme/app_theme.dart' show AppTheme;
@@ -24,10 +25,10 @@ class StatusChip extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: color.withOpacity(0.35)),
       ),
       child: Text(
@@ -35,7 +36,7 @@ class StatusChip extends StatelessWidget {
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w700,
-          fontSize: 12,
+          fontSize: 12.sp,
         ),
       ),
     );
@@ -54,7 +55,7 @@ class StatusBanner extends StatelessWidget {
 
     switch (status) {
       case AccessStatus.pending:
-        bannerColor = AppTheme.warning;
+        bannerColor = AppTheme.accent;
         message = 'Waiting for approval...';
         break;
       case AccessStatus.approved:
@@ -69,10 +70,10 @@ class StatusBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: bannerColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: bannerColor.withOpacity(0.25)),
       ),
       child: Row(
@@ -84,8 +85,9 @@ class StatusBanner extends StatelessWidget {
                 ? Icons.hourglass_bottom_outlined
                 : Icons.block_outlined,
             color: bannerColor,
+            size: 20.r,
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10.w),
           Expanded(
             child: Text(
               message,

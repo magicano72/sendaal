@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sendaal/widgets/shimmer_widgets.dart';
 
 import '../../core/models/user_model.dart';
@@ -95,7 +96,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         children: [
           // ── Search Bar ─────────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+            padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 8.h),
             child: SearchField(
               controller: _searchCtrl,
               onChanged: _onSearchChanged,
@@ -121,9 +122,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (state.isLoading) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 200),
-          Center(child: CircularProgressIndicator()),
+        children: [
+          SizedBox(height: 200.h),
+          const Center(child: CircularProgressIndicator()),
         ],
       );
     }
@@ -134,7 +135,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20.w),
             child: ErrorBanner(
               message: state.error!,
               onRetry: () =>
@@ -170,7 +171,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
                       child: Row(
                         children: [
                           Icon(
@@ -178,9 +179,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             color: hasPendingReceived
                                 ? Colors.blue
                                 : Colors.grey,
-                            size: 20,
+                            size: 20.r,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           Expanded(
                             child: Text(
                               'Incoming Requests',
@@ -190,18 +191,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ),
                           if (hasPendingReceived)
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 3.h,
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.blue.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Text(
                                 '${accessRequests.receivedRequests.where((r) => r.status.name == 'pending').length} Pending',
-                                style: const TextStyle(
-                                  fontSize: 11,
+                                style: TextStyle(
+                                  fontSize: 11.sp,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.blue,
                                 ),
@@ -214,7 +215,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       (req) =>
                           AccessRequestCard(request: req, isReceived: true),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                   ],
                 ),
 
@@ -223,15 +224,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
                       child: Row(
                         children: [
                           Icon(
                             Icons.send_outlined,
                             color: hasPendingSent ? Colors.orange : Colors.grey,
-                            size: 20,
+                            size: 20.r,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           Expanded(
                             child: Text(
                               'My Requests',
@@ -241,18 +242,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ),
                           if (hasPendingSent)
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 3.h,
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.orange.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Text(
                                 '${accessRequests.sentRequests.where((r) => r.status.name == 'pending').length} Pending',
-                                style: const TextStyle(
-                                  fontSize: 11,
+                                style: TextStyle(
+                                  fontSize: 11.sp,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.orange,
                                 ),
@@ -265,16 +266,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       (req) =>
                           AccessRequestCard(request: req, isReceived: false),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                   ],
                 ),
 
               // Empty state with prompt
               if (accessRequests.receivedRequests.isEmpty &&
                   accessRequests.sentRequests.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.only(top: 80),
-                  child: EmptyState(
+                Padding(
+                  padding: EdgeInsets.only(top: 80.h),
+                  child: const EmptyState(
                     icon: Icons.person_search_outlined,
                     title: 'Find someone to pay',
                     subtitle:
@@ -282,9 +283,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
                 )
               else
-                const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: EmptyState(
+                Padding(
+                  padding: EdgeInsets.all(20.w),
+                  child: const EmptyState(
                     icon: Icons.person_search_outlined,
                     title: 'Find someone to pay',
                     subtitle:
@@ -302,7 +303,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          const SizedBox(height: 60),
+          SizedBox(height: 60.h),
           EmptyState(
             icon: Icons.search_off_outlined,
             title: 'No users found',
@@ -314,9 +315,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     // Results list
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
       itemCount: state.results.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
+      separatorBuilder: (_, __) => Divider(height: 1.h),
       itemBuilder: (_, i) {
         final user = state.results[i];
         return UserTile(

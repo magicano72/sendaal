@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../core/constants/app_constants.dart';
@@ -31,32 +32,32 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 52,
+      height: 52.h,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? AppTheme.primary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14.r),
           ),
         ),
         child: isLoading
-            ? const SizedBox(
-                width: 22,
-                height: 22,
+            ? SizedBox(
+                width: 22.w,
+                height: 22.w,
                 child: CircularProgressIndicator(
                   color: Colors.white,
-                  strokeWidth: 2.5,
+                  strokeWidth: 2.5.w,
                 ),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (icon != null) ...[icon!, const SizedBox(width: 8)],
+                  if (icon != null) ...[icon!, SizedBox(width: 8.w)],
                   Text(
                     label,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
@@ -93,10 +94,10 @@ class SearchField extends StatelessWidget {
       onChanged: onChanged,
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: const Icon(Icons.search, color: AppTheme.textHint),
+        prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
         suffixIcon: controller.text.isNotEmpty
             ? IconButton(
-                icon: const Icon(Icons.close, color: AppTheme.textHint),
+                icon: const Icon(Icons.close, color: AppTheme.primary),
                 onPressed: () {
                   controller.clear();
                   onClear?.call();
@@ -138,26 +139,26 @@ class AccountCard extends StatelessWidget {
         AppConstants.accountTypeLabels[account.type.name] ?? account.type.name;
 
     final card = Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: 10.h),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         child: Row(
           children: [
             // Account type icon circle
             Container(
-              width: 44,
-              height: 44,
+              width: 44.w,
+              height: 44.w,
               decoration: BoxDecoration(
-                color: AppTheme.surfaceVariant,
-                borderRadius: BorderRadius.circular(12),
+                color: AppTheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
               ),
               child: Icon(
                 _accountIcon(account.type),
                 color: AppTheme.primary,
-                size: 22,
+                size: 22.r,
               ),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14.w),
 
             // Label + identifier
             Expanded(
@@ -166,17 +167,17 @@ class AccountCard extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2.h),
                   Text(
                     account.accountIdentifier,
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: TextStyle(
+                      fontSize: 13.sp,
                       color: AppTheme.textSecondary,
                     ),
                   ),
@@ -186,15 +187,15 @@ class AccountCard extends StatelessWidget {
 
             // Limit badge
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceVariant,
-                borderRadius: BorderRadius.circular(8),
+                color: AppTheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
                 '${_fmtAmount(account.defaultLimit.toDouble())} EGP',
-                style: const TextStyle(
-                  fontSize: 11,
+                style: TextStyle(
+                  fontSize: 11.sp,
                   color: AppTheme.primary,
                   fontWeight: FontWeight.w500,
                 ),
@@ -203,14 +204,14 @@ class AccountCard extends StatelessWidget {
 
             // Star action
             if (showStar) ...[
-              const SizedBox(width: 4),
+              SizedBox(width: 4.w),
               IconButton(
                 icon: Icon(
                   account.priority == 0 ? Icons.star : Icons.star_border,
                   color: account.priority == 0
-                      ? AppTheme.warning
-                      : AppTheme.textHint,
-                  size: 20,
+                      ? AppTheme.primary
+                      : AppTheme.primary,
+                  size: 20.r,
                 ),
                 onPressed: onStar,
                 padding: EdgeInsets.zero,
@@ -220,7 +221,7 @@ class AccountCard extends StatelessWidget {
 
             // Visibility toggle
             if (showToggle) ...[
-              const SizedBox(width: 4),
+              SizedBox(width: 4.w),
               Switch.adaptive(
                 value: account.isVisible,
                 onChanged: onToggleVisibility,
@@ -250,9 +251,9 @@ class AccountCard extends StatelessWidget {
                   foregroundColor: Colors.white,
                   icon: Icons.edit_outlined,
                   label: 'Edit',
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12.r),
+                    bottomLeft: Radius.circular(12.r),
                   ),
                 ),
               ],
@@ -269,9 +270,9 @@ class AccountCard extends StatelessWidget {
                   foregroundColor: Colors.white,
                   icon: Icons.delete_outline,
                   label: 'Delete',
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(12.r),
+                    bottomRight: Radius.circular(12.r),
                   ),
                 ),
               ],
@@ -317,23 +318,23 @@ class NotificationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(12.r),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
           color: notification.isRead
               ? AppTheme.surface
-              : AppTheme.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.cardBorder),
+              : AppTheme.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Notification type icon
             Container(
-              width: 40,
-              height: 40,
+              width: 40.w,
+              height: 40.w,
               decoration: BoxDecoration(
                 color: _typeColor(notification.type).withOpacity(0.12),
                 shape: BoxShape.circle,
@@ -341,10 +342,10 @@ class NotificationTile extends StatelessWidget {
               child: Icon(
                 _typeIcon(notification.type),
                 color: _typeColor(notification.type),
-                size: 18,
+                size: 18.r,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12.w),
 
             // Content
             Expanded(
@@ -357,15 +358,15 @@ class NotificationTile extends StatelessWidget {
                       fontWeight: notification.isRead
                           ? FontWeight.w500
                           : FontWeight.w700,
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  SizedBox(height: 3.h),
                   Text(
                     notification.body,
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: TextStyle(
+                      fontSize: 13.sp,
                       color: AppTheme.textSecondary,
                     ),
                     maxLines: 2,
@@ -378,9 +379,9 @@ class NotificationTile extends StatelessWidget {
             // Unread dot
             if (!notification.isRead)
               Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(top: 4),
+                width: 8.w,
+                height: 8.w,
+                margin: EdgeInsets.only(top: 4.h),
                 decoration: const BoxDecoration(
                   color: AppTheme.primary,
                   shape: BoxShape.circle,
@@ -412,7 +413,7 @@ class NotificationTile extends StatelessWidget {
       case 'access_approved':
         return AppTheme.success;
       case 'system':
-        return AppTheme.warning;
+        return AppTheme.accent;
       default:
         return AppTheme.primary;
     }
@@ -440,28 +441,28 @@ class AmountInputField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Enter Amount (EGP)',
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 14,
+            fontSize: 14.sp,
             color: AppTheme.textSecondary,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: onChanged,
-          style: const TextStyle(
-            fontSize: 28,
+          style: TextStyle(
+            fontSize: 28.sp,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,
           ),
           decoration: InputDecoration(
             prefixText: 'EGP  ',
-            prefixStyle: const TextStyle(
-              fontSize: 18,
+            prefixStyle: TextStyle(
+              fontSize: 18.sp,
               fontWeight: FontWeight.w500,
               color: AppTheme.textSecondary,
             ),
@@ -494,26 +495,26 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: AppTheme.textHint),
-            const SizedBox(height: 16),
+            Icon(icon, size: 64.r, color: AppTheme.primary),
+            SizedBox(height: 16.h),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 17,
+              style: TextStyle(
+                fontSize: 17.sp,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               Text(
                 subtitle!,
-                style: const TextStyle(fontSize: 14, color: AppTheme.textHint),
+                style: TextStyle(fontSize: 14.sp, color: AppTheme.primary),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -557,35 +558,36 @@ class UserTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+      contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 4.h),
       leading: CircleAvatar(
-        radius: 24,
-        backgroundColor: AppTheme.surfaceVariant,
+        radius: 24.r,
+        backgroundColor: AppTheme.primary.withOpacity(0.1),
         backgroundImage: avatarProvider,
         child: avatarProvider == null
             ? Text(
                 displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppTheme.primary,
                   fontWeight: FontWeight.w700,
+                  fontSize: 16.sp,
                 ),
               )
             : null,
       ),
       title: Text(
         displayName,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14.sp),
       ),
       subtitle: Text(
         '@$username',
-        style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+        style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
       ),
-      trailing: const Icon(Icons.chevron_right, color: AppTheme.textHint),
+      trailing: Icon(Icons.chevron_right, color: AppTheme.primary, size: 20.r),
     );
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━═══
 // ErrorBanner
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -598,24 +600,27 @@ class ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: AppTheme.error.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppTheme.error.withOpacity(0.3)),
       ),
       child: Row(
         children: [
           const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
-          const SizedBox(width: 10),
+          SizedBox(width: 10.w),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(color: AppTheme.error, fontSize: 13),
+              style: TextStyle(color: AppTheme.error, fontSize: 13.sp),
             ),
           ),
           if (onRetry != null)
-            TextButton(onPressed: onRetry, child: const Text('Retry')),
+            TextButton(
+              onPressed: onRetry,
+              child: Text('Retry', style: TextStyle(fontSize: 14.sp)),
+            ),
         ],
       ),
     );
