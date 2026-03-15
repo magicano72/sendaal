@@ -6,7 +6,7 @@ import '../core/error/exceptions.dart';
 import '../core/models/user_model.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/directus_error_parser.dart';
-import '../services/api_client.dart' hide ApiException;
+import '../services/api_client.dart' as api_client;
 import '../services/notification_service.dart';
 import '../services/user_service.dart';
 
@@ -47,11 +47,11 @@ class AuthState {
 
 /// Provides the AuthService singleton
 final authServiceProvider = Provider<AuthService>(
-  (ref) => AuthService(ApiClient.instance),
+  (ref) => AuthService(api_client.ApiClient.instance),
 );
 
 final notificationServiceProvider = Provider<NotificationService>(
-  (ref) => NotificationService(apiClient: ApiClient.instance),
+  (ref) => NotificationService(apiClient: api_client.ApiClient.instance),
 );
 
 /// Provides the UserService singleton
@@ -63,11 +63,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final UserService _userService;
   final NotificationService _notificationService;
 
-  AuthNotifier(
-    this._authService,
-    this._userService,
-    this._notificationService,
-  ) : super(const AuthState());
+  AuthNotifier(this._authService, this._userService, this._notificationService)
+    : super(const AuthState());
 
   Future<bool> login(String email, String password) async {
     print('[AuthNotifier] Starting login for: $email');
@@ -103,7 +100,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       String errorMessage = 'Email or password is incorrect.';
       if (e is ApiException) {
         errorMessage = DirectusErrorParser.getGeneralErrorMessage(e);
-      } else if (e.toString().contains('timed out')) {
+      } else if (e is api_client.ApiException) {
+        errorMessage = DirectusErrorParser.getGeneralErrorMessage(
+          ApiException(statusCode: e.statusCode, message: e.message),
+        );
+      } else if (e.toString().toLowerCase().contains('timed out')) {
         errorMessage =
             'Request took too long. Please check your connection and try again.';
       }
@@ -141,8 +142,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
               );
             },
           );
-      final createdId = (userId['data'] is Map &&
-              (userId['data']['id'] != null))
+      final createdId =
+          (userId['data'] is Map && (userId['data']['id'] != null))
           ? userId['data']['id'].toString()
           : '';
       if (createdId.isNotEmpty) {
@@ -154,12 +155,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return true;
     } catch (e) {
       print('[AuthNotifier] Register error: $e');
-      String errorMessage = 'Something went wrong. Please try again.';
+      String errorMessage;
       if (e is ApiException) {
-        errorMessage = DirectusErrorParser.getGeneralErrorMessage(e);
-      } else if (e.toString().contains('timed out')) {
+        // Keep the raw API message so the UI can map to field-level errors
+        errorMessage = e.message;
+      } else if (e is api_client.ApiException) {
+        errorMessage = e.message;
+      } else if (e.toString().toLowerCase().contains('timed out')) {
         errorMessage =
             'Request took too long. Please check your connection and try again.';
+      } else {
+        errorMessage = 'Something went wrong. Please try again.';
       }
       state = state.copyWith(isRegisterLoading: false, error: errorMessage);
       return false;
@@ -170,7 +176,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     print('[AuthNotifier] Checking if token refresh is needed');
     try {
       // Get the refresh token from ApiClient
-      final apiClient = ApiClient.instance;
+      final apiClient = api_client.ApiClient.instance;
 
       // Check if token is expired or about to expire
       if (!apiClient.isTokenExpired) {

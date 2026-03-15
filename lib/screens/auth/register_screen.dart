@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:sendaal/widgets/app_widgets.dart' show ErrorBanner;
 
+import '../../core/error/exceptions.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/connectivity_service.dart';
+import '../../core/services/directus_error_parser.dart';
 import '../../core/services/validation_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/text_style.dart';
 import '../../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -24,6 +28,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _obscure = true;
   bool _agreedToTerms = false;
   final _formKey = GlobalKey<FormState>();
+  String? _formError; // non-field specific API errors
 
   // Field-level error tracking for API errors
   String? _usernameError;
@@ -46,6 +51,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _usernameError = null;
       _emailError = null;
       _phoneError = null;
+      _formError = null;
     });
 
     if (!_formKey.currentState!.validate()) return;
@@ -94,28 +100,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authError = ref.read(authProvider).error;
     if (authError != null && !success) {
       try {
-        if (authError.contains('username') && authError.contains('unique')) {
-          setState(() {
-            _usernameError =
-                'This username is already taken. Please choose another.';
-          });
+        final apiEx = ApiException(message: authError);
+
+        _usernameError = DirectusErrorParser.parseFieldError(apiEx, 'username');
+        _emailError = DirectusErrorParser.parseFieldError(apiEx, 'email');
+        _phoneError = DirectusErrorParser.parseFieldError(apiEx, 'phone');
+
+        final hasFieldError =
+            _usernameError != null ||
+            _emailError != null ||
+            _phoneError != null;
+
+        if (hasFieldError) {
+          setState(() {});
           _formKey.currentState?.validate();
-        } else if (authError.contains('email') &&
-            authError.contains('unique')) {
-          setState(() {
-            _emailError =
-                'This email is already registered. Try logging in instead.';
-          });
-          _formKey.currentState?.validate();
-        } else if (authError.contains('phone') &&
-            authError.contains('unique')) {
-          setState(() {
-            _phoneError = 'This phone number is already registered.';
-          });
-          _formKey.currentState?.validate();
+        } else {
+          setState(
+            () =>
+                _formError = DirectusErrorParser.getGeneralErrorMessage(apiEx),
+          );
         }
       } catch (e) {
         debugPrint('Error parsing field error: $e');
+        setState(() => _formError = 'Something went wrong. $authError');
       }
     }
 
@@ -142,7 +149,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             // ── Scrollable content ──────────────────────────────────────────
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 2.h),
                 child: Column(
                   children: [
                     // White card
@@ -161,44 +168,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       padding: EdgeInsets.symmetric(
                         horizontal: 24.w,
-                        vertical: 28.h,
+                        vertical: 20.h,
                       ),
                       child: Form(
                         key: _formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // ── Back arrow + title row ─────────────────────
-                            Row(
-                              children: [
-                                GestureDetector(
-                                  onTap: () => Navigator.pop(context),
-                                  child: Icon(
-                                    Icons.arrow_back,
-                                    size: 22.r,
-                                    color: const Color(0xFF1A1A2E),
-                                  ),
-                                ),
-                                SizedBox(width: 12.w),
-                                Text(
-                                  'Create Account',
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF1A1A2E),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            SizedBox(height: 24.h),
-
                             // ── Headline ───────────────────────────────────
                             Text(
                               'Join Sendaal',
-                              style: TextStyle(
-                                fontSize: 26.sp,
-                                fontWeight: FontWeight.w800,
+                              style: TextStyles.h1Semi.copyWith(
                                 color: const Color(0xFF1A1A2E),
                                 letterSpacing: -0.5,
                               ),
@@ -206,14 +186,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             SizedBox(height: 6.h),
                             Text(
                               'Fill in your details to get started with\nyour new account.',
-                              style: TextStyle(
-                                fontSize: 14.sp,
+                              style: TextStyles.bodySmall.copyWith(
                                 color: const Color(0xFF8A94A6),
                                 height: 1.5,
                               ),
                             ),
 
-                            SizedBox(height: 28.h),
+                            SizedBox(height: 20.h),
 
                             // ── First Name ─────────────────────────────────
                             _FieldLabel(label: 'First Name'),
@@ -222,7 +201,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               controller: _firstNameCtrl,
                               keyboardType: TextInputType.name,
                               textCapitalization: TextCapitalization.words,
-                              style: TextStyle(
+                              style: TextStyles.bodySmall.copyWith(
                                 fontSize: 15.sp,
                                 color: const Color(0xFF1A1A2E),
                               ),
@@ -233,14 +212,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                             ),
 
-                            SizedBox(height: 18.h),
+                            SizedBox(height: 12.h),
 
                             // ── Username ───────────────────────────────────
                             _FieldLabel(label: 'Username'),
                             SizedBox(height: 8.h),
                             TextFormField(
                               controller: _usernameCtrl,
-                              style: TextStyle(
+                              style: TextStyles.bodySmall.copyWith(
                                 fontSize: 15.sp,
                                 color: const Color(0xFF1A1A2E),
                               ),
@@ -252,7 +231,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   ValidationService.validateUsername(v),
                             ),
 
-                            SizedBox(height: 18.h),
+                            SizedBox(height: 12.h),
 
                             // ── Email ──────────────────────────────────────
                             _FieldLabel(label: 'Email Address'),
@@ -260,7 +239,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             TextFormField(
                               controller: _emailCtrl,
                               keyboardType: TextInputType.emailAddress,
-                              style: TextStyle(
+                              style: TextStyles.bodySmall.copyWith(
                                 fontSize: 15.sp,
                                 color: const Color(0xFF1A1A2E),
                               ),
@@ -272,7 +251,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   ValidationService.validateEmail(v),
                             ),
 
-                            SizedBox(height: 18.h),
+                            SizedBox(height: 12.h),
 
                             // ── Phone ──────────────────────────────────────
                             _FieldLabel(label: 'Phone Number'),
@@ -280,19 +259,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             TextFormField(
                               controller: _phoneCtrl,
                               keyboardType: TextInputType.phone,
-                              style: TextStyle(
+                              style: TextStyles.bodySmall.copyWith(
                                 fontSize: 15.sp,
                                 color: const Color(0xFF1A1A2E),
                               ),
                               decoration: _inputDecoration(
-                                hint: '+1 (555) 000-0000',
+                                hint: '01x-xxx-xxxx',
                                 errorText: _phoneError,
                               ),
                               validator: (v) =>
                                   ValidationService.validatePhone(v),
                             ),
 
-                            SizedBox(height: 18.h),
+                            SizedBox(height: 12.h),
 
                             // ── Password ───────────────────────────────────
                             _FieldLabel(label: 'Password'),
@@ -300,7 +279,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             TextFormField(
                               controller: _passwordCtrl,
                               obscureText: _obscure,
-                              style: TextStyle(
+                              style: TextStyles.bodySmall.copyWith(
                                 fontSize: 15.sp,
                                 color: const Color(0xFF1A1A2E),
                               ),
@@ -333,7 +312,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                             ],
 
-                            SizedBox(height: 20.h),
+                            SizedBox(height: 14.h),
+
+                            // API error (non field-specific)
+                            if (_formError != null) ...[
+                              ErrorBanner(message: _formError!),
+                              SizedBox(height: 12.h),
+                            ],
 
                             // ── Terms checkbox ─────────────────────────────
                             Row(
@@ -351,10 +336,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                       borderRadius: BorderRadius.circular(4.r),
                                     ),
                                     side: BorderSide(
-                                      color: const Color(0xFFCDD5DF),
+                                      color: AppTheme.primary,
                                       width: 1.5.w,
                                     ),
-                                    activeColor: const Color(0xFF2563EB),
+                                    activeColor: AppTheme.primary,
                                     materialTapTargetSize:
                                         MaterialTapTargetSize.shrinkWrap,
                                   ),
@@ -363,29 +348,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 Expanded(
                                   child: Text.rich(
                                     TextSpan(
-                                      style: TextStyle(
+                                      style: TextStyles.captionRegular.copyWith(
                                         fontSize: 13.sp,
-                                        color: const Color(0xFF4A5568),
+                                        color: AppTheme.textSecondary,
                                         height: 1.5,
                                       ),
                                       children: [
                                         const TextSpan(text: 'I agree to the '),
                                         TextSpan(
                                           text: 'Terms of Service',
-                                          style: TextStyle(
-                                            color: const Color(0xFF2563EB),
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 13.sp,
-                                          ),
+                                          style: TextStyles.captionMedium
+                                              .copyWith(
+                                                color: AppTheme.primary,
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 13.sp,
+                                              ),
                                         ),
                                         const TextSpan(text: ' and '),
                                         TextSpan(
                                           text: 'Privacy Policy',
-                                          style: TextStyle(
-                                            color: const Color(0xFF2563EB),
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 13.sp,
-                                          ),
+                                          style: TextStyles.captionMedium
+                                              .copyWith(
+                                                color: AppTheme.primary,
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 13.sp,
+                                              ),
                                         ),
                                         const TextSpan(text: '.'),
                                       ],
@@ -395,7 +382,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ],
                             ),
 
-                            SizedBox(height: 28.h),
+                            SizedBox(height: 20.h),
 
                             // ── Register button ────────────────────────────
                             SizedBox(
@@ -406,10 +393,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     ? null
                                     : _register,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2563EB),
-                                  disabledBackgroundColor: const Color(
-                                    0xFF2563EB,
-                                  ).withOpacity(0.6),
+                                  backgroundColor: AppColors.primary,
+                                  disabledBackgroundColor: AppColors.primary
+                                      .withOpacity(0.5),
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
@@ -430,10 +416,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   auth.isRegisterLoading
                                       ? 'Creating...'
                                       : 'Register',
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
+                                  style: TextStyles.bodyRegular.copyWith(
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: 0.3,
+                                    fontSize: 16.sp,
                                   ),
                                 ),
                               ),
@@ -447,9 +433,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               children: [
                                 Text(
                                   'Already have an account?',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: const Color(0xFF8A94A6),
+                                  style: TextStyles.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                                 SizedBox(width: 4.w),
@@ -457,9 +442,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   onTap: () => Navigator.pop(context),
                                   child: Text(
                                     'Login',
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      color: const Color(0xFF2563EB),
+                                    style: TextStyles.bodySmall.copyWith(
+                                      color: AppColors.primary,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -470,44 +454,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ),
                     ),
-
-                    SizedBox(height: 24.h),
-
-                    // ── Sendaal branding ─────────────────────────────────────
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 36.r,
-                          height: 36.r,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF8A94A6),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'S',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Text(
-                          'SENDAAL',
-                          style: TextStyle(
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                            color: const Color(0xFF4A5568),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 12.h),
                   ],
                 ),
               ),
@@ -558,8 +504,7 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: TextStyle(
-        fontSize: 14.sp,
+      style: TextStyles.bodySmall.copyWith(
         fontWeight: FontWeight.w600,
         color: const Color(0xFF1A1A2E),
       ),
@@ -594,17 +539,13 @@ class _PasswordStrengthIndicator extends StatelessWidget {
             children: [
               Text(
                 'Password Strength',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
+                style: TextStyles.captionMedium.copyWith(
                   color: const Color(0xFF1A1A2E),
                 ),
               ),
               Text(
                 '$metCount/$totalCount',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
+                style: TextStyles.captionMedium.copyWith(
                   color: metCount == totalCount
                       ? AppTheme.success
                       : AppTheme.error,

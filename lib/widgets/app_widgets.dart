@@ -602,18 +602,18 @@ class ErrorBanner extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppTheme.error.withOpacity(0.08),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppTheme.error.withOpacity(0.3)),
+        border: Border.all(color: AppColors.error.withOpacity(0.4), width: 1),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
+          const Icon(Icons.error_outline, color: AppColors.error, size: 20),
           SizedBox(width: 10.w),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: AppTheme.error, fontSize: 13.sp),
+              style: TextStyle(color: AppColors.error, fontSize: 13.sp),
             ),
           ),
           if (onRetry != null)

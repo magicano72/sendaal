@@ -1,63 +1,25 @@
 // lib/core/theme/text_styles.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TextStyles {
-  static const _fontFamily = 'Inter';
+  static TextStyle _inter(double size, FontWeight weight, double height) =>
+      GoogleFonts.inter(fontSize: size.sp, fontWeight: weight, height: height);
 
   // Headings
-  static TextStyle h1Bold = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 32.sp,
-    fontWeight: FontWeight.w700,
-    height: 1.2,
-  );
-  static TextStyle h1Semi = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 28.sp,
-    fontWeight: FontWeight.w600,
-    height: 1.25,
-  );
+  static TextStyle h1Bold = _inter(32, FontWeight.w700, 1.2);
+  static TextStyle h1Semi = _inter(28, FontWeight.w600, 1.25);
 
   // Subheadings
-  static TextStyle h2Semi = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 24.sp,
-    fontWeight: FontWeight.w600,
-    height: 1.25,
-  );
-  static TextStyle h2Medium = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 20.sp,
-    fontWeight: FontWeight.w600,
-    height: 1.3,
-  );
+  static TextStyle h2Semi = _inter(24, FontWeight.w600, 1.25);
+  static TextStyle h2Medium = _inter(20, FontWeight.w600, 1.3);
 
   // Body
-  static TextStyle bodyRegular = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 16.sp,
-    fontWeight: FontWeight.w400,
-    height: 1.4,
-  );
-  static TextStyle bodySmall = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w400,
-    height: 1.4,
-  );
+  static TextStyle bodyRegular = _inter(16, FontWeight.w400, 1.4);
+  static TextStyle bodySmall = _inter(14, FontWeight.w400, 1.4);
 
   // Caption / Small
-  static TextStyle captionRegular = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 12.sp,
-    fontWeight: FontWeight.w400,
-    height: 1.35,
-  );
-  static TextStyle captionMedium = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 12.sp,
-    fontWeight: FontWeight.w500,
-    height: 1.35,
-  );
+  static TextStyle captionRegular = _inter(12, FontWeight.w400, 1.35);
+  static TextStyle captionMedium = _inter(12, FontWeight.w500, 1.35);
 }
