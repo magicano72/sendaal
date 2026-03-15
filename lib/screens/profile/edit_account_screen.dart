@@ -23,6 +23,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
   late String _selectedType;
   late String _instapayIdType;
   late String _bankIdType;
+  late TextEditingController _titleCtrl;
   late TextEditingController _identifierCtrl;
   late TextEditingController _limitCtrl;
   late int _priority;
@@ -44,6 +45,11 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
         _selectedType == 'bank_account' && _looksLikeIban(account.accountIdentifier)
             ? 'iban'
             : 'account';
+    _titleCtrl = TextEditingController(
+      text: account.accountTitle.isNotEmpty
+          ? account.accountTitle
+          : AppConstants.displayLabel(account.type.name),
+    );
     _identifierCtrl = TextEditingController(text: account.accountIdentifier);
     _limitCtrl =
         TextEditingController(text: account.defaultLimit.toStringAsFixed(0));
@@ -53,6 +59,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
 
   @override
   void dispose() {
+    _titleCtrl.dispose();
     _identifierCtrl.dispose();
     _limitCtrl.dispose();
     super.dispose();
@@ -116,6 +123,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
   }
 
   Future<void> _save() async {
+    final title = _titleCtrl.text.trim();
     var identifier = _identifierCtrl.text.trim();
     final limitText = _limitCtrl.text.trim();
 
@@ -152,6 +160,8 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
       accountId: widget.account.id,
       type: _selectedType,
       accountIdentifier: normalizedIdentifier,
+      accountTitle:
+          title.isNotEmpty ? title : AppConstants.displayLabel(_selectedType),
       defaultLimit: parsedLimit,
       priority: _priority,
       isVisible: _isVisible,
@@ -184,6 +194,16 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            TextFormField(
+              controller: _titleCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Account Title',
+                hintText: 'e.g. Business Credit, Emergency Fund',
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+            SizedBox(height: 14.h),
+
             DropdownButtonFormField<String>(
               value: _selectedType,
               decoration: const InputDecoration(labelText: 'Account Type'),

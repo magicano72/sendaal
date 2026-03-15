@@ -6,9 +6,11 @@ import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/main_shell.dart';
 import '../../screens/notifications/notifications_screen.dart';
+import '../../screens/accounts/accounts_screen.dart';
 import '../../screens/profile/edit_account_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/recipient/recipient_screen.dart';
+import '../../screens/requests/all_requests_screen.dart';
 import '../../screens/requests/requester_details_screen.dart';
 import '../../screens/search/search_screen.dart';
 import '../../screens/transfer/transfer_screen.dart';
@@ -19,6 +21,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
+  static const String accounts = '/accounts';
   static const String profile = '/profile';
   static const String editAccount = '/edit-account';
   static const String search = '/search';
@@ -27,6 +30,9 @@ class AppRoutes {
   static const String transferSuccess = '/transfer-success';
   static const String notifications = '/notifications';
   static const String requesterDetails = '/requester-details';
+  // Backwards-compatible alias
+  static const String allAccessRequests = '/all-requests';
+  static const String allRequests = '/all-requests';
 }
 
 /// Central router configuration.
@@ -42,6 +48,8 @@ class AppRouter {
         return _fade(const RegisterScreen());
       case AppRoutes.home:
         return _fade(const MainShell());
+      case AppRoutes.accounts:
+        return _fade(const AccountsScreen());
       case AppRoutes.profile:
         return _fade(const ProfileScreen());
       case AppRoutes.editAccount:
@@ -62,6 +70,9 @@ class AppRouter {
       case AppRoutes.requesterDetails:
         final request = settings.arguments as AccessRequest;
         return _fade(RequesterDetailsScreen(request: request));
+      case AppRoutes.allAccessRequests:
+      case AppRoutes.allRequests:
+        return _fade(const AllRequestsScreen());
       default:
         return _fade(const LoginScreen());
     }

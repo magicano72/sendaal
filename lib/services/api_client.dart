@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
+import '../core/services/connectivity_service.dart';
+
 /// Custom exception with a user-friendly message and optional HTTP status
 class ApiException implements Exception {
   final String message;
@@ -13,7 +15,7 @@ class ApiException implements Exception {
   const ApiException(this.message, {this.statusCode});
 
   @override
-  String toString() => 'ApiException($statusCode): $message';
+  String toString() => message;
 }
 
 /// Central HTTP client for ALL Sendaal API calls.
@@ -26,6 +28,7 @@ class ApiClient {
   ApiClient._();
 
   static final ApiClient instance = ApiClient._();
+  final ConnectivityService _connectivityService = ConnectivityService();
 
   // ── Configuration from .env ───────────────────────────────────────────────
   String get baseUrl => dotenv.env['BASE_URL'] ?? 'https://api.sendaal.com';
@@ -33,6 +36,15 @@ class ApiClient {
   Duration get _timeout => Duration(
     milliseconds: int.tryParse(dotenv.env['API_TIMEOUT'] ?? '30000') ?? 30000,
   );
+
+  Future<void> _ensureOnline() async {
+    final hasInternet = await _connectivityService.hasInternetConnection();
+    if (!hasInternet) {
+      throw const ApiException(
+        'No internet connection. Please check your network.',
+      );
+    }
+  }
 
   // ── Auth token (set after login) ──────────────────────────────────────────
   String? _authToken;
@@ -169,6 +181,7 @@ class ApiClient {
   Future<dynamic> _sendWithRefreshRetry(
     Future<http.Response> Function() send,
   ) async {
+    await _ensureOnline();
     // Pre-emptively refresh if we know the token is expiring.
     await _refreshIfExpired();
 
@@ -274,6 +287,7 @@ class ApiClient {
   }) async {
     print('[ApiClient] MULTIPART POST request: $_baseUrl$path');
     try {
+      await _ensureOnline();
       await _refreshIfExpired();
 
       Future<({int statusCode, String body})> sendRequest() async {

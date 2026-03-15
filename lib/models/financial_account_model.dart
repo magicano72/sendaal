@@ -20,6 +20,7 @@ class FinancialAccount {
   final String userId;
   final AccountType type;
   final String accountIdentifier;
+  final String accountTitle;
   final double defaultLimit;
   final int priority;
   final bool isVisible;
@@ -29,6 +30,7 @@ class FinancialAccount {
     required this.userId,
     required this.type,
     required this.accountIdentifier,
+    this.accountTitle = '',
     required this.defaultLimit,
     this.priority = 0,
     this.isVisible = true,
@@ -49,6 +51,7 @@ class FinancialAccount {
       userId: json['user']?.toString() ?? json['userId']?.toString() ?? '',
       type: AccountType.fromString(typeValue),
       accountIdentifier: json['account_identifier']?.toString() ?? '',
+      accountTitle: json['account_title']?.toString() ?? '',
       defaultLimit: double.tryParse(json['limit']?.toString() ?? '0') ?? 0,
       priority: json['priority'] is int
           ? json['priority']
@@ -63,6 +66,7 @@ class FinancialAccount {
       'user': userId,
       'type': type.name,
       'account_identifier': accountIdentifier,
+      'account_title': accountTitle,
       'limit': defaultLimit,
       'priority': priority,
     };
@@ -78,6 +82,7 @@ class FinancialAccount {
     String? userId,
     AccountType? type,
     String? accountIdentifier,
+    String? accountTitle,
     double? defaultLimit,
     int? priority,
     bool? isVisible,
@@ -86,6 +91,7 @@ class FinancialAccount {
     userId: userId ?? this.userId,
     type: type ?? this.type,
     accountIdentifier: accountIdentifier ?? this.accountIdentifier,
+    accountTitle: accountTitle ?? this.accountTitle,
     defaultLimit: defaultLimit ?? this.defaultLimit,
     priority: priority ?? this.priority,
     isVisible: isVisible ?? this.isVisible,

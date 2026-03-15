@@ -21,6 +21,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
   String _selectedType = 'instapay';
   String _instapayIdType = 'handle'; // 'handle' | 'phone'
   String _bankIdType = 'account'; // 'account' | 'iban'
+  final _titleCtrl = TextEditingController();
   final _identifierCtrl = TextEditingController();
   final _limitCtrl = TextEditingController();
   double _defaultLimit = AppConstants.limitForAccountType('instapay');
@@ -36,6 +37,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
 
   @override
   void dispose() {
+    _titleCtrl.dispose();
     _identifierCtrl.dispose();
     _limitCtrl.dispose();
     super.dispose();
@@ -97,6 +99,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
   }
 
   Future<void> _save() async {
+    final title = _titleCtrl.text.trim();
     var identifier = _identifierCtrl.text.trim();
     final limitText = _limitCtrl.text.trim();
 
@@ -135,6 +138,8 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
         userId: userId,
         type: _selectedType,
         accountIdentifier: normalizedIdentifier,
+        accountTitle:
+            title.isNotEmpty ? title : AppConstants.displayLabel(_selectedType),
         defaultLimit: parsedLimit,
         priority: _priority,
       );
@@ -186,6 +191,16 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
             ),
           ),
           SizedBox(height: 20.h),
+
+          TextFormField(
+            controller: _titleCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Account Title',
+              hintText: 'e.g. Emergency Wallet, Travel Card',
+            ),
+            textCapitalization: TextCapitalization.words,
+          ),
+          SizedBox(height: 14.h),
 
           // Account type dropdown
           DropdownButtonFormField<String>(

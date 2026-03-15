@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/app_theme.dart';
-import '../providers/search_provider.dart';
-import 'notifications/notifications_screen.dart';
+import 'accounts/accounts_screen.dart';
 import 'profile/profile_screen.dart';
 import 'search/search_screen.dart';
 
 /// Main app shell with bottom navigation bar.
-/// Manages the 3 primary tabs: Search, Profile, Notifications.
+/// Manages the primary tabs.
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
@@ -21,14 +20,12 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   final _screens = const [
     SearchScreen(),
+    AccountsScreen(),
     ProfileScreen(),
-    NotificationsScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final unreadCount = ref.watch(notificationsProvider).unreadCount;
-
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
@@ -38,27 +35,20 @@ class _MainShellState extends ConsumerState<MainShell> {
         indicatorColor: AppTheme.accent,
         destinations: [
           const NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search, color: AppTheme.primary),
-            label: 'Send',
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home, color: AppTheme.surface),
+            label: 'Home',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon:
+                Icon(Icons.account_balance_wallet, color: AppTheme.surface),
+            label: 'Accounts',
           ),
           const NavigationDestination(
             icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: AppTheme.primary),
+            selectedIcon: Icon(Icons.person, color: AppTheme.surface),
             label: 'Profile',
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: unreadCount > 0,
-              label: Text('$unreadCount'),
-              child: const Icon(Icons.notifications_outlined),
-            ),
-            selectedIcon: Badge(
-              isLabelVisible: unreadCount > 0,
-              label: Text('$unreadCount'),
-              child: const Icon(Icons.notifications, color: AppTheme.primary),
-            ),
-            label: 'Alerts',
           ),
         ],
       ),

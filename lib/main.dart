@@ -8,6 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'services/local_notification_service.dart';
 import 'services/system_limits_service.dart';
 import 'screens/auth/login_screen.dart';
+import 'widgets/connectivity_banner.dart';
 
 /// Entry point — loads .env before running the app
 Future<void> main() async {
@@ -39,6 +40,9 @@ class SendaalApp extends StatelessWidget {
           home: const LoginScreen(),
           onGenerateRoute: AppRouter.generateRoute,
           initialRoute: AppRoutes.login,
+          builder: (context, child) => ConnectivityBanner(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

@@ -50,6 +50,7 @@ class AccountService {
     required String userId,
     required String type,
     required String accountIdentifier,
+    String? accountTitle,
     required double defaultLimit,
     int priority = 0,
     bool isVisible = true,
@@ -58,6 +59,7 @@ class AccountService {
       'user': userId,
       'type': type, // API now expects type as a string, not an array
       'account_identifier': accountIdentifier,
+      'account_title': accountTitle ?? '',
       'limit': defaultLimit,
       'priority': priority,
       'created_at': DateTime.now().toIso8601String().split(
@@ -78,6 +80,7 @@ class AccountService {
     required String accountId,
     required String type,
     required String accountIdentifier,
+    String? accountTitle,
     required double defaultLimit,
     int priority = 0,
     bool isVisible = true,
@@ -85,6 +88,7 @@ class AccountService {
     final body = <String, dynamic>{
       'type': type,
       'account_identifier': accountIdentifier,
+      'account_title': accountTitle ?? '',
       'limit': defaultLimit,
       'priority': priority,
       'is_visible': isVisible,

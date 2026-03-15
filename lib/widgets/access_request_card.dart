@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
+import '../core/models/user_model.dart';
 import '../core/router/app_router.dart';
-import '../core/theme/app_theme.dart';
 import '../models/access_request_model.dart';
 import '../providers/access_request_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
+import 'delete_confirmation_dialog.dart';
 import 'shimmer_widgets.dart';
 
 /// Compact card to display access request on home/search screens.
+/// Matches the high-fidelity design with avatar, status chip, and actions.
 class AccessRequestCard extends ConsumerWidget {
   final AccessRequest request;
   final bool isReceived; // True if receiver viewing, false if requester viewing
@@ -24,8 +27,6 @@ class AccessRequestCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPending = request.status == AccessStatus.pending;
-    final canHide = request.canHide;
-    final statusColor = _getStatusColor();
     final currentUser = ref.watch(authProvider).user;
 
     // Fetch user info (requester if received, receiver if sent)
@@ -41,32 +42,26 @@ class AccessRequestCard extends ConsumerWidget {
 
     final showActions = isReceived && isPending && isReceiver;
     final userAsync = ref.watch(userProvider(userIdToFetch));
-    final labelText = isReceived ? 'From: @' : 'To: @';
 
     return userAsync.when(
-      loading: () => ShimmerCard(height: 140.h),
-      error: (error, stackTrace) {
-        // Fallback UI if user fetch fails
-        return _buildCard(
-          context,
-          ref,
-          userName: 'User ${userIdToFetch.substring(0, 8)}...',
-          canHide: canHide,
-          statusColor: statusColor,
-          isReceived: isReceived,
-          labelText: labelText,
-          canOpenDetails: canOpenDetails,
-          showActions: showActions,
-        );
-      },
-      data: (user) => _buildCard(
+      loading: () => ShimmerCard(height: 150.h),
+      error: (_, __) => _buildCard(
         context,
         ref,
-        userName: user.username,
-        canHide: canHide,
-        statusColor: statusColor,
-        isReceived: isReceived,
-        labelText: labelText,
+        displayName: 'User ${userIdToFetch.substring(0, 6)}',
+        firstName: null,
+        avatarUrl: null,
+        canOpenDetails: canOpenDetails,
+        showActions: showActions,
+      ),
+      data: (User user) => _buildCard(
+        context,
+        ref,
+        displayName: user.displayName.isNotEmpty
+            ? user.displayName
+            : user.username,
+        firstName: user.firstName,
+        avatarUrl: user.avatarUrl,
         canOpenDetails: canOpenDetails,
         showActions: showActions,
       ),
@@ -76,183 +71,265 @@ class AccessRequestCard extends ConsumerWidget {
   Widget _buildCard(
     BuildContext context,
     WidgetRef ref, {
-    required String userName,
-    required bool canHide,
-    required Color statusColor,
-    required bool isReceived,
-    required String labelText,
+    required String displayName,
+    required String? firstName,
+    required String? avatarUrl,
     required bool canOpenDetails,
     required bool showActions,
   }) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      elevation: 1,
-      child: InkWell(
-        onTap: canOpenDetails
-            ? () => _openRequesterDetails(context, request)
-            : null,
-        borderRadius: BorderRadius.circular(12.r),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row with title and status badge
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                isReceived
-                                    ? 'Access Request'
-                                    : 'Request Status',
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                            SizedBox(width: 6.w),
-                            Icon(
-                              Icons.chevron_right,
-                              size: 18.r,
-                              color: canOpenDetails
-                                  ? AppTheme.primary
-                                  : AppTheme.primary.withOpacity(0.3),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '$labelText$userName',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppTheme.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 5.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(color: statusColor.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      request.status.name.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.h),
+    final statusColor = _getStatusColor();
+    final subtitle =
+        'Request ${_formatRequestNumber(request.id)} • ${_timeAgo(request.createdAt)}';
+    final allowHide = request.canHide || isReceived;
 
-              // Date row
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 14.r,
-                    color: AppTheme.textSecondary,
+    return Slidable(
+      key: ValueKey('access-${request.id}'),
+      closeOnScroll: true,
+      endActionPane: allowHide
+          ? ActionPane(
+              motion: const DrawerMotion(),
+              extentRatio: 0.32,
+              children: [
+                SlidableAction(
+                  onPressed: (_) => _confirmDelete(context, ref),
+                  backgroundColor: Colors.red.withOpacity(0.12),
+                  foregroundColor: Colors.red,
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                  spacing: 6.w,
+                  icon: Icons.delete_outline,
+                  label: 'Delete',
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(18.r),
+                    bottomRight: Radius.circular(18.r),
                   ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    _formatDate(request.createdAt),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.h),
-
-              // Action buttons - ONLY show if received and pending
-              if (showActions)
+                ),
+              ],
+            )
+          : null,
+      child: Card(
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+        elevation: 1.5,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18.r),
+        ),
+        child: InkWell(
+          onTap: canOpenDetails
+              ? () => _openRequesterDetails(context, request)
+              : null,
+          borderRadius: BorderRadius.circular(18.r),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () =>
-                            _rejectRequest(context, ref, request.id),
-                        icon: Icon(Icons.close, size: 16.r),
-                        label: Text(
-                          'Reject',
-                          style: TextStyle(fontSize: 13.sp),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          side: const BorderSide(color: Colors.red),
-                          foregroundColor: Colors.red,
-                        ),
-                      ),
-                    ),
+                    _buildAvatar(avatarUrl, firstName ?? displayName),
                     SizedBox(width: 12.w),
                     Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () =>
-                            _approveRequest(context, ref, request.id),
-                        icon: Icon(Icons.check, size: 16.r),
-                        label: Text(
-                          'Approve',
-                          style: TextStyle(fontSize: 13.sp),
-                        ),
-                        style: FilledButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          backgroundColor: AppTheme.primary,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF111827),
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
-                        child: Text(
-                          request.status.name == 'approved'
-                              ? 'Access granted'
-                              : request.status.name == 'rejected'
-                              ? 'Request rejected'
-                              : 'Request pending',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: request.status.name == 'approved'
-                                    ? AppTheme.success
-                                    : request.status.name == 'rejected'
-                                    ? AppTheme.error
-                                    : AppTheme.accent,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-                    ),
-                    if (canHide)
-                      TextButton.icon(
-                        onPressed: () => _clearRequest(context, ref),
-                        icon: Icon(Icons.hide_source, size: 16.r),
-                        label: Text('Hide', style: TextStyle(fontSize: 13.sp)),
-                      ),
+                    _statusChip(statusColor),
                   ],
                 ),
-            ],
+                SizedBox(height: 14.h),
+                showActions
+                    ? _buildActionButtons(context, ref)
+                    : _buildStatusFooter(
+                        context,
+                        ref,
+                        statusColor,
+                        canOpenDetails,
+                      ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statusChip(Color statusColor) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Text(
+        request.status.name.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w700,
+          color: statusColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String? avatarUrl, String name) {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+    return Container(
+      width: 52.r,
+      height: 52.r,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0xFFF0E7DA),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: avatarUrl != null && avatarUrl!.isNotEmpty
+            ? Image.network(avatarUrl, fit: BoxFit.cover)
+            : Center(
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1F2C3B),
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
+    return Row(
+      children: [
+        Expanded(
+          child: FilledButton(
+            onPressed: () => _approveRequest(context, ref, request.id),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF2D7AE8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18.r),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+            ),
+            child: Text(
+              'Approve',
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => _rejectRequest(context, ref, request.id),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF6B7280),
+              side: const BorderSide(color: Color(0xFFE5E7EB)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18.r),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+              backgroundColor: const Color(0xFFF7F8FA),
+            ),
+            child: Text(
+              'Decline',
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusFooter(
+    BuildContext context,
+    WidgetRef ref,
+    Color statusColor,
+    bool canOpenDetails,
+  ) {
+    if (request.status == AccessStatus.approved) {
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: canOpenDetails
+              ? () => _openRequesterDetails(context, request)
+              : null,
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(
+              color: Color(0xFFD1D9E6),
+              style: BorderStyle.solid,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            padding: EdgeInsets.symmetric(vertical: 12.h),
+            backgroundColor: const Color(0xFFF9FBFF),
+          ),
+          child: Text(
+            'View Log Details',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF4B5563),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (request.status == AccessStatus.rejected && request.canHide) {
+      return Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          onPressed: () => _confirmDelete(context, ref),
+          icon: Icon(Icons.delete_outline, size: 16.r, color: statusColor),
+          label: Text(
+            'Delete',
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: statusColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.h),
+      child: Text(
+        request.status == AccessStatus.rejected
+            ? 'Request rejected'
+            : 'Awaiting response',
+        style: TextStyle(
+          fontSize: 13.sp,
+          fontWeight: FontWeight.w600,
+          color: statusColor,
         ),
       ),
     );
@@ -263,24 +340,40 @@ class AccessRequestCard extends ConsumerWidget {
       case AccessStatus.pending:
         return Colors.orange;
       case AccessStatus.approved:
-        return Colors.green;
+        return const Color(0xFF24B177);
       case AccessStatus.rejected:
         return Colors.red;
     }
   }
 
-  static String _formatDate(DateTime dateTime) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final requestDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+  String _formatRequestNumber(String id) {
+    if (id.isEmpty) return '#0000';
+    final trimmed = id.length > 6 ? id.substring(0, 6) : id;
+    return '#$trimmed';
+  }
 
-    if (requestDate == today) {
-      return 'Today';
-    } else if (requestDate == yesterday) {
-      return 'Yesterday';
-    } else {
-      return '${requestDate.year}-${requestDate.month.toString().padLeft(2, '0')}-${requestDate.day.toString().padLeft(2, '0')}';
+  String _timeAgo(DateTime dateTime) {
+    final diff = DateTime.now().difference(dateTime);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => DeleteConfirmationDialog(
+        title: 'Confirm Delete',
+        description:
+            'Are you sure you want to delete this request? This action cannot be undone.',
+        confirmLabel: 'Delete',
+        cancelLabel: 'Cancel',
+      ),
+    );
+
+    if (confirmed == true) {
+      await _clearRequest(context, ref);
     }
   }
 

@@ -35,12 +35,15 @@ class _RequesterDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final requesterId = _request.requesterId;
     final currentUser = ref.watch(authProvider).user;
     final isReceiver = currentUser?.id == _request.receiverId;
+    final isRequester = currentUser?.id == _request.requesterId;
+    // Show the opposite party: requester when you're receiver, receiver when you're requester.
+    final profileUserId =
+        isRequester ? _request.receiverId : _request.requesterId;
     final canAct = isReceiver && _request.status == AccessStatus.pending;
 
-    final userAsync = ref.watch(userProvider(requesterId));
+    final userAsync = ref.watch(userProvider(profileUserId));
 
     return Scaffold(
       appBar: AppBar(
@@ -59,7 +62,7 @@ class _RequesterDetailsScreenState
             padding: EdgeInsets.all(20.w),
             child: ErrorBanner(
               message: 'Unable to load requester details.',
-              onRetry: () => ref.refresh(userProvider(requesterId)),
+              onRetry: () => ref.refresh(userProvider(profileUserId)),
             ),
           ),
           data: (user) => _RequesterDetailsBody(
@@ -159,6 +162,15 @@ class _RequesterDetailsBody extends StatelessWidget {
     final avatarUrl = user.avatarUrl;
     final phone = (user.phone ?? '').trim();
     final email = (user.email ?? '').trim();
+    final initials = (user.firstName?.isNotEmpty ?? false)
+        ? user.firstName![0].toUpperCase()
+        : user.initials;
+    final primaryName = (user.firstName?.isNotEmpty ?? false)
+        ? user.firstName!
+        : (user.displayName.isNotEmpty ? user.displayName : user.username);
+    final fullName =
+        (user.displayName.isNotEmpty ? user.displayName : user.firstName) ??
+        'Not provided';
 
     return ListView(
       padding: EdgeInsets.all(20.w),
@@ -172,7 +184,7 @@ class _RequesterDetailsBody extends StatelessWidget {
                 : null,
             child: (avatarUrl == null || avatarUrl.isEmpty)
                 ? Text(
-                    user.initials,
+                    initials,
                     style: TextStyle(
                       color: AppTheme.primary,
                       fontWeight: FontWeight.w700,
@@ -185,7 +197,7 @@ class _RequesterDetailsBody extends StatelessWidget {
         SizedBox(height: 12.h),
         Center(
           child: Text(
-            user.displayName.isNotEmpty ? user.displayName : 'Unknown user',
+            primaryName,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -211,9 +223,7 @@ class _RequesterDetailsBody extends StatelessWidget {
                 _InfoRow(
                   icon: Icons.badge_outlined,
                   label: 'Full Name',
-                  value: user.displayName.isNotEmpty
-                      ? user.displayName
-                      : 'Not provided',
+                  value: fullName.isNotEmpty ? fullName : 'Not provided',
                 ),
                 Divider(height: 20.h),
                 _InfoRow(

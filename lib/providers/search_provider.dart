@@ -95,6 +95,7 @@ class NotificationsState {
   });
 
   int get unreadCount => notifications.where((n) => n.isRead != true).length;
+  bool get hasUnread => unreadCount > 0;
 
   NotificationsState copyWith({
     List<Notification>? notifications,

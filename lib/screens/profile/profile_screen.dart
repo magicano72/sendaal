@@ -12,8 +12,7 @@ import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/user_service.dart';
 import '../../widgets/app_widgets.dart';
-import 'add_account_sheet.dart';
-import 'edit_account_screen.dart';
+import '../accounts/accounts_screen.dart';
 
 /// My Profile Screen — shows the current user's profile and financial accounts
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -41,23 +40,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final auth = ref.watch(authProvider);
     final accountsState = ref.watch(accountsProvider);
     final user = auth.user;
+    final favoriteAccounts = accountsState.accounts
+        .where((a) => a.isVisible && a.priority == 0)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
+        leading: const SizedBox(), // Remove back button
         title: const Text('My Profile'),
-        actions: [
-          // Logout
-          IconButton(
-            icon: const Icon(Icons.logout_outlined),
-            tooltip: 'Sign Out',
-            onPressed: () async {
-              await ref.read(authProvider.notifier).logout();
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, AppRoutes.login);
-              }
-            },
-          ),
-        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -100,7 +90,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Payment Accounts',
+                  'Favorite Accounts',
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
@@ -108,9 +98,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 TextButton.icon(
-                  icon: Icon(Icons.add, size: 18.r),
-                  label: Text('Add', style: TextStyle(fontSize: 14.sp)),
-                  onPressed: () => _showAddAccountSheet(context),
+                  icon: Icon(Icons.manage_accounts_outlined, size: 18.r),
+                  label: Text('Manage', style: TextStyle(fontSize: 14.sp)),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const AccountsScreen()),
+                    );
+                  },
                 ),
               ],
             ),
@@ -127,115 +121,90 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   }
                 },
               )
-            else if (accountsState.accounts.isEmpty)
+            else if (favoriteAccounts.isEmpty)
               const EmptyState(
                 icon: Icons.account_balance_wallet_outlined,
-                title: 'No accounts yet',
-                subtitle: 'Add your first payment account to get started.',
+                title: 'No favorite accounts yet',
+                subtitle: 'Manage accounts to star your favorites.',
               )
             else
-              ...accountsState.accounts.map(
+              ...favoriteAccounts.map(
                 (account) => AccountCard(
                   account: account,
-                  showToggle: true,
+                  dense: true,
+                  showToggle: false,
                   showStar: true,
-                  onToggleVisibility: (v) {
-                    ref
-                        .read(accountsProvider.notifier)
-                        .toggleVisibility(account.id, account.isVisible);
+                  onStar: () => _toggleFavorite(account),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const AccountsScreen()),
+                    );
                   },
-                  onStar: () {
-                    final newPriority = account.priority == 0 ? 1 : 0;
-                    ref
-                        .read(accountsProvider.notifier)
-                        .updatePriority(account.id, newPriority);
-                  },
-                  onEdit: () => _openEditAccount(account),
-                  onDelete: () => _confirmDeleteAccount(account),
                 ),
               ),
+
+            SizedBox(height: 28.h),
+
+            _LogoutButton(
+              onPressed: () async {
+                await ref.read(authProvider.notifier).logout();
+                if (mounted) {
+                  Navigator.pushReplacementNamed(context, AppRoutes.login);
+                }
+              },
+            ),
+
+            SizedBox(height: 12.h),
           ],
         ),
       ),
     );
   }
 
-  void _showAddAccountSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (_) => const AddAccountSheet(),
-    );
-  }
-
-  Future<void> _openEditAccount(FinancialAccount account) async {
-    final updated = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => EditAccountScreen(account: account)),
-    );
+  Future<void> _toggleFavorite(FinancialAccount account) async {
+    final notifier = ref.read(accountsProvider.notifier);
+    final newPriority = account.priority == 0 ? 1 : 0;
+    await notifier.updatePriority(account.id, newPriority);
 
     final user = ref.read(authProvider).user;
-    if (updated == true && user != null) {
-      await ref.read(accountsProvider.notifier).loadAccounts(user.id);
-    }
-  }
-
-  Future<void> _confirmDeleteAccount(FinancialAccount account) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete account?'),
-        content: Text(
-          'This will remove ${account.accountIdentifier} from your profile.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    final user = ref.read(authProvider).user;
-    try {
-      await ref.read(accountsProvider.notifier).deleteAccount(account.id);
-
-      if (user != null) {
-        await ref.read(accountsProvider.notifier).loadAccounts(user.id);
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account deleted'),
-            backgroundColor: AppTheme.success,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to delete: $e'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
+    if (user != null) {
+      await notifier.loadAccounts(user.id);
     }
   }
 }
 
+class _LogoutButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _LogoutButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton.icon(
+        onPressed: onPressed,
+        icon: Icon(Icons.logout_outlined, color: AppTheme.error, size: 18.r),
+        label: Text(
+          'Log Out',
+          style: TextStyle(
+            color: AppTheme.error,
+            fontWeight: FontWeight.w700,
+            fontSize: 15.sp,
+          ),
+        ),
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.symmetric(vertical: 14.h),
+          backgroundColor: AppTheme.error.withOpacity(0.08),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+            side: BorderSide(color: AppTheme.error.withOpacity(0.14)),
+          ),
+        ),
+      ),
+    );
+  }
+}
 // ─── Profile Header widget ────────────────────────────────────────────────────
 
 class _ProfileHeader extends ConsumerStatefulWidget {

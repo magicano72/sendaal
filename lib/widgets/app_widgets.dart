@@ -117,37 +117,56 @@ class AccountCard extends StatelessWidget {
   final FinancialAccount account;
   final bool showToggle;
   final bool showStar;
+  final bool dense;
   final ValueChanged<bool>? onToggleVisibility;
   final VoidCallback? onStar;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onTap;
 
   const AccountCard({
     super.key,
     required this.account,
     this.showToggle = false,
     this.showStar = false,
+    this.dense = false,
     this.onToggleVisibility,
     this.onStar,
     this.onEdit,
     this.onDelete,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final label =
         AppConstants.accountTypeLabels[account.type.name] ?? account.type.name;
+    final title = account.accountTitle.trim().isNotEmpty
+        ? account.accountTitle.trim()
+        : label;
+    final subtitleParts = <String>[
+      label,
+      if (account.accountIdentifier.trim().isNotEmpty)
+        account.accountIdentifier.trim(),
+    ];
+    final subtitle = subtitleParts.join(' • ');
+    final verticalPadding = dense ? 10.h : 12.h;
+    final horizontalPadding = dense ? 14.w : 16.w;
+    final bottomMargin = dense ? 8.h : 10.h;
 
     final card = Card(
-      margin: EdgeInsets.only(bottom: 10.h),
+      margin: EdgeInsets.only(bottom: bottomMargin),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
+        ),
         child: Row(
           children: [
             // Account type icon circle
             Container(
-              width: 44.w,
-              height: 44.w,
+              width: dense ? 42.w : 44.w,
+              height: dense ? 42.w : 44.w,
               decoration: BoxDecoration(
                 color: AppTheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12.r),
@@ -155,7 +174,7 @@ class AccountCard extends StatelessWidget {
               child: Icon(
                 _accountIcon(account.type),
                 color: AppTheme.primary,
-                size: 22.r,
+                size: dense ? 20.r : 22.r,
               ),
             ),
             SizedBox(width: 14.w),
@@ -166,16 +185,16 @@ class AccountCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    label,
+                    title,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 14.sp,
+                      fontSize: dense ? 14.sp : 15.sp,
                       color: AppTheme.textPrimary,
                     ),
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    account.accountIdentifier,
+                    subtitle,
                     style: TextStyle(
                       fontSize: 13.sp,
                       color: AppTheme.textSecondary,
@@ -233,8 +252,16 @@ class AccountCard extends StatelessWidget {
       ),
     );
 
+    final tappableCard = onTap == null
+        ? card
+        : InkWell(
+            borderRadius: BorderRadius.circular(12.r),
+            onTap: onTap,
+            child: card,
+          );
+
     // If no swipe actions are provided, return plain card
-    if (onEdit == null && onDelete == null) return card;
+    if (onEdit == null && onDelete == null) return tappableCard;
 
     return Slidable(
       key: ValueKey('account-${account.id}'),
@@ -277,7 +304,7 @@ class AccountCard extends StatelessWidget {
                 ),
               ],
             ),
-      child: card,
+      child: tappableCard,
     );
   }
 

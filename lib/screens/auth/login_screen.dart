@@ -133,7 +133,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       SizedBox(height: 12.h),
                       Text(
-                        'Log in to manage your finances and track your investments.',
+                        'Log in to manage your finances.',
                         style: TextStyles.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                           height: 1.5,

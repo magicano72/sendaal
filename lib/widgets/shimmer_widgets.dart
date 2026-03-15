@@ -27,7 +27,7 @@ class ShimmerCard extends StatelessWidget {
     );
 
     return Shimmer.fromColors(
-      baseColor: AppTheme.primary.withOpacity(0.5),
+      baseColor: AppTheme.secondary,
       highlightColor: AppTheme.surface,
       child: Container(
         margin: EdgeInsets.only(
@@ -61,7 +61,7 @@ class AccessRequestShimmer extends StatelessWidget {
           Padding(
             padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
             child: Shimmer.fromColors(
-              baseColor: AppTheme.primary.withOpacity(0.5),
+              baseColor: AppTheme.secondary,
               highlightColor: AppTheme.surface,
               child: Container(
                 height: 24.h,
@@ -82,7 +82,7 @@ class AccessRequestShimmer extends StatelessWidget {
             child: Column(
               children: [
                 Shimmer.fromColors(
-                  baseColor: AppTheme.primary.withOpacity(0.5),
+                  baseColor: AppTheme.secondary,
                   highlightColor: AppTheme.surface,
                   child: Container(
                     height: 32.h,
@@ -95,7 +95,7 @@ class AccessRequestShimmer extends StatelessWidget {
                 ),
                 SizedBox(height: 12.h),
                 Shimmer.fromColors(
-                  baseColor: AppTheme.primary.withOpacity(0.5),
+                  baseColor: AppTheme.secondary,
                   highlightColor: AppTheme.surface,
                   child: Container(
                     height: 20.h,

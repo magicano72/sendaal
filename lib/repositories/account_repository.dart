@@ -18,11 +18,13 @@ class AccountRepository {
     required String userId,
     required String type,
     required String identifier,
+    String? title,
     required double limit,
   }) => _service.createAccount(
     userId: userId,
     type: type,
     accountIdentifier: identifier,
+    accountTitle: title,
     defaultLimit: limit,
   );
 }
