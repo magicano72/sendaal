@@ -14,14 +14,14 @@ import '../../widgets/access_request_card.dart';
 import '../../widgets/app_widgets.dart';
 
 /// Home Screen — shows access requests or empty state, with search
-class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  ConsumerState<SearchScreen> createState() => _SearchScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _SearchScreenState extends ConsumerState<SearchScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchCtrl = TextEditingController();
   DateTime _lastSearch = DateTime.now();
   bool _selectionMode = false;

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sendaal/screens/home/home_screen.dart';
 
 import '../core/theme/app_theme.dart';
 import 'accounts/accounts_screen.dart';
 import 'profile/profile_screen.dart';
-import 'search/search_screen.dart';
 
 /// Main app shell with bottom navigation bar.
 /// Manages the primary tabs.
@@ -18,11 +18,7 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
 
-  final _screens = const [
-    SearchScreen(),
-    AccountsScreen(),
-    ProfileScreen(),
-  ];
+  final _screens = const [HomeScreen(), AccountsScreen(), ProfileScreen()];
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +37,10 @@ class _MainShellState extends ConsumerState<MainShell> {
           ),
           const NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon:
-                Icon(Icons.account_balance_wallet, color: AppTheme.surface),
+            selectedIcon: Icon(
+              Icons.account_balance_wallet,
+              color: AppTheme.surface,
+            ),
             label: 'Accounts',
           ),
           const NavigationDestination(

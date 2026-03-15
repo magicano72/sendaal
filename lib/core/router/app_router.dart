@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:sendaal/screens/home/home_screen.dart';
 
 import '../../core/models/index.dart' hide AccessRequest;
 import '../../models/access_request_model.dart';
+import '../../screens/accounts/accounts_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/main_shell.dart';
 import '../../screens/notifications/notifications_screen.dart';
-import '../../screens/accounts/accounts_screen.dart';
 import '../../screens/profile/edit_account_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/recipient/recipient_screen.dart';
 import '../../screens/requests/all_requests_screen.dart';
 import '../../screens/requests/requester_details_screen.dart';
-import '../../screens/search/search_screen.dart';
 import '../../screens/transfer/transfer_screen.dart';
 import '../../screens/transfer/transfer_success_screen.dart';
 
@@ -56,7 +56,7 @@ class AppRouter {
         final account = settings.arguments as FinancialAccount;
         return _fade(EditAccountScreen(account: account));
       case AppRoutes.search:
-        return _fade(const SearchScreen());
+        return _fade(const HomeScreen());
       case AppRoutes.recipient:
         final user = settings.arguments as User;
         return _fade(RecipientScreen(recipient: user));

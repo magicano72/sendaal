@@ -11,7 +11,7 @@
 - **AccessRequestShimmer**: Shows 2-3 placeholder cards while loading
 - **ShimmerCard**: Generic shimmer loader for individual cards
 - **FullPageShimmer**: Full page loading fallback
-- SearchScreen displays shimmer while `accessRequestProvider.isLoading` is true
+- HomeScreen displays shimmer while `accessRequestProvider.isLoading` is true
 - Smooth transition from shimmer to actual content
 - Uses shimmer package (v3.0.0) already in dependencies
 
@@ -97,7 +97,7 @@ lib/screens/
 5. User sends request → Receiver approves → Requester sees accounts instantly
 
 ### Loading Experience
-1. SearchScreen loads → Shows AccessRequestShimmer
+1. HomeScreen loads → Shows AccessRequestShimmer
 2. AccessRequestCard fetches username → Shows ShimmerCard
 3. Both load independently for better UX
 4. Content appears as each piece loads
