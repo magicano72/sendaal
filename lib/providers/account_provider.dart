@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/financial_account_model.dart';
 import '../services/account_service.dart';
+import 'access_request_provider.dart';
 
 final accountServiceProvider = Provider<AccountService>(
   (ref) => AccountService(),
@@ -139,3 +140,18 @@ final recipientAccountsProvider =
       final service = ref.read(accountServiceProvider);
       return service.getAccountsForUser(userId);
     });
+
+/// Fetch accounts for a user only when there is an approved access request
+/// involving the current user (either requester or receiver).
+final approvedAccountsProvider = FutureProvider.family<
+    ({bool hasAccess, List<FinancialAccount> accounts}),
+    String>((ref, userId) async {
+  final hasAccess =
+      await ref.watch(hasAccessToAccountsProvider(userId).future);
+  if (!hasAccess) {
+    return (hasAccess: false, accounts: <FinancialAccount>[]);
+  }
+  final service = ref.read(accountServiceProvider);
+  final accounts = await service.getAccountsForUser(userId);
+  return (hasAccess: true, accounts: accounts);
+});

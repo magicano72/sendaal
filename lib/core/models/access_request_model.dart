@@ -14,6 +14,8 @@ class AccessRequest {
   final String createdAt;
   final String? requesterName;
   final String? requesterUsername;
+  @JsonKey(name: 'is_favorite', defaultValue: false)
+  final bool isFavorite;
 
   AccessRequest({
     required this.id,
@@ -23,6 +25,7 @@ class AccessRequest {
     required this.createdAt,
     this.requesterName,
     this.requesterUsername,
+    this.isFavorite = false,
   });
 
   factory AccessRequest.fromJson(Map<String, dynamic> json) =>
@@ -37,6 +40,7 @@ class AccessRequest {
     String? createdAt,
     String? requesterName,
     String? requesterUsername,
+    bool? isFavorite,
   }) {
     return AccessRequest(
       id: id ?? this.id,
@@ -46,6 +50,7 @@ class AccessRequest {
       createdAt: createdAt ?? this.createdAt,
       requesterName: requesterName ?? this.requesterName,
       requesterUsername: requesterUsername ?? this.requesterUsername,
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
 

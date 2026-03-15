@@ -37,6 +37,46 @@ class UserService {
     return list.map((e) => User.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  /// Find a user by an exact phone match.
+  Future<User?> findByPhone(String phone) async {
+    final normalized = _normalizePhone(phone);
+    final response = await _api.get(
+      Endpoints.users,
+      queryParams: {'filter[phone][_eq]': normalized, 'limit': '1'},
+    );
+    final list = response['data'] as List<dynamic>? ?? [];
+    if (list.isEmpty) return null;
+    return User.fromJson(list.first as Map<String, dynamic>);
+  }
+
+  /// Batch lookup by phone numbers, returned as map phone -> User.
+  Future<Map<String, User>> findUsersByPhones(List<String> phones) async {
+    if (phones.isEmpty) return {};
+    final normalized = phones
+        .map(_normalizePhone)
+        .where((p) => p.isNotEmpty)
+        .toSet()
+        .toList();
+
+    final response = await _api.get(
+      Endpoints.users,
+      queryParams: {
+        'filter[phone][_in]': normalized.join(','),
+        'limit': normalized.length.toString(),
+      },
+    );
+
+    final list = response['data'] as List<dynamic>? ?? [];
+    final map = <String, User>{};
+    for (final item in list) {
+      if (item is! Map<String, dynamic>) continue;
+      final user = User.fromJson(item);
+      final phone = _normalizePhone(user.phone ?? '');
+      if (phone.isNotEmpty) map[phone] = user;
+    }
+    return map;
+  }
+
   /// Get current logged-in user profile
   Future<User> getCurrentUser() async {
     final response = await _api.get(Endpoints.currentUser);
@@ -94,4 +134,7 @@ class UserService {
       rethrow;
     }
   }
+
+  String _normalizePhone(String raw) =>
+      raw.replaceAll(RegExp(r'[^0-9+]'), '');
 }

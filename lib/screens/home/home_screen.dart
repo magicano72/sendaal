@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sendaal/core/config/index.dart';
+import 'package:sendaal/core/theme/app_theme.dart' hide AppTheme;
+import 'package:sendaal/services/device_contacts_service.dart'
+    show ContactsPermissionStatus;
 import 'package:sendaal/widgets/shimmer_widgets.dart';
 
 import '../../core/models/user_model.dart';
@@ -9,6 +12,7 @@ import '../../core/router/app_router.dart';
 import '../../models/access_request_model.dart';
 import '../../providers/access_request_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/contacts_provider.dart';
 import '../../providers/search_provider.dart';
 import '../../widgets/access_request_card.dart';
 import '../../widgets/app_widgets.dart';
@@ -36,6 +40,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(accessRequestProvider.notifier).loadReceivedRequests(user.id);
         ref.read(accessRequestProvider.notifier).loadSentRequests(user.id);
       }
+      ref.read(deviceContactsProvider.notifier).bootstrap();
+      ref.read(contactsProvider.notifier).load();
     });
   }
 
@@ -53,6 +59,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(searchProvider.notifier).search(query);
       }
     });
+  }
+
+  void _openDeviceContacts() {
+    Navigator.pushNamed(context, AppRoutes.deviceContacts);
+  }
+
+  void _openApprovedContacts() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const _ApprovedContactsScreen()));
   }
 
   void _openRecipient(User user) {
@@ -77,7 +93,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(accessRequestProvider.notifier).loadSentRequests(user.id),
         ref.read(notificationsProvider.notifier).loadNotifications(user.id),
       ]);
+      await ref.read(contactsProvider.notifier).load();
     }
+    await ref.read(deviceContactsProvider.notifier).loadContacts();
     final query = ref.read(searchProvider).query;
     if (query.isNotEmpty) {
       await ref.read(searchProvider.notifier).search(query);
@@ -176,6 +194,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ref.read(searchProvider.notifier).clear();
                 },
                 hint: 'Search username or phone number',
+                onContactsTap: _openDeviceContacts,
               ),
             ),
 
@@ -358,13 +377,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return users.where((u) => u.id != currentUserId).toList();
   }
 
-  // ── Home content: access requests or empty state ─────────────────────
+  // Home content: access requests or empty state
   Widget _buildHomeContent() {
     final accessRequests = ref.watch(accessRequestProvider);
+    final contactsState = ref.watch(contactsProvider);
+    final deviceContactsState = ref.watch(deviceContactsProvider);
+    final contactsSection = _buildContactsSection(
+      contactsState,
+      deviceContactsState,
+    );
 
-    // Shimmer while loading
     if (accessRequests.isLoading) {
-      return const AccessRequestShimmer(count: 2);
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(height: 12.h),
+          contactsSection,
+          const AccessRequestShimmer(count: 2),
+        ],
+      );
     }
 
     final allRequests = [
@@ -372,18 +403,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ...accessRequests.sentRequests,
     ];
 
-    // ── Empty state ──────────────────────────────────────────────────────
     if (allRequests.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          SizedBox(height: 48.h),
+          SizedBox(height: 12.h),
+          contactsSection,
+          SizedBox(height: 24.h),
           _buildEmptyState(),
         ],
       );
     }
 
-    // ── Access requests list ─────────────────────────────────────────────
     final pendingReceivedCount = accessRequests.receivedRequests
         .where((r) => r.status.name == 'pending')
         .length;
@@ -391,7 +422,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
-        // Section header
+        SizedBox(height: 12.h),
+        contactsSection,
+        SizedBox(height: 10.h),
         Padding(
           padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 8.h),
           child: Row(
@@ -413,15 +446,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF2D7AE8),
+                    color: AppColors.primary,
                   ),
                 ),
               ),
             ],
           ),
         ),
-
-        // Received requests
         if (accessRequests.receivedRequests.isNotEmpty) ...[
           _buildSectionLabel(
             icon: Icons.inbox_outlined,
@@ -437,8 +468,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           SizedBox(height: 8.h),
         ],
-
-        // Sent requests
         if (accessRequests.sentRequests.isNotEmpty) ...[
           _buildSectionLabel(
             icon: Icons.send_outlined,
@@ -457,6 +486,154 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           SizedBox(height: 16.h),
         ],
       ],
+    );
+  }
+
+  Widget _buildContactsSection(
+    ContactsState contactsState,
+    DeviceContactsState deviceState,
+  ) {
+    final hasContacts = contactsState.contacts.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 6.h),
+          child: Row(
+            children: [
+              Text(
+                'Contacts',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimaryColor,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: _openApprovedContacts,
+                child: Text(
+                  'View all',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 8.h),
+        SizedBox(
+          height: hasContacts ? 118.h : 140.h,
+          child: hasContacts
+              ? ListView.separated(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: contactsState.contacts.length,
+                  separatorBuilder: (_, __) => SizedBox(width: 14.w),
+                  itemBuilder: (_, i) {
+                    final contact = contactsState.contacts[i];
+                    return _ContactCircleTile(
+                      user: contact.user,
+                      isFavorite: contact.isFavorite,
+                      showFullName: true,
+                      onTap: () => _openRecipient(contact.user),
+                      onFavoriteToggle: () => ref
+                          .read(contactsProvider.notifier)
+                          .toggleFavorite(
+                            contact.request.id,
+                            !contact.isFavorite,
+                          ),
+                    );
+                  },
+                )
+              : _buildContactsPrompt(deviceState, contactsState.isLoading),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContactsPrompt(DeviceContactsState deviceState, bool isLoading) {
+    if (isLoading) {
+      return ListView.separated(
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+        scrollDirection: Axis.horizontal,
+        itemCount: 3,
+        separatorBuilder: (_, __) => SizedBox(width: 10.w),
+        itemBuilder: (_, __) => Container(
+          width: 150.w,
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: const ShimmerCard(height: 130),
+        ),
+      );
+    }
+
+    final denied = deviceState.permission == ContactsPermissionStatus.denied;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+      child: Container(
+        padding: EdgeInsets.all(14.w),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42.r,
+              height: 42.r,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.contacts, color: AppTheme.primaryColor),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    denied ? 'Allow contacts to sync' : 'No contacts yet',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.sp,
+                      color: AppTheme.textPrimaryColor,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    denied
+                        ? 'Grant access to find friends from your phone book.'
+                        : 'Approved contacts will appear here automatically.',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppTheme.textSecondaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 8.w),
+            TextButton(
+              onPressed: denied
+                  ? () => ref
+                        .read(deviceContactsProvider.notifier)
+                        .requestPermission()
+                  : _openDeviceContacts,
+              child: Text(denied ? 'Allow' : 'Import'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -559,6 +736,313 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ContactCircleTile extends StatelessWidget {
+  final User user;
+  final bool isFavorite;
+  final bool showFullName;
+  final VoidCallback onTap;
+  final VoidCallback onFavoriteToggle;
+
+  const _ContactCircleTile({
+    required this.user,
+    required this.isFavorite,
+    required this.showFullName,
+    required this.onTap,
+    required this.onFavoriteToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = user.avatarUrl;
+    final name = showFullName && (user.firstName?.isNotEmpty ?? false)
+        ? user.firstName!
+        : (user.displayName.isNotEmpty ? user.displayName : user.username);
+    final initials = user.initials;
+    final double outer = 68.r;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(outer / 2),
+              child: Container(
+                width: outer,
+                height: outer,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.surfaceColor,
+                  border: Border.all(
+                    color: AppTheme.primaryColor.withOpacity(0.25),
+                    width: 3.w,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(3.w),
+                  child: CircleAvatar(
+                    backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
+                    backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                        ? NetworkImage(avatarUrl)
+                        : null,
+                    child: (avatarUrl == null || avatarUrl.isEmpty)
+                        ? Text(
+                            initials,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primaryColor,
+                              fontSize: 18.sp,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              right: -4,
+              top: -4,
+              child: GestureDetector(
+                onTap: onFavoriteToggle,
+                child: Container(
+                  width: 22.r,
+                  height: 22.r,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isFavorite ? Icons.star : Icons.star_border,
+                    size: 14.r,
+                    color: isFavorite
+                        ? AppTheme.primaryColor
+                        : AppTheme.textSecondaryColor,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        SizedBox(
+          width: outer + 6.w,
+          child: Text(
+            name,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimaryColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ApprovedContactsScreen extends ConsumerStatefulWidget {
+  const _ApprovedContactsScreen({super.key});
+
+  @override
+  ConsumerState<_ApprovedContactsScreen> createState() =>
+      _ApprovedContactsScreenState();
+}
+
+class _ApprovedContactsScreenState
+    extends ConsumerState<_ApprovedContactsScreen> {
+  final _searchCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final contactsState = ref.watch(contactsProvider);
+    final query = _searchCtrl.text.trim().toLowerCase();
+    final filtered = contactsState.contacts.where((c) {
+      if (query.isEmpty) return true;
+      final user = c.user;
+      final phone = user.phone ?? '';
+      return user.displayName.toLowerCase().contains(query) ||
+          user.username.toLowerCase().contains(query) ||
+          phone.toLowerCase().contains(query);
+    }).toList();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Contacts'), centerTitle: true),
+      body: contactsState.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 8.h),
+                  child: TextField(
+                    controller: _searchCtrl,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: 'Search by username or phone',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFEFF2F6),
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 14.h,
+                        horizontal: 14.w,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                        borderSide: BorderSide(
+                          color: AppTheme.primaryColor,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 6.h, 16.w, 8.h),
+                  child: Text(
+                    'APPROVED CONTACTS',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondaryColor,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 24),
+                          child: Center(
+                            child: EmptyState(
+                              icon: Icons.people_outline,
+                              title: 'No approved contacts',
+                              subtitle:
+                                  'Approved contacts will appear here after access is granted.',
+                            ),
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 4.h,
+                          ),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, __) => Divider(
+                            height: 1,
+                            thickness: 0.6,
+                            color: AppColors.divider,
+                          ),
+                          itemBuilder: (_, i) {
+                            final contact = filtered[i];
+                            final user = contact.user;
+                            final phone = user.phone ?? '';
+                            final fullName =
+                                (user.firstName?.isNotEmpty ?? false)
+                                ? user.firstName!
+                                : (user.displayName.isNotEmpty
+                                      ? user.displayName
+                                      : user.username);
+                            final subtitleParts = <String>[
+                              '@${user.username}',
+                              if (phone.isNotEmpty) phone,
+                            ];
+                            final subtitle = subtitleParts.join(' • ');
+
+                            return ListTile(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 6.h,
+                              ),
+                              leading: CircleAvatar(
+                                radius: 24.r,
+                                backgroundColor: AppTheme.primaryColor
+                                    .withOpacity(0.12),
+                                backgroundImage:
+                                    user.avatarUrl != null &&
+                                        user.avatarUrl!.isNotEmpty
+                                    ? NetworkImage(user.avatarUrl!)
+                                    : null,
+                                child:
+                                    (user.avatarUrl == null ||
+                                        user.avatarUrl!.isEmpty)
+                                    ? Text(
+                                        user.initials,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.primaryColor,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              title: Text(
+                                fullName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16.sp,
+                                  color: AppTheme.textPrimaryColor,
+                                ),
+                              ),
+                              subtitle: Padding(
+                                padding: EdgeInsets.only(top: 4.h),
+                                child: Text(
+                                  subtitle,
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    color: AppTheme.textSecondaryColor,
+                                  ),
+                                ),
+                              ),
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.recipient,
+                                arguments: user,
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

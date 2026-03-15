@@ -15,6 +15,12 @@ import '../../services/smart_split_service.dart';
 import '../../widgets/access_request_widget.dart';
 import '../../widgets/app_widgets.dart';
 
+String _preferredName(User user) {
+  if (user.firstName?.isNotEmpty ?? false) return user.firstName!;
+  if (user.displayName.isNotEmpty) return user.displayName;
+  return user.username;
+}
+
 /// Recipient View Screen
 ///
 /// Shows a recipient's profile + sorted accounts.
@@ -131,7 +137,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
       context: context,
       builder: (context) => SendAccessRequestDialog(
         recipientId: widget.recipient.id,
-        recipientName: widget.recipient.displayName,
+        recipientName: _preferredName(widget.recipient),
       ),
     );
 
@@ -254,7 +260,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.recipient.displayName)),
+      appBar: AppBar(title: Text(_preferredName(widget.recipient))),
       body: hasAccessAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) =>
@@ -395,7 +401,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
             ),
             SizedBox(height: 8.h),
             Text(
-              '${widget.recipient.displayName} has not granted you access to their accounts.',
+              '${_preferredName(widget.recipient)} has not granted you access to their accounts.',
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -670,7 +676,7 @@ class _RecipientHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recipient.displayName,
+                    _preferredName(recipient),
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w700,

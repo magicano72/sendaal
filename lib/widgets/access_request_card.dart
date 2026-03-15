@@ -78,8 +78,9 @@ class AccessRequestCard extends ConsumerWidget {
     required bool showActions,
   }) {
     final statusColor = _getStatusColor();
-    final subtitle =
-        'Request ${_formatRequestNumber(request.id)} • ${_timeAgo(request.createdAt)}';
+    final subtitle = isReceived
+        ? 'Requested access\n${_timeAgo(request.createdAt)}'
+        : 'Access request sent\n${_timeAgo(request.createdAt)}';
     final allowHide = request.canHide || isReceived;
 
     return Slidable(
@@ -94,7 +95,10 @@ class AccessRequestCard extends ConsumerWidget {
                   onPressed: (_) => _confirmDelete(context, ref),
                   backgroundColor: Colors.red.withOpacity(0.12),
                   foregroundColor: Colors.red,
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 8.h,
+                  ),
                   spacing: 6.w,
                   icon: Icons.delete_outline,
                   label: 'Delete',
@@ -144,6 +148,8 @@ class AccessRequestCard extends ConsumerWidget {
                           SizedBox(height: 4.h),
                           Text(
                             subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 13.sp,
                               color: const Color(0xFF6B7280),

@@ -138,6 +138,31 @@ class AccessService {
     }
   }
 
+  /// Find an approved request between two users, regardless of direction.
+  /// Returns the first matching approved request or null if none exists.
+  Future<AccessRequest?> getApprovedRequestBetween({
+    required String userA,
+    required String userB,
+  }) async {
+    final response = await _api.get(
+      Endpoints.accessRequests,
+      queryParams: {
+        'filter[_or][0][_and][0][requester][_eq]': userA,
+        'filter[_or][0][_and][1][receiver][_eq]': userB,
+        'filter[_or][0][_and][2][status][_eq]': 'approved',
+        'filter[_or][1][_and][0][requester][_eq]': userB,
+        'filter[_or][1][_and][1][receiver][_eq]': userA,
+        'filter[_or][1][_and][2][status][_eq]': 'approved',
+        'limit': '1',
+        'sort': '-created_at',
+      },
+    );
+
+    final list = response['data'] as List<dynamic>? ?? [];
+    if (list.isEmpty) return null;
+    return AccessRequest.fromJson(list.first as Map<String, dynamic>);
+  }
+
   /// Find active request (pending or approved) between requester and receiver
   /// Only one active request allowed per sender → receiver pair
   Future<AccessRequest?> getActiveRequest({
@@ -181,6 +206,40 @@ class AccessService {
     final response = await _api.patch(
       Endpoints.accessRequestById(requestId),
       body: {'visible_for_receiver': false},
+    );
+    return AccessRequest.fromJson(response['data'] as Map<String, dynamic>);
+  }
+
+  /// Fetch approved access requests where the current user is requester or receiver.
+  /// Used to build the "My Contacts" list.
+  Future<List<Map<String, dynamic>>> getApprovedConnections(
+    String userId,
+  ) async {
+    final response = await _api.get(
+      Endpoints.accessRequests,
+      queryParams: {
+        'filter[_and][0][status][_eq]': 'approved',
+        'filter[_and][1][_or][0][requester][_eq]': userId,
+        'filter[_and][1][_or][1][receiver][_eq]': userId,
+        'fields': '*,requester.*,receiver.*',
+        'sort': '-created_at',
+      },
+    );
+
+    final list = response['data'] as List<dynamic>? ?? [];
+    return list
+        .whereType<Map<String, dynamic>>()
+        .toList();
+  }
+
+  /// Toggle favorite flag on an access request (optional improvement).
+  Future<AccessRequest> updateFavorite(
+    String requestId, {
+    required bool isFavorite,
+  }) async {
+    final response = await _api.patch(
+      Endpoints.accessRequestById(requestId),
+      body: {'is_favorite': isFavorite},
     );
     return AccessRequest.fromJson(response['data'] as Map<String, dynamic>);
   }

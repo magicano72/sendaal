@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/text_style.dart';
 import '../../providers/search_provider.dart';
 import '../../widgets/app_widgets.dart';
 
@@ -14,10 +15,9 @@ class TransferSuccessScreen extends ConsumerWidget {
     // Clear search state so home shows the default requests view
     ref.read(searchProvider.notifier).clear();
 
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.home,
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
   }
 
   @override
@@ -36,7 +36,7 @@ class TransferSuccessScreen extends ConsumerWidget {
             SizedBox(height: 18.h),
             Text(
               'Transfer instructions generated',
-              style: TextStyle(
+              style: TextStyles.h2Medium.copyWith(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textPrimary,
@@ -46,7 +46,8 @@ class TransferSuccessScreen extends ConsumerWidget {
             SizedBox(height: 8.h),
             Text(
               'You can now complete payments in your apps.\nTap below to return home.',
-              style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
+              style: TextStyles.bodySmall
+                  .copyWith(color: AppTheme.textSecondary, height: 1.5),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 28.h),

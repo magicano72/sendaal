@@ -5,6 +5,7 @@ import '../core/repositories/access_request_repository.dart';
 import '../models/access_request_model.dart';
 import '../services/access_service.dart';
 import 'auth_provider.dart';
+import 'contacts_provider.dart';
 
 /// Provider for AccessService
 final accessServiceProvider = Provider<AccessService>((ref) => AccessService());
@@ -240,6 +241,11 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
             if (req.id == requestId) approved else req,
         ],
       );
+
+      // Refresh contacts so approved users appear immediately
+      try {
+        await _ref.read(contactsProvider.notifier).load();
+      } catch (_) {}
       return true;
     } catch (e) {
       print('[AccessRequestNotifier] Error approving request: $e');
@@ -401,26 +407,18 @@ final accessRequestProvider =
 /// Returns true only if there's an approved access request from requester to receiver
 final hasAccessToAccountsProvider = FutureProvider.family<bool, String>((
   ref,
-  receiverId,
+  otherUserId,
 ) async {
   final currentUser = ref.watch(authProvider).user;
   if (currentUser == null) return false;
 
-  final currentUserId = currentUser.id;
   try {
-    // Get repository to check for approved requests
-    final repository = ref.read(accessRequestRepositoryProvider);
-    final requests = await repository.getReceivedRequests(
-      receiverId,
-      includeHidden: true,
+    final service = ref.read(accessServiceProvider);
+    final approved = await service.getApprovedRequestBetween(
+      userA: currentUser.id,
+      userB: otherUserId,
     );
-
-    // Check if there's an approved request from currentUserId
-    return requests.any(
-      (req) =>
-          req.requesterId == currentUserId &&
-          req.status == AccessStatus.approved,
-    );
+    return approved != null;
   } catch (e) {
     print('[hasAccessToAccountsProvider] Error checking access: $e');
     return false;

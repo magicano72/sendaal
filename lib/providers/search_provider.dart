@@ -44,7 +44,8 @@ class SearchNotifier extends StateNotifier<SearchState> {
   SearchNotifier(this._service) : super(const SearchState());
 
   Future<void> search(String query) async {
-    if (query.trim().isEmpty) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
       state = state.copyWith(clearResults: true, query: '');
       return;
     }
@@ -52,14 +53,23 @@ class SearchNotifier extends StateNotifier<SearchState> {
     state = state.copyWith(isLoading: true, clearError: true, query: query);
 
     try {
-      List<User> results;
-      // Heuristic: if query looks like a phone number, search by phone
-      if (RegExp(r'^\+?[0-9\s\-]{7,}$').hasMatch(query.trim())) {
-        results = await _service.searchByPhone(query.trim());
-      } else {
-        results = await _service.searchByUsername(query.trim());
+      // Run both username + phone searches and merge unique users by id.
+      final lists = await Future.wait<List<User>>([
+        _service.searchByUsername(trimmed),
+        _service.searchByPhone(trimmed),
+      ]);
+
+      final merged = <String, User>{};
+      for (final list in lists) {
+        for (final user in list) {
+          merged[user.id] = user;
+        }
       }
-      state = state.copyWith(isLoading: false, results: results);
+
+      state = state.copyWith(
+        isLoading: false,
+        results: merged.values.toList(),
+      );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

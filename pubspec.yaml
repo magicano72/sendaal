@@ -57,6 +57,8 @@ dependencies:
   shimmer: ^3.0.0
   flutter_slidable: ^3.1.0
   google_fonts: ^6.1.0
+  flutter_contacts: ^1.1.7
+  share_plus: ^10.0.2
 
   # JSON Serialization
   json_annotation: ^4.8.1

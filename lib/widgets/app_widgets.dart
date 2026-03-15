@@ -78,6 +78,7 @@ class SearchField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onClear;
   final String hint;
+  final VoidCallback? onContactsTap;
 
   const SearchField({
     super.key,
@@ -85,26 +86,44 @@ class SearchField extends StatelessWidget {
     this.onChanged,
     this.onClear,
     this.hint = 'Search by username or phone...',
+    this.onContactsTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
-        suffixIcon: controller.text.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.close, color: AppTheme.primary),
-                onPressed: () {
-                  controller.clear();
-                  onClear?.call();
-                },
-              )
-            : null,
-      ),
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (_, value, __) {
+        final hasText = value.text.isNotEmpty;
+        return TextField(
+          controller: controller,
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
+            suffixIconConstraints:
+                const BoxConstraints(minWidth: 0, minHeight: 0),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (onContactsTap != null)
+                  IconButton(
+                    icon: const Icon(Icons.contacts, color: AppTheme.primary),
+                    onPressed: onContactsTap,
+                  ),
+                if (hasText)
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppTheme.primary),
+                    onPressed: () {
+                      controller.clear();
+                      onClear?.call();
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

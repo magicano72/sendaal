@@ -11,6 +11,8 @@ import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/profile/edit_account_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/recipient/recipient_screen.dart';
+import '../../screens/contacts/device_contacts_screen.dart';
+import '../../screens/contacts/contact_details_screen.dart';
 import '../../screens/requests/all_requests_screen.dart';
 import '../../screens/requests/requester_details_screen.dart';
 import '../../screens/transfer/transfer_screen.dart';
@@ -29,6 +31,8 @@ class AppRoutes {
   static const String transfer = '/transfer';
   static const String transferSuccess = '/transfer-success';
   static const String notifications = '/notifications';
+  static const String deviceContacts = '/device-contacts';
+  static const String contactDetails = '/contact-details';
   static const String requesterDetails = '/requester-details';
   // Backwards-compatible alias
   static const String allAccessRequests = '/all-requests';
@@ -73,6 +77,11 @@ class AppRouter {
       case AppRoutes.allAccessRequests:
       case AppRoutes.allRequests:
         return _fade(const AllRequestsScreen());
+      case AppRoutes.deviceContacts:
+        return _fade(const DeviceContactsScreen());
+      case AppRoutes.contactDetails:
+        final user = settings.arguments as User;
+        return _fade(ContactDetailsScreen(contact: user));
       default:
         return _fade(const LoginScreen());
     }
