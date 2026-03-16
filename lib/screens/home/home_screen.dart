@@ -1,11 +1,11 @@
+import 'package:Sendaal/core/config/index.dart';
+import 'package:Sendaal/core/theme/app_theme.dart' hide AppTheme;
+import 'package:Sendaal/services/device_contacts_service.dart'
+    show ContactsPermissionStatus;
+import 'package:Sendaal/widgets/shimmer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sendaal/core/config/index.dart';
-import 'package:sendaal/core/theme/app_theme.dart' hide AppTheme;
-import 'package:sendaal/services/device_contacts_service.dart'
-    show ContactsPermissionStatus;
-import 'package:sendaal/widgets/shimmer_widgets.dart';
 
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';

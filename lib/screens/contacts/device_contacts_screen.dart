@@ -1,7 +1,7 @@
+import 'package:Sendaal/services/device_contacts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sendaal/services/device_contacts_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/models/user_model.dart';

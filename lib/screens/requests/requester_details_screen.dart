@@ -1,7 +1,7 @@
+import 'package:Sendaal/screens/requests/status_banar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sendaal/screens/requests/status_banar.dart';
 
 import '../../core/models/user_model.dart';
 import '../../core/theme/app_theme.dart';
@@ -39,8 +39,9 @@ class _RequesterDetailsScreenState
     final isReceiver = currentUser?.id == _request.receiverId;
     final isRequester = currentUser?.id == _request.requesterId;
     // Show the opposite party: requester when you're receiver, receiver when you're requester.
-    final profileUserId =
-        isRequester ? _request.receiverId : _request.requesterId;
+    final profileUserId = isRequester
+        ? _request.receiverId
+        : _request.requesterId;
     final canAct = isReceiver && _request.status == AccessStatus.pending;
 
     final userAsync = ref.watch(userProvider(profileUserId));

@@ -1,8 +1,8 @@
+import 'package:Sendaal/widgets/access_request_widget.dart'
+    show AccessRequestTile;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sendaal/widgets/access_request_widget.dart'
-    show AccessRequestTile;
 
 import '../../providers/access_request_provider.dart';
 import '../../providers/auth_provider.dart';

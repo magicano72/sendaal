@@ -1,10 +1,10 @@
+import 'package:Sendaal/models/access_request_model.dart';
+import 'package:Sendaal/providers/access_request_provider.dart';
+import 'package:Sendaal/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sendaal/models/access_request_model.dart';
-import 'package:sendaal/providers/access_request_provider.dart';
-import 'package:sendaal/providers/auth_provider.dart';
 
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';

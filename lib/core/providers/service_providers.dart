@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sendaal/core/services/user_service.dart';
+import 'package:Sendaal/core/services/user_service.dart';
 
 import '../../services/access_service.dart';
 import '../repositories/index.dart';

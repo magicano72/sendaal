@@ -6,6 +6,8 @@ import '../core/constants/app_constants.dart';
 import '../core/models/notification_model.dart' as notification_model;
 import '../core/theme/app_theme.dart';
 import '../models/financial_account_model.dart';
+import '../models/system_limit_model.dart';
+import 'system_limit_icon.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PrimaryButton
@@ -101,8 +103,10 @@ class SearchField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
-            suffixIconConstraints:
-                const BoxConstraints(minWidth: 0, minHeight: 0),
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 0,
+              minHeight: 0,
+            ),
             suffixIcon: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -160,6 +164,9 @@ class AccountCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final label =
         AppConstants.accountTypeLabels[account.type.name] ?? account.type.name;
+    final system =
+        AppConstants.systemLimitFor(account.type.name) ??
+        _fallbackSystem(account);
     final title = account.accountTitle.trim().isNotEmpty
         ? account.accountTitle.trim()
         : label;
@@ -184,16 +191,14 @@ class AccountCard extends StatelessWidget {
           children: [
             // Account type icon circle
             Container(
-              width: dense ? 42.w : 44.w,
-              height: dense ? 42.w : 44.w,
+              width: dense ? 44.w : 46.w,
+              height: dense ? 44.w : 46.w,
               decoration: BoxDecoration(
                 color: AppTheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
-              child: Icon(
-                _accountIcon(account.type),
-                color: AppTheme.primary,
-                size: dense ? 20.r : 22.r,
+              child: Center(
+                child: SystemIcon(system: system, size: dense ? 22.r : 24.r),
               ),
             ),
             SizedBox(width: 14.w),
@@ -327,21 +332,6 @@ class AccountCard extends StatelessWidget {
     );
   }
 
-  IconData _accountIcon(AccountType type) {
-    switch (type.name) {
-      case 'instapay':
-        return Icons.flash_on;
-      case 'digital_wallet':
-        return Icons.phone_android;
-      case 'bank_account':
-        return Icons.account_balance;
-      case 'telda':
-        return Icons.credit_card;
-      default:
-        return Icons.payment;
-    }
-  }
-
   String _fmtAmount(double v) {
     if (v >= 1000) {
       return '${(v / 1000).toStringAsFixed(v % 1000 == 0 ? 0 : 1)}K';
@@ -349,6 +339,13 @@ class AccountCard extends StatelessWidget {
     return v.toStringAsFixed(0);
   }
 }
+
+SystemLimit _fallbackSystem(FinancialAccount account) => SystemLimit(
+  id: -1,
+  systemName: account.type.name,
+  dailyLimit: account.defaultLimit.toInt(),
+  systemImage: null,
+);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // NotificationTile

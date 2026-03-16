@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/theme/app_theme.dart';
 import '../../models/financial_account_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_widgets.dart';
+import '../../widgets/account_type_dropdown.dart';
 
 /// Full-screen editor for an existing financial account.
 class EditAccountScreen extends ConsumerStatefulWidget {
@@ -31,6 +31,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
 
   bool _isSaving = false;
   String? _error;
+  String? _typeError;
 
   @override
   void initState() {
@@ -38,21 +39,24 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
     final account = widget.account;
     _selectedType = account.type.name;
     _instapayIdType =
-        _selectedType == 'instapay' && _looksLikePhone(account.accountIdentifier)
-            ? 'phone'
-            : 'handle';
+        _selectedType == 'instapay' &&
+            _looksLikePhone(account.accountIdentifier)
+        ? 'phone'
+        : 'handle';
     _bankIdType =
-        _selectedType == 'bank_account' && _looksLikeIban(account.accountIdentifier)
-            ? 'iban'
-            : 'account';
+        _selectedType == 'bank_account' &&
+            _looksLikeIban(account.accountIdentifier)
+        ? 'iban'
+        : 'account';
     _titleCtrl = TextEditingController(
       text: account.accountTitle.isNotEmpty
           ? account.accountTitle
           : AppConstants.displayLabel(account.type.name),
     );
     _identifierCtrl = TextEditingController(text: account.accountIdentifier);
-    _limitCtrl =
-        TextEditingController(text: account.defaultLimit.toStringAsFixed(0));
+    _limitCtrl = TextEditingController(
+      text: account.defaultLimit.toStringAsFixed(0),
+    );
     _priority = account.priority;
     _isVisible = account.isVisible;
   }
@@ -127,6 +131,11 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
     var identifier = _identifierCtrl.text.trim();
     final limitText = _limitCtrl.text.trim();
 
+    if (_selectedType.isEmpty) {
+      setState(() => _typeError = 'Please select an account type.');
+      return;
+    }
+
     final idError = _validateIdentifier(identifier);
     if (idError != null) {
       setState(() => _error = idError);
@@ -160,8 +169,9 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
       accountId: widget.account.id,
       type: _selectedType,
       accountIdentifier: normalizedIdentifier,
-      accountTitle:
-          title.isNotEmpty ? title : AppConstants.displayLabel(_selectedType),
+      accountTitle: title.isNotEmpty
+          ? title
+          : AppConstants.displayLabel(_selectedType),
       defaultLimit: parsedLimit,
       priority: _priority,
       isVisible: _isVisible,
@@ -186,9 +196,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Account'),
-      ),
+      appBar: AppBar(title: const Text('Edit Account')),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
         child: Column(
@@ -204,21 +212,14 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
             ),
             SizedBox(height: 14.h),
 
-            DropdownButtonFormField<String>(
+            AccountTypeDropdown(
               value: _selectedType,
-              decoration: const InputDecoration(labelText: 'Account Type'),
-              items: AppConstants.accountTypeLimits.keys
-                  .map(
-                    (key) => DropdownMenuItem(
-                      value: key,
-                      child: Text(AppConstants.displayLabel(key)),
-                    ),
-                  )
-                  .toList(),
+              isRequired: true,
+              errorText: _typeError,
               onChanged: (v) {
-                if (v == null) return;
                 setState(() {
                   _selectedType = v;
+                  _typeError = null;
                   if (v != 'instapay') {
                     _instapayIdType = 'handle';
                   }
@@ -253,8 +254,8 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
                   });
                 },
               ),
-            SizedBox(height: 12.h),
-          ],
+              SizedBox(height: 12.h),
+            ],
 
             if (_selectedType == 'bank_account') ...[
               DropdownButtonFormField<String>(
@@ -267,10 +268,7 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
                     value: 'account',
                     child: Text('Account Number'),
                   ),
-                  DropdownMenuItem(
-                    value: 'iban',
-                    child: Text('IBAN'),
-                  ),
+                  DropdownMenuItem(value: 'iban', child: Text('IBAN')),
                 ],
                 onChanged: (v) {
                   if (v == null) return;
@@ -306,10 +304,12 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
               decoration: const InputDecoration(
                 labelText: 'Default Limit (EGP)',
                 helperText:
-                    'Used by Smart Split to cap how much can be routed here.',
+                    'Used by Smart Split to cap how much can be routed.',
                 prefixIcon: Icon(Icons.payments_outlined),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
             SizedBox(height: 16.h),
 

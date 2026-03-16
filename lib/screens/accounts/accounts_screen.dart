@@ -5,10 +5,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/financial_account_model.dart';
+import '../../models/system_limit_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_widgets.dart';
 import '../../widgets/delete_confirmation_dialog.dart';
+import '../../widgets/system_limit_icon.dart';
 import '../profile/account_form_screen.dart';
 
 /// Dedicated Accounts screen for managing payment accounts.
@@ -72,8 +74,17 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
       if (account.accountIdentifier.trim().isNotEmpty)
         account.accountIdentifier.trim(),
     ];
+    final system =
+        AppConstants.systemLimitFor(account.type.name) ??
+        SystemLimit(
+          id: -1,
+          systemName: account.type.name,
+          dailyLimit: account.defaultLimit.toInt(),
+          systemImage: null,
+        );
 
     showModalBottomSheet(
+      backgroundColor: AppColors.background,
       context: context,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
@@ -110,10 +121,8 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                         color: AppTheme.primary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(14.r),
                       ),
-                      child: Icon(
-                        Icons.account_balance_wallet_outlined,
-                        color: AppTheme.primary,
-                        size: 22.r,
+                      child: Center(
+                        child: SystemIcon(system: system, size: 24.r),
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -293,15 +302,12 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
           crossFadeState: _isSearching
               ? CrossFadeState.showSecond
               : CrossFadeState.showFirst,
-          firstChild: Padding(
-            padding: EdgeInsets.only(left: 16.w),
-            child: Text(
-              'Accounts',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-              ),
+          firstChild: Text(
+            'Accounts',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
             ),
           ),
           secondChild: Padding(

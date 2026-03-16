@@ -1,7 +1,7 @@
+import 'package:Sendaal/widgets/app_widgets.dart' show ErrorBanner;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sendaal/widgets/app_widgets.dart' show ErrorBanner;
 
 import '../../core/error/exceptions.dart';
 import '../../core/router/app_router.dart';

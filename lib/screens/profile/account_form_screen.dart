@@ -9,6 +9,7 @@ import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/account_service.dart';
 import '../../widgets/app_widgets.dart';
+import '../../widgets/account_type_dropdown.dart';
 
 /// Full-screen form for creating or editing a financial account.
 class AccountFormScreen extends ConsumerStatefulWidget {
@@ -36,18 +37,21 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
   String? _identifierError;
   String? _limitError;
   String? _generalError;
+  String? _typeError;
 
   @override
   void initState() {
     super.initState();
     final account = widget.account;
     _selectedType = account?.type.name ?? 'instapay';
-    _instapayIdType = _selectedType == 'instapay' &&
+    _instapayIdType =
+        _selectedType == 'instapay' &&
             account != null &&
             _looksLikePhone(account.accountIdentifier)
         ? 'phone'
         : 'handle';
-    _bankIdType = _selectedType == 'bank_account' &&
+    _bankIdType =
+        _selectedType == 'bank_account' &&
             account != null &&
             _looksLikeIban(account.accountIdentifier)
         ? 'iban'
@@ -57,12 +61,14 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
           ? account!.accountTitle
           : AppConstants.displayLabel(_selectedType),
     );
-    _identifierCtrl =
-        TextEditingController(text: account?.accountIdentifier ?? '');
+    _identifierCtrl = TextEditingController(
+      text: account?.accountIdentifier ?? '',
+    );
     _limitCtrl = TextEditingController(
-      text: (account?.defaultLimit ??
-              AppConstants.limitForAccountType(_selectedType))
-          .toStringAsFixed(0),
+      text:
+          (account?.defaultLimit ??
+                  AppConstants.limitForAccountType(_selectedType))
+              .toStringAsFixed(0),
     );
     _priority = account?.priority ?? 2;
     _isVisible = account?.isVisible ?? true;
@@ -142,6 +148,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     final parsedLimit = double.tryParse(limitText);
 
     setState(() {
+      _typeError =
+          _selectedType.isEmpty ? 'Please select an account type.' : null;
       _identifierError = idError;
       _limitError = (parsedLimit == null || parsedLimit <= 0)
           ? 'Enter a valid positive default limit.'
@@ -149,7 +157,10 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       _generalError = null;
     });
 
-    if (idError != null || parsedLimit == null || parsedLimit <= 0) {
+    if (_typeError != null ||
+        idError != null ||
+        parsedLimit == null ||
+        parsedLimit <= 0) {
       return;
     }
 
@@ -168,7 +179,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
     try {
       final user = ref.read(authProvider).user;
-      if (user == null) throw Exception('Missing user. Please re-authenticate.');
+      if (user == null)
+        throw Exception('Missing user. Please re-authenticate.');
 
       final notifier = ref.read(accountsProvider.notifier);
 
@@ -217,9 +229,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     final isEditing = widget.isEditing;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEditing ? 'Edit Account' : 'Add Account'),
-      ),
+      appBar: AppBar(title: Text(isEditing ? 'Edit Account' : 'Add Account')),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -256,22 +266,15 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                     ),
                     SizedBox(height: 14.h),
 
-                    DropdownButtonFormField<String>(
+                    AccountTypeDropdown(
                       value: _selectedType,
-                      decoration: const InputDecoration(labelText: 'Account Type'),
-                      items: AppConstants.accountTypeLimits.keys
-                          .map(
-                            (key) => DropdownMenuItem(
-                              value: key,
-                              child: Text(AppConstants.displayLabel(key)),
-                            ),
-                          )
-                          .toList(),
+                      isRequired: true,
+                      errorText: _typeError,
                       onChanged: (v) {
-                        if (v == null) return;
                         final defaultLimit = AppConstants.limitForAccountType(v);
                         setState(() {
                           _selectedType = v;
+                          _typeError = null;
                           _limitCtrl.text = defaultLimit.toStringAsFixed(0);
                           if (v != 'instapay') _instapayIdType = 'handle';
                           if (v != 'bank_account') _bankIdType = 'account';
@@ -319,10 +322,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                             value: 'account',
                             child: Text('Account Number'),
                           ),
-                          DropdownMenuItem(
-                            value: 'iban',
-                            child: Text('IBAN'),
-                          ),
+                          DropdownMenuItem(value: 'iban', child: Text('IBAN')),
                         ],
                         onChanged: (v) {
                           if (v == null) return;
@@ -341,13 +341,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                         labelText: 'Account Identifier',
                         hintText: _selectedType == 'instapay'
                             ? (_instapayIdType == 'handle'
-                                ? 'e.g. user or user@instapay'
-                                : 'e.g. 01012345678')
+                                  ? 'e.g. user or user@instapay'
+                                  : 'e.g. 01012345678')
                             : _selectedType == 'bank_account'
-                                ? (_bankIdType == 'iban'
-                                    ? 'EG380019000500000000263180002'
-                                    : 'e.g. 1234567890')
-                                : 'e.g. 01012345678',
+                            ? (_bankIdType == 'iban'
+                                  ? 'EG380019000500000000263180002'
+                                  : 'e.g. 1234567890')
+                            : 'e.g. 01012345678',
                         prefixIcon: const Icon(Icons.tag),
                         errorText: _identifierError,
                       ),
@@ -365,12 +365,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       decoration: InputDecoration(
                         labelText: 'Default Limit (EGP)',
                         helperText:
-                            'Used by Smart Split to cap how much can be routed here.',
+                            'Used by Smart Split to cap how much can be routed.',
                         prefixIcon: const Icon(Icons.payments_outlined),
                         errorText: _limitError,
                       ),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       onChanged: (_) {
                         if (_limitError != null) {
                           setState(() => _limitError = null);

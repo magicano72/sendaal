@@ -1,15 +1,34 @@
 /// App-wide constants for Sendaal
+import '../../models/system_limit_model.dart';
 
 class AppConstants {
   AppConstants._();
 
   // ── Account type limits (used in Smart Split algorithm) ───────────────────
   static Map<String, double> accountTypeLimits = const {};
+  static List<SystemLimit> systemLimits = const [];
 
   /// Replace the in-memory limits with values fetched from the backend.
   static void updateAccountTypeLimits(Map<String, double> limits) {
     if (limits.isNotEmpty) {
       accountTypeLimits = Map.unmodifiable(limits);
+    }
+  }
+
+  /// Store the ordered system limit objects as returned by the backend.
+  static void updateSystemLimits(List<SystemLimit> limits) {
+    if (limits.isNotEmpty) {
+      systemLimits = List.unmodifiable(limits);
+    }
+  }
+
+  /// Lookup a system limit object by system_name (case-insensitive).
+  static SystemLimit? systemLimitFor(String systemName) {
+    final key = systemName.toLowerCase();
+    try {
+      return systemLimits.firstWhere((s) => s.systemName.toLowerCase() == key);
+    } catch (_) {
+      return null;
     }
   }
 
@@ -29,9 +48,7 @@ class AppConstants {
     return key
         .split('_')
         .where((part) => part.isNotEmpty)
-        .map(
-          (part) => part[0].toUpperCase() + part.substring(1),
-        )
+        .map((part) => part[0].toUpperCase() + part.substring(1))
         .join(' ');
   }
 

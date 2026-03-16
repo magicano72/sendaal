@@ -8,6 +8,7 @@ import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/account_service.dart';
 import '../../widgets/app_widgets.dart';
+import '../../widgets/account_type_dropdown.dart';
 
 /// Bottom sheet for adding a new financial account
 class AddAccountSheet extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
   int _priority = 2; // Default priority
   bool _isLoading = false;
   String? _error;
+  String? _typeError;
 
   @override
   void initState() {
@@ -103,6 +105,11 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
     var identifier = _identifierCtrl.text.trim();
     final limitText = _limitCtrl.text.trim();
 
+    if (_selectedType.isEmpty) {
+      setState(() => _typeError = 'Please select an account type.');
+      return;
+    }
+
     final idError = _validateIdentifier(identifier);
     if (idError != null) {
       setState(() => _error = idError);
@@ -138,8 +145,9 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
         userId: userId,
         type: _selectedType,
         accountIdentifier: normalizedIdentifier,
-        accountTitle:
-            title.isNotEmpty ? title : AppConstants.displayLabel(_selectedType),
+        accountTitle: title.isNotEmpty
+            ? title
+            : AppConstants.displayLabel(_selectedType),
         defaultLimit: parsedLimit,
         priority: _priority,
       );
@@ -203,22 +211,15 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
           SizedBox(height: 14.h),
 
           // Account type dropdown
-          DropdownButtonFormField<String>(
+          AccountTypeDropdown(
             value: _selectedType,
-            decoration: const InputDecoration(labelText: 'Account Type'),
-            items: AppConstants.accountTypeLimits.keys
-                .map(
-                  (key) => DropdownMenuItem(
-                    value: key,
-                    child: Text(AppConstants.displayLabel(key)),
-                  ),
-                )
-                .toList(),
+            isRequired: true,
+            errorText: _typeError,
             onChanged: (v) {
-              if (v == null) return;
               final newDefault = AppConstants.limitForAccountType(v);
               setState(() {
                 _selectedType = v;
+                _typeError = null;
                 _defaultLimit = newDefault;
                 _limitCtrl.text = newDefault.toStringAsFixed(0);
                 if (v != 'instapay') {
@@ -306,8 +307,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
             controller: _limitCtrl,
             decoration: const InputDecoration(
               labelText: 'Default Limit (EGP)',
-              helperText:
-                  'Used by Smart Split to cap how much can be routed here.',
+              helperText: 'Used by Smart Split to cap how much can be routed.',
               prefixIcon: Icon(Icons.payments_outlined),
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),

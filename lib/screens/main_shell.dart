@@ -1,6 +1,6 @@
+import 'package:Sendaal/screens/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sendaal/screens/home/home_screen.dart';
 
 import '../core/theme/app_theme.dart';
 import 'accounts/accounts_screen.dart';

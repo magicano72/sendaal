@@ -1,6 +1,6 @@
+import 'package:Sendaal/models/access_request_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sendaal/models/access_request_model.dart';
 
 import '../../core/theme/app_theme.dart' show AppTheme;
 

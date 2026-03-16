@@ -1,4 +1,4 @@
-import 'package:sendaal/core/error/exceptions.dart';
+import 'package:Sendaal/core/error/exceptions.dart';
 
 /// Parses Directus API errors and returns user-friendly messages
 class DirectusErrorParser {
