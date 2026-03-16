@@ -12,7 +12,7 @@ import '../../services/system_limits_service.dart';
 import '../../widgets/app_widgets.dart';
 import '../../widgets/delete_confirmation_dialog.dart';
 import '../../widgets/system_limit_icon.dart';
-import '../profile/account_form_screen.dart';
+import 'account_form_screen.dart';
 
 /// Dedicated Accounts screen for managing payment accounts.
 class AccountsScreen extends ConsumerStatefulWidget {

@@ -1,3 +1,4 @@
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:Sendaal/widgets/app_widgets.dart' show ErrorBanner;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,14 +58,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Please agree to the Terms of Service and Privacy Policy.',
-          ),
-          backgroundColor: Colors.red,
-        ),
+      AppSnackBar.error(
+        context,
+        'Please agree to the Terms of Service and Privacy Policy.',
       );
+
       return;
     }
 
@@ -77,7 +75,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('No internet connection. Please check your network.'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
           ),
         );
       }
@@ -127,11 +125,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account created! Please sign in.'),
-          backgroundColor: AppTheme.success,
-        ),
+      AppSnackBar.success(
+        context,
+        'Account created successfully! Please log in.',
       );
       Navigator.pushReplacementNamed(context, AppRoutes.login);
     }
@@ -195,7 +191,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             SizedBox(height: 20.h),
 
                             // ── First Name ─────────────────────────────────
-                            _FieldLabel(label: 'First Name'),
+                            _FieldLabel(label: 'Full Name'),
                             SizedBox(height: 8.h),
                             TextFormField(
                               controller: _firstNameCtrl,

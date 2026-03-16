@@ -75,7 +75,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             if (user != null) _ShareLinkButton(username: user.username),
             SizedBox(height: 28.h),
             Text(
-              'Financial Accounts',
+              'Favorite Accounts',
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w800,

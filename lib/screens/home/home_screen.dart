@@ -594,7 +594,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: AppTheme.primaryColor.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.contacts, color: AppTheme.primaryColor),
+              child: Icon(Icons.contacts, color: AppColors.primary),
             ),
             SizedBox(width: 12.w),
             Expanded(

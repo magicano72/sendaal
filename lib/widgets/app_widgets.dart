@@ -555,7 +555,11 @@ class EmptyState extends StatelessWidget {
               SizedBox(height: 8.h),
               Text(
                 subtitle!,
-                style: TextStyle(fontSize: 14.sp, color: AppTheme.primary),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

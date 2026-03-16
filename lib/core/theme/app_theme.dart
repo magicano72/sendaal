@@ -15,6 +15,7 @@ class AppColors {
   static const error = Color(0xFFEF4444);
   static const border = Color(0xFFE5E7EB);
   static const divider = Color(0xFFE5E7EB);
+  static const warning = Color(0xFFF59E0B);
 }
 
 class AppSpacing {
@@ -74,7 +75,9 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 1,
         centerTitle: true,
-        titleTextStyle: TextStyles.h2Medium.copyWith(color: AppColors.textPrimary),
+        titleTextStyle: TextStyles.h2Medium.copyWith(
+          color: AppColors.textPrimary,
+        ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
 
@@ -87,7 +90,9 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radius),
           ),
-          textStyle: TextStyles.bodyRegular.copyWith(fontWeight: FontWeight.w600),
+          textStyle: TextStyles.bodyRegular.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
           shadowColor: Colors.black.withOpacity(0.05),
           elevation: 3,
         ),
@@ -101,7 +106,9 @@ class AppTheme {
             horizontal: AppSpacing.x4,
             vertical: AppSpacing.x3,
           ),
-          textStyle: TextStyles.bodyRegular.copyWith(fontWeight: FontWeight.w600),
+          textStyle: TextStyles.bodyRegular.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
           shadowColor: Colors.black.withOpacity(0.05),
           elevation: 2,
         ),
@@ -137,8 +144,12 @@ class AppTheme {
           borderRadius: BorderRadius.circular(radius),
           borderSide: const BorderSide(color: AppColors.error),
         ),
-        hintStyle: TextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-        labelStyle: TextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+        hintStyle: TextStyles.bodySmall.copyWith(
+          color: AppColors.textSecondary,
+        ),
+        labelStyle: TextStyles.bodySmall.copyWith(
+          color: AppColors.textSecondary,
+        ),
       ),
 
       // Cards
