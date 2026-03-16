@@ -7,8 +7,8 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/account_service.dart';
-import '../../widgets/app_widgets.dart';
 import '../../widgets/account_type_dropdown.dart';
+import '../../widgets/app_widgets.dart';
 
 /// Bottom sheet for adding a new financial account
 class AddAccountSheet extends ConsumerStatefulWidget {
@@ -239,6 +239,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
               decoration: const InputDecoration(
                 labelText: 'InstaPay Identifier Type',
               ),
+              icon: const Icon(Icons.keyboard_arrow_down_rounded),
               items: const [
                 DropdownMenuItem(
                   value: 'handle',
@@ -258,50 +259,6 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
             ),
             SizedBox(height: 12.h),
           ],
-
-          if (_selectedType == 'bank_account') ...[
-            DropdownButtonFormField<String>(
-              value: _bankIdType,
-              decoration: const InputDecoration(
-                labelText: 'Bank Identifier Type',
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'account',
-                  child: Text('Account Number'),
-                ),
-                DropdownMenuItem(value: 'iban', child: Text('IBAN')),
-              ],
-              onChanged: (v) {
-                if (v == null) return;
-                setState(() {
-                  _bankIdType = v;
-                });
-              },
-            ),
-            SizedBox(height: 12.h),
-          ],
-
-          // Identifier field
-          TextFormField(
-            controller: _identifierCtrl,
-            decoration: InputDecoration(
-              labelText: 'Account Identifier',
-              hintText: _selectedType == 'instapay'
-                  ? (_instapayIdType == 'handle'
-                        ? 'e.g. x or x@instapay'
-                        : 'e.g. 01012345678')
-                  : _selectedType == 'bank_account'
-                  ? (_bankIdType == 'iban'
-                        ? 'EG380019000500000000263180002'
-                        : 'e.g. 1234567890')
-                  : 'e.g. 01012345678',
-              prefixIcon: const Icon(Icons.tag),
-            ),
-            keyboardType: TextInputType.text,
-          ),
-          SizedBox(height: 16.h),
-
           // Default limit field
           TextFormField(
             controller: _limitCtrl,

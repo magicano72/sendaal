@@ -175,7 +175,7 @@ class AccountCard extends StatelessWidget {
       if (account.accountIdentifier.trim().isNotEmpty)
         account.accountIdentifier.trim(),
     ];
-    final subtitle = subtitleParts.join(' • ');
+    final subtitle = subtitleParts.join('\n');
     final verticalPadding = dense ? 10.h : 12.h;
     final horizontalPadding = dense ? 14.w : 16.w;
     final bottomMargin = dense ? 8.h : 10.h;
@@ -197,9 +197,7 @@ class AccountCard extends StatelessWidget {
                 color: AppTheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
-              child: Center(
-                child: SystemIcon(system: system, size: dense ? 22.r : 24.r),
-              ),
+              child: SystemIcon(system: system, size: dense ? 22.r : 24.r),
             ),
             SizedBox(width: 14.w),
 

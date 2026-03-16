@@ -54,6 +54,6 @@ Widget _fallbackIcon(String name, double size) {
     case 'telda':
       return Icon(Icons.credit_card, size: size);
     default:
-      return Icon(Icons.account_box, size: size);
+      return Icon(Icons.payment, size: size);
   }
 }

@@ -8,6 +8,7 @@ import '../../models/financial_account_model.dart';
 import '../../models/system_limit_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/system_limits_service.dart';
 import '../../widgets/app_widgets.dart';
 import '../../widgets/delete_confirmation_dialog.dart';
 import '../../widgets/system_limit_icon.dart';
@@ -38,6 +39,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
   }
 
   Future<void> _load() async {
+    await SystemLimitsService().loadLimits();
     final user = ref.read(authProvider).user;
     if (user != null) {
       await ref.read(accountsProvider.notifier).loadAccounts(user.id);
@@ -121,9 +123,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                         color: AppTheme.primary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(14.r),
                       ),
-                      child: Center(
-                        child: SystemIcon(system: system, size: 24.r),
-                      ),
+                      child: SystemIcon(system: system, size: 24.r),
                     ),
                     SizedBox(width: 12.w),
                     Expanded(
@@ -356,7 +356,9 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
             if (state.isLoading && accounts.isEmpty)
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 40.h),
-                child: const Center(child: CircularProgressIndicator()),
+                child: const Center(
+                  child: CircularProgressIndicator(color: AppTheme.primary),
+                ),
               )
             else if (state.error != null)
               ErrorBanner(message: state.error!, onRetry: _load)

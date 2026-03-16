@@ -8,8 +8,8 @@ import '../../models/financial_account_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/account_service.dart';
-import '../../widgets/app_widgets.dart';
 import '../../widgets/account_type_dropdown.dart';
+import '../../widgets/app_widgets.dart';
 
 /// Full-screen form for creating or editing a financial account.
 class AccountFormScreen extends ConsumerStatefulWidget {
@@ -59,7 +59,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     _titleCtrl = TextEditingController(
       text: account?.accountTitle.isNotEmpty == true
           ? account!.accountTitle
-          : AppConstants.displayLabel(_selectedType),
+          : '',
     );
     _identifierCtrl = TextEditingController(
       text: account?.accountIdentifier ?? '',
@@ -148,8 +148,9 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     final parsedLimit = double.tryParse(limitText);
 
     setState(() {
-      _typeError =
-          _selectedType.isEmpty ? 'Please select an account type.' : null;
+      _typeError = _selectedType.isEmpty
+          ? 'Please select an account type.'
+          : null;
       _identifierError = idError;
       _limitError = (parsedLimit == null || parsedLimit <= 0)
           ? 'Enter a valid positive default limit.'
@@ -271,7 +272,9 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       isRequired: true,
                       errorText: _typeError,
                       onChanged: (v) {
-                        final defaultLimit = AppConstants.limitForAccountType(v);
+                        final defaultLimit = AppConstants.limitForAccountType(
+                          v,
+                        );
                         setState(() {
                           _selectedType = v;
                           _typeError = null;
@@ -283,13 +286,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       },
                     ),
                     SizedBox(height: 16.h),
-
                     if (_selectedType == 'instapay') ...[
                       DropdownButtonFormField<String>(
                         value: _instapayIdType,
                         decoration: const InputDecoration(
                           labelText: 'InstaPay Identifier Type',
                         ),
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded),
                         items: const [
                           DropdownMenuItem(
                             value: 'handle',
@@ -304,31 +307,6 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                           if (v == null) return;
                           setState(() {
                             _instapayIdType = v;
-                            _identifierError = null;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 12.h),
-                    ],
-
-                    if (_selectedType == 'bank_account') ...[
-                      DropdownButtonFormField<String>(
-                        value: _bankIdType,
-                        decoration: const InputDecoration(
-                          labelText: 'Bank Identifier Type',
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'account',
-                            child: Text('Account Number'),
-                          ),
-                          DropdownMenuItem(value: 'iban', child: Text('IBAN')),
-                        ],
-                        onChanged: (v) {
-                          if (v == null) return;
-                          setState(() {
-                            _bankIdType = v;
-                            _identifierError = null;
                           });
                         },
                       ),

@@ -6,8 +6,8 @@ import '../../core/constants/app_constants.dart';
 import '../../models/financial_account_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/app_widgets.dart';
 import '../../widgets/account_type_dropdown.dart';
+import '../../widgets/app_widgets.dart';
 
 /// Full-screen editor for an existing financial account.
 class EditAccountScreen extends ConsumerStatefulWidget {
@@ -230,13 +230,13 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
               },
             ),
             SizedBox(height: 16.h),
-
             if (_selectedType == 'instapay') ...[
               DropdownButtonFormField<String>(
                 value: _instapayIdType,
                 decoration: const InputDecoration(
                   labelText: 'InstaPay Identifier Type',
                 ),
+                icon: const Icon(Icons.keyboard_arrow_down_rounded),
                 items: const [
                   DropdownMenuItem(
                     value: 'handle',
@@ -251,29 +251,6 @@ class _EditAccountScreenState extends ConsumerState<EditAccountScreen> {
                   if (v == null) return;
                   setState(() {
                     _instapayIdType = v;
-                  });
-                },
-              ),
-              SizedBox(height: 12.h),
-            ],
-
-            if (_selectedType == 'bank_account') ...[
-              DropdownButtonFormField<String>(
-                value: _bankIdType,
-                decoration: const InputDecoration(
-                  labelText: 'Bank Identifier Type',
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'account',
-                    child: Text('Account Number'),
-                  ),
-                  DropdownMenuItem(value: 'iban', child: Text('IBAN')),
-                ],
-                onChanged: (v) {
-                  if (v == null) return;
-                  setState(() {
-                    _bankIdType = v;
                   });
                 },
               ),
