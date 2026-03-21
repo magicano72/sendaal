@@ -10,7 +10,7 @@ class AccountService {
       '*,country.*,account_type.*,'
       'provider.id,provider.provider_name,provider.logo,provider.is_active,'
       'provider_availability.id,provider_availability.currency,'
-      'provider_availability.account_type.*';
+      'provider_availability.account_type.*,is_favourite';
 
   AccountService({ApiClient? apiClient})
     : _api = apiClient ?? ApiClient.instance;
@@ -41,6 +41,9 @@ class AccountService {
 
     const order = {'high': 0, 'medium': 1, 'low': 2};
     accounts.sort((a, b) {
+      if (a.isFavourite != b.isFavourite) {
+        return a.isFavourite ? -1 : 1;
+      }
       final pa = order[a.priority.name] ?? 1;
       final pb = order[b.priority.name] ?? 1;
       if (pa != pb) return pa.compareTo(pb);
@@ -182,7 +185,7 @@ class AccountService {
     return getAccountById(accountId);
   }
 
-  /// Update account priority (star / reorder)
+  /// Update account priority
   Future<FinancialAccount> updatePriority(
     String accountId,
     AccountPriority priority,
@@ -217,6 +220,7 @@ class AccountService {
       'account_title': accountTitle,
       'limit': limit,
       'priority': priorityToString(priority),
+      'is_favourite': false,
     };
     // Only include is_visible if it's false (true is the default)
     if (!isVisible) {
@@ -259,5 +263,17 @@ class AccountService {
   /// Delete a financial account
   Future<void> deleteAccount(String accountId) async {
     await _api.delete('${Endpoints.financialAccounts}/$accountId');
+  }
+
+  /// Toggle favourite flag
+  Future<FinancialAccount> updateFavourite(
+    String accountId,
+    bool isFavourite,
+  ) async {
+    await _api.patch(
+      '${Endpoints.financialAccounts}/$accountId',
+      body: {'is_favourite': isFavourite},
+    );
+    return getAccountById(accountId);
   }
 }

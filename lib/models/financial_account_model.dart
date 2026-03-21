@@ -60,6 +60,7 @@ class FinancialAccount {
   final double defaultLimit;
   final AccountPriority priority;
   final bool isVisible;
+  final bool isFavourite;
   final DateTime? createdAt;
 
   const FinancialAccount({
@@ -81,6 +82,7 @@ class FinancialAccount {
     required this.defaultLimit,
     this.priority = AccountPriority.medium,
     this.isVisible = true,
+    this.isFavourite = false,
     this.createdAt,
   });
 
@@ -152,6 +154,7 @@ class FinancialAccount {
       defaultLimit: double.tryParse(json['limit']?.toString() ?? '0') ?? 0,
       priority: priorityFromString(json['priority']?.toString()),
       isVisible: json['is_visible'] != false && json['isVisible'] != false,
+      isFavourite: json['is_favourite'] == true,
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
     );
   }
@@ -169,6 +172,7 @@ class FinancialAccount {
       'account_title': accountTitle,
       'limit': defaultLimit,
       'priority': priorityToString(priority),
+      'is_favourite': isFavourite,
     };
     // Only include is_visible if it's false (true is the default)
     if (!isVisible) {
@@ -196,6 +200,7 @@ class FinancialAccount {
     double? defaultLimit,
     AccountPriority? priority,
     bool? isVisible,
+    bool? isFavourite,
     DateTime? createdAt,
   }) => FinancialAccount(
     id: id ?? this.id,
@@ -217,6 +222,7 @@ class FinancialAccount {
     defaultLimit: defaultLimit ?? this.defaultLimit,
     priority: priority ?? this.priority,
     isVisible: isVisible ?? this.isVisible,
+    isFavourite: isFavourite ?? this.isFavourite,
     createdAt: createdAt ?? this.createdAt,
   );
 }

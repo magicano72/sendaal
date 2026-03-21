@@ -46,6 +46,9 @@ class SmartSplitService {
     // Sort by priority (lower number = higher priority)
     const order = {'high': 0, 'medium': 1, 'low': 2};
     visible.sort((a, b) {
+      if (a.isFavourite != b.isFavourite) {
+        return a.isFavourite ? -1 : 1;
+      }
       final pa = order[a.priority.name] ?? 1;
       final pb = order[b.priority.name] ?? 1;
       if (pa != pb) return pa.compareTo(pb);

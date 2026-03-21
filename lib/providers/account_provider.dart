@@ -139,9 +139,42 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
     }
   }
 
+  Future<void> toggleFavourite(String accountId, bool current) async {
+    final previous = state.accounts;
+    final optimistic = _sorted(
+      previous
+          .map(
+            (a) => a.id == accountId
+                ? a.copyWith(isFavourite: !current)
+                : a,
+          )
+          .toList(),
+    );
+    state = state.copyWith(accounts: optimistic);
+
+    try {
+      final updated = await _service.updateFavourite(accountId, !current);
+      state = state.copyWith(
+        accounts: _sorted(
+          state.accounts
+              .map((a) => a.id == accountId ? updated : a)
+              .toList(),
+        ),
+      );
+    } catch (e) {
+      state = state.copyWith(
+        accounts: previous,
+        error: 'Failed to update favourite: $e',
+      );
+    }
+  }
+
   List<FinancialAccount> _sorted(List<FinancialAccount> list) {
     const order = {'high': 0, 'medium': 1, 'low': 2};
     list.sort((a, b) {
+      if (a.isFavourite != b.isFavourite) {
+        return a.isFavourite ? -1 : 1;
+      }
       final pa = order[a.priority.name] ?? 1;
       final pb = order[b.priority.name] ?? 1;
       if (pa != pb) return pa.compareTo(pb);

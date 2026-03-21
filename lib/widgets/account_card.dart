@@ -62,18 +62,34 @@ class AccountCard extends StatelessWidget {
     final horizontalPadding = dense ? 14.w : 16.w;
     final bottomMargin = dense ? 8.h : 10.h;
 
+    // Star icon (20.r) + padding (8.w * 2) + a little breathing room
+    final starReservedWidth = showStar ? (dense ? 34.w : 36.w) : 0.0;
+
     final card = Card(
       margin: EdgeInsets.only(bottom: bottomMargin),
+      color: account.isFavourite ? AppTheme.primary.withOpacity(0.03) : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: BorderSide(
+          color: account.isFavourite
+              ? AppTheme.primary.withOpacity(0.35)
+              : Colors.transparent,
+          width: account.isFavourite ? 1.2 : 0,
+        ),
+      ),
       child: Stack(
         children: [
+          // ── Main content row ────────────────────────────────────────────
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: verticalPadding,
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              verticalPadding,
+              // Shrink right edge so the limit badge never slides under star
+              horizontalPadding + starReservedWidth,
+              verticalPadding,
             ),
             child: Row(
               children: [
-                // Account type icon circle
                 ProviderLogo(
                   logoUuid: account.providerLogo,
                   providerName: account.providerName,
@@ -81,7 +97,6 @@ class AccountCard extends StatelessWidget {
                 ),
                 SizedBox(width: 14.w),
 
-                // Label + identifier
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +136,6 @@ class AccountCard extends StatelessWidget {
                   ),
                 ),
 
-                // Visibility toggle
                 if (showToggle) ...[
                   SizedBox(width: 4.w),
                   Switch.adaptive(
@@ -134,12 +148,42 @@ class AccountCard extends StatelessWidget {
             ),
           ),
 
-          // Priority badge pinned to the top-right corner
+          // ── Priority badge — top-left corner tag ────────────────────────
           Positioned(
             top: 0,
-            right: 0,
+            left: 0,
             child: _PriorityBadge(priority: account.priority),
           ),
+
+          // ── Favourite star — vertically centred on the right edge ────────
+          if (showStar)
+            Positioned(
+              top: 0,
+              bottom: 0,
+              right: 4.w,
+              child: Center(
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: onStar,
+                    child: Padding(
+                      padding: EdgeInsets.all(8.w),
+                      child: Icon(
+                        account.isFavourite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: account.isFavourite
+                            ? AppTheme.primary
+                            : AppTheme.textSecondary,
+                        size: dense ? 18.r : 20.r,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -152,7 +196,6 @@ class AccountCard extends StatelessWidget {
             child: card,
           );
 
-    // If no swipe actions are provided, return plain card
     if (onEdit == null && onDelete == null) return tappableCard;
 
     return Slidable(
@@ -240,8 +283,8 @@ class _PriorityBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.only(
-          topRight: Radius.circular(10.r),
-          bottomLeft: Radius.circular(10.r),
+          topLeft: Radius.circular(10.r),
+          bottomRight: Radius.circular(10.r),
         ),
       ),
       child: Text(label, style: TextStyles.captionMedium.copyWith(color: fg)),

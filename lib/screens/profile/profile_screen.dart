@@ -42,9 +42,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final auth = ref.watch(authProvider);
     final accountsState = ref.watch(accountsProvider);
     final user = auth.user;
-    final favoriteAccounts = accountsState.accounts
-        .where((a) => a.isVisible && a.priority == AccountPriority.high)
-        .toList();
+    final allVisibleAccounts =
+        accountsState.accounts.where((a) => a.isVisible).toList();
+    final favoriteAccounts =
+        allVisibleAccounts.where((a) => a.isFavourite).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -95,13 +96,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   }
                 },
               )
-            else if (favoriteAccounts.isEmpty)
+            else if (favoriteAccounts.isEmpty && allVisibleAccounts.isEmpty)
               const EmptyState(
                 icon: Icons.account_balance_wallet_outlined,
                 title: 'No accounts yet',
                 subtitle: 'Add accounts to see them here.',
               )
-            else
+            else if (favoriteAccounts.isEmpty)
+              const EmptyState(
+                icon: Icons.favorite_border,
+                title: 'No favorite accounts',
+                subtitle: 'Tap the heart on an account to pin it here.',
+              )
+            else ...[
               ...favoriteAccounts.map(
                 (account) => Padding(
                   padding: EdgeInsets.only(bottom: 12.h),
@@ -109,17 +116,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     account: account,
                     dense: false,
                     showToggle: false,
-                    showStar: false,
-                    onTap: () {
-                      // Navigator.of(context).push(
-                      //   MaterialPageRoute(
-                      //     builder: (_) => const AccountsScreen(),
-                      //   ),
-                      // );
-                    },
+                    showStar: true,
+                    onStar: () => _toggleFavorite(account),
+                    onTap: () {},
                   ),
                 ),
               ),
+            ],
             SizedBox(height: 28.h),
             _LogoutButton(
               onPressed: () async {
@@ -138,10 +141,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _toggleFavorite(FinancialAccount account) async {
     final notifier = ref.read(accountsProvider.notifier);
-    final newPriority = account.priority == AccountPriority.high
-        ? AccountPriority.medium
-        : AccountPriority.high;
-    await notifier.updatePriority(account.id, newPriority);
+    await notifier.toggleFavourite(account.id, account.isFavourite);
 
     final user = ref.read(authProvider).user;
     if (user != null) {

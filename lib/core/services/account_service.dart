@@ -18,7 +18,7 @@ class AccountService {
               '*,country.*,account_type.*,'
               'provider.id,provider.provider_name,provider.logo,provider.is_active,'
               'provider_availability.id,provider_availability.currency,'
-              'provider_availability.account_type.*,created_at',
+              'provider_availability.account_type.*,created_at,is_favourite',
         },
       );
 
@@ -26,6 +26,9 @@ class AccountService {
         final list = List<Map<String, dynamic>>.from(result['data']);
         const order = {'high': 0, 'medium': 1, 'low': 2};
         list.sort((a, b) {
+          final fa = a['is_favourite'] == true;
+          final fb = b['is_favourite'] == true;
+          if (fa != fb) return fa ? -1 : 1;
           final pa = order[(a['priority'] ?? 'medium').toString()] ?? 1;
           final pb = order[(b['priority'] ?? 'medium').toString()] ?? 1;
           if (pa != pb) return pa.compareTo(pb);
@@ -142,6 +145,7 @@ class AccountService {
         'account_title': accountTitle,
         'limit': limit,
         'priority': priorityToString(priority),
+        'is_favourite': false,
       },
     );
   }
