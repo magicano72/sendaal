@@ -1,5 +1,6 @@
 import '../../services/api_client.dart';
 import '../constants/app_constants.dart';
+import '../models/financial_account_model.dart';
 
 class AccountService {
   final ApiClient apiClient;
@@ -11,11 +12,30 @@ class AccountService {
     try {
       final result = await apiClient.get(
         '/items/financial_accounts',
-        queryParams: {'filter[user][_eq]': userId},
+        queryParams: {
+          'filter[user][_eq]': userId,
+          'fields':
+              '*,country.*,account_type.*,'
+              'provider.id,provider.provider_name,provider.logo,provider.is_active,'
+              'provider_availability.id,provider_availability.currency,'
+              'provider_availability.account_type.*,created_at',
+        },
       );
 
       if (result['data'] is List) {
-        return List<Map<String, dynamic>>.from(result['data']);
+        final list = List<Map<String, dynamic>>.from(result['data']);
+        const order = {'high': 0, 'medium': 1, 'low': 2};
+        list.sort((a, b) {
+          final pa = order[(a['priority'] ?? 'medium').toString()] ?? 1;
+          final pb = order[(b['priority'] ?? 'medium').toString()] ?? 1;
+          if (pa != pb) return pa.compareTo(pb);
+          final ca = DateTime.tryParse(a['created_at']?.toString() ?? '') ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          final cb = DateTime.tryParse(b['created_at']?.toString() ?? '') ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          return ca.compareTo(cb);
+        });
+        return list;
       }
       return [];
     } catch (e) {
@@ -53,8 +73,15 @@ class AccountService {
 
     // Sort by priority (ascending order means higher priority accounts first)
     final sortedAccounts = List<Map<String, dynamic>>.from(visibleAccounts);
+    const priorityOrder = {'high': 0, 'medium': 1, 'low': 2};
     sortedAccounts.sort(
-      (a, b) => (a['priority'] ?? 0).compareTo(b['priority'] ?? 0),
+      (a, b) {
+        final pa =
+            priorityOrder[(a['priority'] ?? 'medium').toString()] ?? 1;
+        final pb =
+            priorityOrder[(b['priority'] ?? 'medium').toString()] ?? 1;
+        return pa.compareTo(pb);
+      },
     );
 
     // Split amount across accounts
@@ -94,20 +121,27 @@ class AccountService {
   /// Add new financial account
   Future<Map<String, dynamic>> addAccount({
     required String userId,
-    required String type,
+    required String providerAvailabilityId,
+    required String countryId,
+    required String providerId,
+    required String accountTypeId,
     required String accountIdentifier,
-    required int priority,
-    bool isVisible = true,
+    required String accountTitle,
+    required double limit,
+    AccountPriority priority = AccountPriority.medium,
   }) async {
     return await apiClient.post(
       '/items/financial_accounts',
       body: {
         'user': userId,
-        'type': type,
-        'accountIdentifier': accountIdentifier,
-        'defaultLimit': getLimitForType(type),
-        'priority': priority,
-        'isVisible': isVisible,
+        'provider_availability': providerAvailabilityId,
+        'country': countryId,
+        'provider': providerId,
+        'account_type': accountTypeId,
+        'account_identifier': accountIdentifier,
+        'account_title': accountTitle,
+        'limit': limit,
+        'priority': priorityToString(priority),
       },
     );
   }
@@ -119,18 +153,18 @@ class AccountService {
   ) async {
     return await apiClient.patch(
       '/items/financial_accounts/$accountId',
-      body: {'isVisible': isVisible},
+      body: {'is_visible': isVisible},
     );
   }
 
   /// Update account priority
   Future<Map<String, dynamic>> updateAccountPriority(
     String accountId,
-    int priority,
+    AccountPriority priority,
   ) async {
     return await apiClient.patch(
       '/items/financial_accounts/$accountId',
-      body: {'priority': priority},
+      body: {'priority': priorityToString(priority)},
     );
   }
 }

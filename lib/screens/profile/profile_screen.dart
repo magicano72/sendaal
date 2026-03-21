@@ -1,3 +1,5 @@
+import 'package:Sendaal/widgets/account_card.dart';
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,12 +8,12 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/text_style.dart';
 import '../../models/financial_account_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/user_service.dart';
 import '../../widgets/app_widgets.dart';
-import '../accounts/accounts_screen.dart';
 
 /// My Profile screen styled to match the provided fintech design.
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -41,13 +43,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final accountsState = ref.watch(accountsProvider);
     final user = auth.user;
     final favoriteAccounts = accountsState.accounts
-        .where((a) => a.isVisible && a.priority == 0)
+        .where((a) => a.isVisible && a.priority == AccountPriority.high)
         .toList();
 
     return Scaffold(
       appBar: AppBar(
         leading: const SizedBox(),
-
         title: const Text('My Profile'),
         centerTitle: true,
         actions: const [
@@ -76,7 +77,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             SizedBox(height: 28.h),
             Text(
               'Favorite Accounts',
-              style: TextStyle(
+              style: TextStyles.bodyBold.copyWith(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w800,
                 color: AppTheme.textPrimary,
@@ -108,14 +109,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     account: account,
                     dense: false,
                     showToggle: false,
-                    showStar: true,
-                    onStar: () => _toggleFavorite(account),
+                    showStar: false,
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const AccountsScreen(),
-                        ),
-                      );
+                      // Navigator.of(context).push(
+                      //   MaterialPageRoute(
+                      //     builder: (_) => const AccountsScreen(),
+                      //   ),
+                      // );
                     },
                   ),
                 ),
@@ -138,7 +138,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _toggleFavorite(FinancialAccount account) async {
     final notifier = ref.read(accountsProvider.notifier);
-    final newPriority = account.priority == 0 ? 1 : 0;
+    final newPriority = account.priority == AccountPriority.high
+        ? AccountPriority.medium
+        : AccountPriority.high;
     await notifier.updatePriority(account.id, newPriority);
 
     final user = ref.read(authProvider).user;
@@ -148,27 +150,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _pickPhotoFromGallery() async {
+    // Don't allow picking while already uploading
+    if (_isUploading) return;
+
     try {
       final picker = ImagePicker();
       final image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
+        // Start loading immediately after the user picks a photo
+        if (mounted) setState(() => _isUploading = true);
         await _uploadPhoto(image.path);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        AppSnackBar.error(context, 'Failed to pick photo.');
       }
     }
   }
 
   Future<void> _uploadPhoto(String filePath) async {
     final current = ref.read(authProvider).user;
-    if (current == null) return;
+    if (current == null) {
+      if (mounted) setState(() => _isUploading = false);
+      return;
+    }
 
-    setState(() => _isUploading = true);
-
+    // _isUploading is already true when called from _pickPhotoFromGallery
     try {
       final userService = UserService();
       final updatedUser = await userService.uploadAndUpdateAvatar(
@@ -177,18 +184,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
       ref.read(authProvider.notifier).setUser(updatedUser);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile photo updated successfully'),
-            backgroundColor: AppTheme.success,
-          ),
-        );
+        AppSnackBar.success(context, 'Profile photo updated successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error uploading photo: $e')));
+        AppSnackBar.error(context, 'Failed to upload photo.');
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -205,17 +205,12 @@ class _ShareLinkButton extends StatelessWidget {
     return TextButton.icon(
       onPressed: () {
         Clipboard.setData(ClipboardData(text: 'sendaal.com/@$username'));
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Profile link copied!')));
+        AppSnackBar.success(context, 'Profile link copied to clipboard!');
       },
       icon: const Icon(Icons.share, color: AppTheme.primary),
-      label: const Text(
+      label: Text(
         'Share Account Link',
-        style: TextStyle(
-          color: AppTheme.textPrimary,
-          fontWeight: FontWeight.w700,
-        ),
+        style: TextStyles.bodyBold.copyWith(color: AppTheme.textPrimary),
       ),
       style: TextButton.styleFrom(
         padding: EdgeInsets.symmetric(vertical: 14.h),
@@ -240,9 +235,9 @@ class _LogoutButton extends StatelessWidget {
       child: TextButton.icon(
         onPressed: onPressed,
         icon: const Icon(Icons.logout_outlined, color: AppTheme.error),
-        label: const Text(
+        label: Text(
           'Log Out',
-          style: TextStyle(
+          style: TextStyles.bodySmallBold.copyWith(
             color: AppTheme.error,
             fontWeight: FontWeight.w700,
             fontSize: 15,
@@ -289,6 +284,7 @@ class _ProfileHeader extends StatelessWidget {
       children: [
         Stack(
           children: [
+            // ── Avatar circle ─────────────────────────────────────────────
             Container(
               width: 110.w,
               height: 110.w,
@@ -297,23 +293,55 @@ class _ProfileHeader extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: AppTheme.primary.withOpacity(0.1),
               ),
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                backgroundImage: hasAvatar
-                    ? NetworkImage(user.avatarUrl)
-                    : null,
-                child: hasAvatar
-                    ? null
-                    : Text(
-                        initials,
-                        style: TextStyle(
-                          fontSize: 30.sp,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.primary,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // The actual avatar image / initials
+                  Positioned.fill(
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      backgroundImage: hasAvatar
+                          ? NetworkImage(user.avatarUrl)
+                          : null,
+                      child: hasAvatar
+                          ? null
+                          : Text(
+                              initials,
+                              style: TextStyles.h1Semi.copyWith(
+                                fontSize: 30.sp,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                    ),
+                  ),
+
+                  // ── Loading overlay on top of avatar ───────────────────
+                  if (isUploading)
+                    Positioned.fill(
+                      child: ClipOval(
+                        child: Container(
+                          color: Colors.black.withOpacity(0.45),
+                          child: Center(
+                            child: SizedBox(
+                              width: 28.w,
+                              height: 28.w,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
+                    ),
+                ],
               ),
             ),
+
+            // ── Edit / uploading badge ────────────────────────────────────
             Positioned(
               bottom: 4,
               right: 4,
@@ -323,7 +351,9 @@ class _ProfileHeader extends StatelessWidget {
                   width: 32.w,
                   height: 32.w,
                   decoration: BoxDecoration(
-                    color: AppTheme.primary,
+                    color: isUploading
+                        ? AppTheme.primary.withOpacity(0.6)
+                        : AppTheme.primary,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -354,7 +384,7 @@ class _ProfileHeader extends StatelessWidget {
           user?.firstName?.isNotEmpty == true
               ? user.firstName!
               : (user?.displayName ?? 'User'),
-          style: TextStyle(
+          style: TextStyles.h1Semi.copyWith(
             fontSize: 22.sp,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -363,7 +393,7 @@ class _ProfileHeader extends StatelessWidget {
         SizedBox(height: 4.h),
         Text(
           user != null ? '@${user.username}' : '@username',
-          style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
+          style: TextStyles.label.copyWith(color: AppTheme.textSecondary),
         ),
       ],
     );

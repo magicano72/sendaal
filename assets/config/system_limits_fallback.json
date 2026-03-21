@@ -4,6 +4,7 @@
     { "system_name": "digital_wallet", "daily_limit": 30000, "system_image": null },
     { "system_name": "bank_account", "daily_limit": 100000, "system_image": null },
     { "system_name": "telda", "daily_limit": 20000, "system_image": null },
+    { "system_name": "fawry", "daily_limit": 20000, "system_image": null },
     { "system_name": "other", "daily_limit": 10000, "system_image": null }
   ]
 }

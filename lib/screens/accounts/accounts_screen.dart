@@ -1,17 +1,22 @@
+import 'package:Sendaal/widgets/account_card.dart';
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/text_style.dart';
 import '../../models/financial_account_model.dart';
 import '../../models/system_limit_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/system_limits_service.dart';
+import '../../widgets/account_type_badge.dart';
 import '../../widgets/app_widgets.dart';
+import '../../widgets/country_flag_icon.dart';
 import '../../widgets/delete_confirmation_dialog.dart';
-import '../../widgets/system_limit_icon.dart';
+import '../../widgets/provider_logo.dart';
 import 'account_form_screen.dart';
 
 /// Dedicated Accounts screen for managing payment accounts.
@@ -70,17 +75,21 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
   }
 
   void _showAccountQuickActions(FinancialAccount account) {
-    final label = AppConstants.displayLabel(account.type.name);
+    final rawType = account.accountTypeName.isNotEmpty
+        ? account.accountTypeName
+        : account.type.name;
+    final label = AppConstants.displayLabel(rawType);
     final subtitleParts = <String>[
-      label,
+      account.providerName.isNotEmpty ? account.providerName : label,
       if (account.accountIdentifier.trim().isNotEmpty)
         account.accountIdentifier.trim(),
+      if (account.currency?.isNotEmpty == true) account.currency!,
     ];
     final system =
-        AppConstants.systemLimitFor(account.type.name) ??
+        AppConstants.systemLimitFor(rawType) ??
         SystemLimit(
           id: -1,
-          systemName: account.type.name,
+          systemName: rawType,
           dailyLimit: account.defaultLimit.toInt(),
           systemImage: null,
         );
@@ -116,35 +125,64 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 48.w,
-                      height: 48.w,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(14.r),
-                      ),
-                      child: SystemIcon(system: system, size: 24.r),
+                    ProviderLogo(
+                      logoUuid: account.providerLogo,
+                      providerName: account.providerName,
+                      size: 44.w,
                     ),
                     SizedBox(width: 12.w),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            account.accountTitle.trim().isNotEmpty
-                                ? account.accountTitle.trim()
-                                : label,
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  account.accountTitle.trim().isNotEmpty
+                                      ? account.accountTitle.trim()
+                                      : label,
+                                  style: TextStyles.bodyBold.copyWith(
+                                    fontSize: 18.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              AccountTypeBadge(
+                                type: account.accountTypeName.isNotEmpty
+                                    ? account.accountTypeName
+                                    : account.type.name,
+                                iconSize: 14.w,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 6.h),
+                          Row(
+                            children: [
+                              CountryFlagIcon(
+                                countryCode: account.countryCode,
+                                size: 24.w,
+                              ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  account.countryName ??
+                                      account.countryCode ??
+                                      'Country',
+                                  style: TextStyles.label.copyWith(
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                           SizedBox(height: 4.h),
                           Text(
                             subtitleParts.join(' • '),
-                            style: TextStyle(
-                              fontSize: 13.sp,
+                            style: TextStyles.label.copyWith(
                               color: AppTheme.textSecondary,
                             ),
                           ),
@@ -160,7 +198,8 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                   children: [
                     _InfoChip(
                       icon: Icons.payments_outlined,
-                      label: '${_fmtAmount(account.defaultLimit)} EGP',
+                      label:
+                          '${_fmtAmount(account.defaultLimit)} ${account.currency?.isNotEmpty == true ? account.currency : 'EGP'}',
                     ),
                     _InfoChip(
                       icon: Icons.visibility_outlined,
@@ -168,7 +207,11 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                     ),
                     _InfoChip(
                       icon: Icons.star_rate_rounded,
-                      label: account.priority == 0 ? 'Favorite' : 'Standard',
+                      label: account.priority == AccountPriority.high
+                          ? 'High'
+                          : account.priority == AccountPriority.low
+                          ? 'Low'
+                          : 'Medium',
                     ),
                   ],
                 ),
@@ -176,18 +219,33 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                 const Divider(),
                 SizedBox(height: 4.h),
                 _AccountActionTile(
-                  icon: account.priority == 0
-                      ? Icons.star
-                      : Icons.star_border_outlined,
-                  label: account.priority == 0
-                      ? 'Unfavorite this account'
-                      : 'Mark as favorite',
+                  icon: Icons.flag,
+                  label: 'Set High priority',
                   onTap: () {
                     Navigator.pop(context);
-                    final newPriority = account.priority == 0 ? 1 : 0;
                     ref
                         .read(accountsProvider.notifier)
-                        .updatePriority(account.id, newPriority);
+                        .updatePriority(account.id, AccountPriority.high);
+                  },
+                ),
+                _AccountActionTile(
+                  icon: Icons.flag_outlined,
+                  label: 'Set Medium priority',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ref
+                        .read(accountsProvider.notifier)
+                        .updatePriority(account.id, AccountPriority.medium);
+                  },
+                ),
+                _AccountActionTile(
+                  icon: Icons.flag_circle_outlined,
+                  label: 'Set Low priority',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ref
+                        .read(accountsProvider.notifier)
+                        .updatePriority(account.id, AccountPriority.low);
                   },
                 ),
                 _AccountActionTile(
@@ -262,21 +320,11 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
       await ref.read(accountsProvider.notifier).deleteAccount(account.id);
       await _load();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account deleted'),
-            backgroundColor: AppTheme.success,
-          ),
-        );
+        AppSnackBar.success(context, 'Account deleted successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to delete: $e'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
+        AppSnackBar.error(context, 'Failed to delete account.');
       }
     }
   }
@@ -285,11 +333,15 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(accountsProvider);
     final searchQuery = _searchController.text.trim().toLowerCase();
-    final accounts = state.accounts
-        .where(
-          (acc) => acc.accountTitle.trim().toLowerCase().contains(searchQuery),
-        )
-        .toList();
+    final accounts = state.accounts.where((acc) {
+      if (searchQuery.isEmpty) return true;
+      final provider = acc.providerName.toLowerCase();
+      final country = (acc.countryName ?? acc.countryCode ?? '').toLowerCase();
+      final title = acc.accountTitle.toLowerCase();
+      return provider.contains(searchQuery) ||
+          country.contains(searchQuery) ||
+          title.contains(searchQuery);
+    }).toList();
     final activeCount = accounts.where((a) => a.isVisible).length;
 
     return Scaffold(
@@ -304,7 +356,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
               : CrossFadeState.showFirst,
           firstChild: Text(
             'Accounts',
-            style: TextStyle(
+            style: TextStyles.bodyBold.copyWith(
               fontSize: 18.sp,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -327,7 +379,9 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
-            tooltip: _isSearching ? 'Close search' : 'Search by account title',
+            tooltip: _isSearching
+                ? 'Close search'
+                : 'Search by provider or country',
             onPressed: () {
               setState(() {
                 if (_isSearching) {
@@ -366,15 +420,13 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
               searchQuery.isNotEmpty
                   ? EmptyState(
                       icon: Icons.search_off_outlined,
-                      title: 'No accounts found',
-                      subtitle:
-                          'No account titles match "${_searchController.text}".',
+                      title: 'No accounts match your search',
+                      subtitle: 'Try a different provider or country name.',
                     )
                   : const EmptyState(
                       icon: Icons.account_balance_wallet_outlined,
                       title: 'No accounts yet',
-                      subtitle:
-                          'Add an account to start sending and receiving.',
+                      subtitle: 'Add your first account to get started.',
                     )
             else
               ...accounts.map(
@@ -382,17 +434,11 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                   account: account,
                   dense: true,
                   showToggle: true,
-                  showStar: true,
+                  showStar: false,
                   onTap: () => _showAccountQuickActions(account),
                   onToggleVisibility: (_) => ref
                       .read(accountsProvider.notifier)
                       .toggleVisibility(account.id, account.isVisible),
-                  onStar: () {
-                    final newPriority = account.priority == 0 ? 1 : 0;
-                    ref
-                        .read(accountsProvider.notifier)
-                        .updatePriority(account.id, newPriority);
-                  },
                   onEdit: () => _openAccountForm(account: account),
                   onDelete: () => _confirmDelete(account),
                 ),
@@ -453,9 +499,7 @@ class _AccountActionTile extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
+                    style: TextStyles.bodySmallBold.copyWith(
                       color: labelColor ?? AppTheme.textPrimary,
                     ),
                   ),
@@ -463,8 +507,7 @@ class _AccountActionTile extends StatelessWidget {
                     SizedBox(height: 2.h),
                     Text(
                       subtitle!,
-                      style: TextStyle(
-                        fontSize: 12.sp,
+                      style: TextStyles.captionRegular.copyWith(
                         color: AppTheme.textSecondary,
                       ),
                     ),
@@ -520,7 +563,7 @@ class _SearchBar extends StatelessWidget {
         autofocus: autofocus,
         onChanged: (_) => onChanged(),
         decoration: InputDecoration(
-          hintText: 'Search by account title',
+          hintText: 'Search by provider or country...',
           prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
@@ -557,19 +600,16 @@ class _AccountsHeader extends StatelessWidget {
             children: [
               Text(
                 'Connected Accounts'.toUpperCase(),
-                style: TextStyle(
+                style: TextStyles.captionBold.copyWith(
                   letterSpacing: 0.8,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w700,
                   color: AppTheme.textSecondary,
                 ),
               ),
               SizedBox(height: 4.h),
               Text(
                 '$total accounts',
-                style: TextStyle(
+                style: TextStyles.bodySmallBold.copyWith(
                   fontSize: 15.sp,
-                  fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimary,
                 ),
               ),
@@ -584,11 +624,7 @@ class _AccountsHeader extends StatelessWidget {
           ),
           child: Text(
             '$active Active',
-            style: TextStyle(
-              color: AppTheme.primary,
-              fontWeight: FontWeight.w600,
-              fontSize: 13.sp,
-            ),
+            style: TextStyles.labelBold.copyWith(color: AppTheme.primary),
           ),
         ),
       ],
@@ -617,11 +653,7 @@ class _InfoChip extends StatelessWidget {
           SizedBox(width: 6.w),
           Text(
             label,
-            style: TextStyle(
-              color: AppTheme.primary,
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyles.captionMedium.copyWith(color: AppTheme.primary),
           ),
         ],
       ),

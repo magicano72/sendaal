@@ -1,3 +1,4 @@
+import 'package:Sendaal/widgets/account_card.dart' show AccountCard;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/text_style.dart';
 import '../../providers/account_provider.dart';
 import '../../widgets/app_widgets.dart';
 
@@ -48,8 +50,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                   onPressed: () => _openRecipient(context),
                   child: Text(
                     'Split Payment',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
+                    style: TextStyles.bodySmallBold.copyWith(
                       color: AppTheme.primary,
                     ),
                   ),
@@ -60,8 +61,7 @@ class ContactDetailsScreen extends ConsumerWidget {
           SizedBox(height: 20.h),
           Text(
             'Approved accounts',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
+            style: TextStyles.bodySmallBold.copyWith(
               fontSize: 15.sp,
               color: AppTheme.textPrimary,
             ),
@@ -136,9 +136,9 @@ class ContactDetailsScreen extends ConsumerWidget {
               child: (avatarUrl == null || avatarUrl.isEmpty)
                   ? Text(
                       contact.initials,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
+                      style: TextStyles.bodyBold.copyWith(
                         color: AppTheme.primary,
+                        fontWeight: FontWeight.w700,
                       ),
                     )
                   : null,
@@ -150,17 +150,13 @@ class ContactDetailsScreen extends ConsumerWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16.sp,
-                    ),
+                    style: TextStyles.bodySmallBold.copyWith(fontSize: 16.sp),
                   ),
                   SizedBox(height: 4.h),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: TextStyles.label.copyWith(
                       color: AppTheme.textSecondary,
-                      fontSize: 13.sp,
                     ),
                   ),
                 ],
@@ -192,8 +188,7 @@ class ContactDetailsScreen extends ConsumerWidget {
           children: [
             Text(
               'Contact details',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
+              style: TextStyles.bodySmallBold.copyWith(
                 fontSize: 14.sp,
                 color: AppTheme.textPrimary,
               ),
@@ -217,10 +212,8 @@ class ContactDetailsScreen extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: TextStyles.captionMedium.copyWith(
             color: AppTheme.textSecondary,
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
           ),
         ),
         const Spacer(),
@@ -228,11 +221,7 @@ class ContactDetailsScreen extends ConsumerWidget {
           child: Text(
             value,
             textAlign: TextAlign.right,
-            style: TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyles.labelBold.copyWith(color: AppTheme.textPrimary),
             overflow: TextOverflow.ellipsis,
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/theme/app_theme.dart';
+import '../core/theme/text_style.dart';
 import '../models/system_limit_model.dart';
 import 'system_limit_icon.dart';
 
@@ -85,9 +86,7 @@ class AccountTypeDropdown extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w600,
+          style: TextStyles.labelBold.copyWith(
             color: AppTheme.textSecondary,
           ),
         ),
@@ -138,10 +137,11 @@ class AccountTypeDropdown extends StatelessWidget {
                       children: [
                         Text(
                           selected?.label ?? 'Select account type',
-                          style: TextStyle(
+                          style: TextStyles.bodySmall.copyWith(
                             fontSize: 14.sp,
-                            fontWeight:
-                                selected != null ? FontWeight.w600 : FontWeight.w500,
+                            fontWeight: selected != null
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                             color: selected != null
                                 ? AppTheme.textPrimary
                                 : AppTheme.textSecondary,
@@ -150,8 +150,7 @@ class AccountTypeDropdown extends StatelessWidget {
                         SizedBox(height: 2.h),
                         Text(
                           'Tap to choose',
-                          style: TextStyle(
-                            fontSize: 12.sp,
+                          style: TextStyles.captionRegular.copyWith(
                             color: AppTheme.textSecondary,
                           ),
                         ),
@@ -172,10 +171,9 @@ class AccountTypeDropdown extends StatelessWidget {
           SizedBox(height: 6.h),
           Text(
             displayError!,
-            style: TextStyle(
+            style: TextStyles.captionMedium.copyWith(
               color: AppTheme.error,
               fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -317,7 +315,7 @@ class _AccountTypeSheetState extends State<_AccountTypeSheet> {
                   Expanded(
                     child: Text(
                       'Choose Account Type',
-                      style: TextStyle(
+                      style: TextStyles.bodyBold.copyWith(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
@@ -349,9 +347,8 @@ class _AccountTypeSheetState extends State<_AccountTypeSheet> {
                   ? Center(
                       child: Text(
                         'No account types found',
-                        style: TextStyle(
+                        style: TextStyles.label.copyWith(
                           color: AppTheme.textSecondary,
-                          fontSize: 13.sp,
                         ),
                       ),
                     )
@@ -396,7 +393,7 @@ class _AccountTypeSheetState extends State<_AccountTypeSheet> {
                                     children: [
                                       Text(
                                         option.label,
-                                        style: TextStyle(
+                                        style: TextStyles.bodySmallBold.copyWith(
                                           fontSize: 14.sp,
                                           fontWeight: FontWeight.w700,
                                           color: AppTheme.textPrimary,
@@ -405,8 +402,7 @@ class _AccountTypeSheetState extends State<_AccountTypeSheet> {
                                       SizedBox(height: 2.h),
                                       Text(
                                         'Tap to select',
-                                        style: TextStyle(
-                                          fontSize: 12.sp,
+                                        style: TextStyles.captionRegular.copyWith(
                                           color: AppTheme.textSecondary,
                                         ),
                                       ),

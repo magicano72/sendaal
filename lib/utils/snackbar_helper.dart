@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
+import '../core/theme/text_style.dart';
 
 /// Centralized SnackBar helper — use instead of ScaffoldMessenger directly
 class AppSnackbar {
@@ -20,7 +21,10 @@ class AppSnackbar {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(message, style: const TextStyle(color: Colors.white)),
+          content: Text(
+            message,
+            style: TextStyles.label.copyWith(color: Colors.white),
+          ),
           backgroundColor: bg,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

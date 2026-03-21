@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../core/theme/app_theme.dart';
+import '../core/theme/text_style.dart';
 import '../providers/connectivity_provider.dart';
 
 /// Global offline banner that overlays the current screen.
@@ -65,10 +66,8 @@ class ConnectivityBanner extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               'No internet connection. Please check your network.',
-                              style: TextStyle(
+                              style: TextStyles.labelBold.copyWith(
                                 color: AppColors.error,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13.sp,
                               ),
                             ),
                           ),

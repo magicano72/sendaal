@@ -1,8 +1,10 @@
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../core/theme/app_theme.dart';
+import '../core/theme/text_style.dart';
 import '../models/access_request_model.dart';
 import '../providers/access_request_provider.dart';
 import '../providers/auth_provider.dart';
@@ -55,10 +57,7 @@ class AccessRequestTile extends ConsumerWidget {
                   ),
                   child: Text(
                     request.status.name.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyles.captionBold.copyWith(fontSize: 12.sp),
                   ),
                 ),
               ],
@@ -86,7 +85,7 @@ class AccessRequestTile extends ConsumerWidget {
                     child: OutlinedButton.icon(
                       onPressed: () => _rejectRequest(context, ref, request.id),
                       icon: Icon(Icons.close, size: 18.r),
-                      label: Text('Reject', style: TextStyle(fontSize: 13.sp)),
+                      label: Text('Reject', style: TextStyles.label),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
                       ),
@@ -98,7 +97,7 @@ class AccessRequestTile extends ConsumerWidget {
                       onPressed: () =>
                           _approveRequest(context, ref, request.id),
                       icon: Icon(Icons.check, size: 18.r),
-                      label: Text('Approve', style: TextStyle(fontSize: 13.sp)),
+                      label: Text('Approve', style: TextStyles.label),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppTheme.primary,
                       ),
@@ -154,13 +153,9 @@ class AccessRequestTile extends ConsumerWidget {
         ),
       );
     } else if (!success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(accessRequestProvider).error ?? 'Failed to approve',
-          ),
-          backgroundColor: Colors.red,
-        ),
+      AppSnackBar.error(
+        context,
+        ref.read(accessRequestProvider).error ?? 'Failed to approve',
       );
     }
   }
@@ -181,13 +176,9 @@ class AccessRequestTile extends ConsumerWidget {
         ),
       );
     } else if (!success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(accessRequestProvider).error ?? 'Failed to reject',
-          ),
-          backgroundColor: Colors.red,
-        ),
+      AppSnackBar.error(
+        context,
+        ref.read(accessRequestProvider).error ?? 'Failed to reject',
       );
     }
   }
@@ -236,7 +227,7 @@ class _SendAccessRequestDialogState
               ),
               child: Text(
                 'They will be able to approve or reject your request',
-                style: TextStyle(
+                style: TextStyles.captionRegular.copyWith(
                   fontSize: 12.sp,
                   color: AppTheme.textSecondary,
                 ),
@@ -266,9 +257,9 @@ class _SendAccessRequestDialogState
                         Expanded(
                           child: Text(
                             errorMessage!,
-                            style: TextStyle(
-                              color: Colors.red.shade700,
+                            style: TextStyles.captionRegular.copyWith(
                               fontSize: 12.sp,
+                              color: Colors.red.shade700,
                             ),
                           ),
                         ),
@@ -316,12 +307,9 @@ class _SendAccessRequestDialogState
                       if (mounted) {
                         if (success) {
                           // Show success snackbar
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Access request sent successfully'),
-                              backgroundColor: Colors.green,
-                              duration: Duration(seconds: 2),
-                            ),
+                          AppSnackBar.success(
+                            context,
+                            'Access request sent successfully',
                           );
                           // Defer navigation until after the current frame
                           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -335,14 +323,9 @@ class _SendAccessRequestDialogState
 
                           if (duplicatePending && mounted) {
                             // Show required snackbar and leave button untouched
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'You already have a pending request. Please wait for approval or cancel it first.',
-                                ),
-                                backgroundColor: Colors.orange,
-                                duration: Duration(seconds: 3),
-                              ),
+                            AppSnackBar.info(
+                              context,
+                              'You already have a pending request. Please wait for approval or cancel it first.',
                             );
 
                             Navigator.pop(context, null);
@@ -364,7 +347,7 @@ class _SendAccessRequestDialogState
                     width: 16.w,
                     child: CircularProgressIndicator(strokeWidth: 2.w),
                   )
-                : Text('Send Request', style: TextStyle(fontSize: 14.sp)),
+                : Text('Send Request', style: TextStyles.bodySmallBold),
           ),
       ],
     );

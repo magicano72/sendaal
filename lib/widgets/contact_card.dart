@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../core/models/user_model.dart';
 import '../core/theme/app_theme.dart';
+import '../core/theme/text_style.dart';
 
 class ContactCard extends StatelessWidget {
   final User user;
@@ -80,7 +81,7 @@ class ContactCard extends StatelessWidget {
                     child: (avatarUrl == null || avatarUrl.isEmpty)
                         ? Text(
                             initials,
-                            style: TextStyle(
+                            style: TextStyles.bodyBold.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppTheme.primary,
                             ),
@@ -107,7 +108,7 @@ class ContactCard extends StatelessWidget {
                 primary,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: TextStyles.bodySmallBold.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 14.sp,
                   color: AppTheme.textPrimary,
@@ -118,7 +119,7 @@ class ContactCard extends StatelessWidget {
                 subtitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: TextStyles.captionRegular.copyWith(
                   fontSize: 12.sp,
                   color: AppTheme.textSecondary,
                 ),
@@ -138,10 +139,7 @@ class ContactCard extends StatelessWidget {
                   onPressed: onAction ?? onTap,
                   child: Text(
                     actionLabel,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyles.captionBold.copyWith(fontSize: 12.sp),
                   ),
                 ),
               ),

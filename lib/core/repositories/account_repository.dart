@@ -25,9 +25,17 @@ class AccountRepository {
   }) {
     final suggestions = <SplitSuggestion>[];
 
-    // Filter visible accounts and sort by priority
-    final visibleAccounts = accounts.where((acc) => acc.isVisible).toList()
-      ..sort((a, b) => a.priority.compareTo(b.priority));
+    // Filter visible accounts and sort by priority then created_at
+    final visibleAccounts = accounts.where((acc) => acc.isVisible).toList();
+    const order = {'high': 0, 'medium': 1, 'low': 2};
+    visibleAccounts.sort((a, b) {
+      final pa = order[a.priority.name] ?? 1;
+      final pb = order[b.priority.name] ?? 1;
+      if (pa != pb) return pa.compareTo(pb);
+      final ca = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final cb = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return ca.compareTo(cb);
+    });
 
     if (visibleAccounts.isEmpty) {
       throw ValidationException(message: 'No visible accounts available.');

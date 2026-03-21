@@ -5,9 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'screens/auth/login_screen.dart';
 import 'services/local_notification_service.dart';
 import 'services/system_limits_service.dart';
-import 'screens/auth/login_screen.dart';
 import 'widgets/connectivity_banner.dart';
 
 /// Entry point — loads .env before running the app
@@ -40,9 +40,8 @@ class SendaalApp extends StatelessWidget {
           home: const LoginScreen(),
           onGenerateRoute: AppRouter.generateRoute,
           initialRoute: AppRoutes.login,
-          builder: (context, child) => ConnectivityBanner(
-            child: child ?? const SizedBox.shrink(),
-          ),
+          builder: (context, child) =>
+              ConnectivityBanner(child: child ?? const SizedBox.shrink()),
         );
       },
     );

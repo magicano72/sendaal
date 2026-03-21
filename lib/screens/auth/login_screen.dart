@@ -1,3 +1,4 @@
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -39,11 +40,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (!hasInternet) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No internet connection. Please check your network.'),
-            backgroundColor: Colors.red,
-          ),
+        AppSnackBar.error(
+          context,
+          'No internet connection. Please try again later.',
         );
       }
       return;

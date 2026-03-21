@@ -2,6 +2,7 @@ import 'package:Sendaal/core/config/index.dart';
 import 'package:Sendaal/core/theme/app_theme.dart' hide AppTheme;
 import 'package:Sendaal/services/device_contacts_service.dart'
     show ContactsPermissionStatus;
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:Sendaal/widgets/shimmer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';
+import '../../core/theme/text_style.dart';
 import '../../models/access_request_model.dart';
 import '../../providers/access_request_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -74,11 +76,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _openRecipient(User user) {
     final currentUser = ref.read(authProvider).user;
     if (currentUser != null && user.id == currentUser.id) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Open your profile from the Profile tab.'),
-          duration: Duration(seconds: 2),
-        ),
+      AppSnackBar.info(
+        context,
+        'This is you! Your profile is in the Profile tab.',
       );
       return;
     }
@@ -193,7 +193,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _searchCtrl.clear();
                   ref.read(searchProvider.notifier).clear();
                 },
-                hint: 'Search username or phone number',
+                hint: 'Search username or phone',
                 onContactsTap: _openDeviceContacts,
               ),
             ),
@@ -239,7 +239,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 Text(
                   'Sendaal',
-                  style: TextStyle(
+                  style: TextStyles.bodyBold.copyWith(
                     fontSize: 17.sp,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimaryColor,
@@ -249,8 +249,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   user != null
                       ? 'Welcome back, ${user.firstName.split(' ').first}'
                       : 'Welcome back',
-                  style: TextStyle(
-                    fontSize: 13.sp,
+                  style: TextStyles.label.copyWith(
                     color: AppTheme.textSecondaryColor,
                   ),
                 ),
@@ -431,10 +430,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Text(
                 'Access Requests',
-                style: TextStyle(
+                style: TextStyles.h2Medium.copyWith(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w800,
-                  color: Colors.black,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const Spacer(),
@@ -443,8 +442,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Navigator.pushNamed(context, AppRoutes.allAccessRequests),
                 child: Text(
                   'View all',
-                  style: TextStyle(
-                    fontSize: 14.sp,
+                  style: TextStyles.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,
                   ),
@@ -504,7 +502,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Text(
                 'Contacts',
-                style: TextStyle(
+                style: TextStyles.h2Medium.copyWith(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textPrimaryColor,
@@ -515,9 +513,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onTap: _openApprovedContacts,
                 child: Text(
                   'View all',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w700,
+                  style: TextStyles.bodySmallBold.copyWith(
                     color: AppColors.primary,
                   ),
                 ),
@@ -603,9 +599,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Text(
                     denied ? 'Allow contacts to sync' : 'No contacts yet',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14.sp,
+                    style: TextStyles.bodySmallBold.copyWith(
                       color: AppTheme.textPrimaryColor,
                     ),
                   ),
@@ -614,8 +608,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     denied
                         ? 'Grant access to find friends from your phone book.'
                         : 'Approved contacts will appear here automatically.',
-                    style: TextStyle(
-                      fontSize: 12.sp,
+                    style: TextStyles.captionRegular.copyWith(
                       color: AppTheme.textSecondaryColor,
                     ),
                   ),
@@ -657,11 +650,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
-              ),
+              style: TextStyles.labelBold.copyWith(color: Colors.black87),
             ),
           ),
           if (pendingCount > 0)
@@ -673,7 +662,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               child: Text(
                 '$pendingCount Pending',
-                style: TextStyle(
+                style: TextStyles.captionMedium.copyWith(
                   fontSize: 11.sp,
                   fontWeight: FontWeight.w600,
                   color: pendingColor,
@@ -717,7 +706,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             SizedBox(height: 24.h),
             Text(
               'All caught up!',
-              style: TextStyle(
+              style: TextStyles.h2Medium.copyWith(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w800,
                 color: Colors.black,
@@ -727,8 +716,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Text(
               'No pending access requests. New requests will appear here when others share their accounts with you.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14.sp,
+              style: TextStyles.bodySmall.copyWith(
                 color: Colors.grey[600],
                 height: 1.6,
               ),
@@ -801,7 +789,7 @@ class _ContactCircleTile extends StatelessWidget {
                     child: (avatarUrl == null || avatarUrl.isEmpty)
                         ? Text(
                             initials,
-                            style: TextStyle(
+                            style: TextStyles.bodyBold.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppTheme.primaryColor,
                               fontSize: 18.sp,
@@ -851,9 +839,7 @@ class _ContactCircleTile extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w600,
+            style: TextStyles.labelBold.copyWith(
               color: AppTheme.textPrimaryColor,
             ),
           ),
@@ -940,11 +926,9 @@ class _ApprovedContactsScreenState
                   padding: EdgeInsets.fromLTRB(16.w, 6.h, 16.w, 8.h),
                   child: Text(
                     'APPROVED CONTACTS',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textSecondaryColor,
+                    style: TextStyles.captionBold.copyWith(
                       letterSpacing: 0.4,
+                      color: AppTheme.textSecondaryColor,
                     ),
                   ),
                 ),
@@ -1007,16 +991,16 @@ class _ApprovedContactsScreenState
                                         user.avatarUrl!.isEmpty)
                                     ? Text(
                                         user.initials,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
+                                        style: TextStyles.bodyBold.copyWith(
                                           color: AppTheme.primaryColor,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       )
                                     : null,
                               ),
                               title: Text(
                                 fullName,
-                                style: TextStyle(
+                                style: TextStyles.bodyBold.copyWith(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16.sp,
                                   color: AppTheme.textPrimaryColor,
@@ -1026,8 +1010,7 @@ class _ApprovedContactsScreenState
                                 padding: EdgeInsets.only(top: 4.h),
                                 child: Text(
                                   subtitle,
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
+                                  style: TextStyles.label.copyWith(
                                     color: AppTheme.textSecondaryColor,
                                   ),
                                 ),
@@ -1083,7 +1066,7 @@ class _UserResultCard extends StatelessWidget {
                 child: (avatarUrl == null || avatarUrl.isEmpty)
                     ? Text(
                         initials,
-                        style: TextStyle(
+                        style: TextStyles.bodyBold.copyWith(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.w700,
                           fontSize: 16.sp,
@@ -1098,8 +1081,7 @@ class _UserResultCard extends StatelessWidget {
                   children: [
                     Text(
                       displayName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
+                      style: TextStyles.bodySmallBold.copyWith(
                         fontSize: 15.sp,
                         color: AppTheme.textPrimaryColor,
                       ),
@@ -1109,8 +1091,7 @@ class _UserResultCard extends StatelessWidget {
                     SizedBox(height: 2.h),
                     Text(
                       '@${user.username}',
-                      style: TextStyle(
-                        fontSize: 13.sp,
+                      style: TextStyles.label.copyWith(
                         color: AppTheme.textSecondaryColor,
                       ),
                       maxLines: 1,

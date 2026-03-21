@@ -41,7 +41,7 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final accounts = await _service.getAccountsForUser(userId);
-      state = state.copyWith(isLoading: false, accounts: accounts);
+      state = state.copyWith(isLoading: false, accounts: _sorted(accounts));
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -54,9 +54,11 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
     try {
       final updated = await _service.updateVisibility(accountId, !current);
       state = state.copyWith(
-        accounts: state.accounts
-            .map((a) => a.id == accountId ? updated : a)
-            .toList(),
+        accounts: _sorted(
+          state.accounts
+              .map((a) => a.id == accountId ? updated : a)
+              .toList(),
+        ),
       );
     } catch (e) {
       state = state.copyWith(error: 'Failed to update account: $e');
@@ -65,28 +67,36 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
 
   Future<FinancialAccount?> updateAccount({
     required String accountId,
-    required String type,
+    required String providerAvailabilityId,
+    required String countryId,
+    required String providerId,
+    required String accountTypeId,
     required String accountIdentifier,
     required String accountTitle,
-    required double defaultLimit,
-    required int priority,
+    required double limit,
+    required AccountPriority priority,
     required bool isVisible,
   }) async {
     try {
       final updated = await _service.updateAccount(
         accountId: accountId,
-        type: type,
+        providerAvailabilityId: providerAvailabilityId,
+        countryId: countryId,
+        providerId: providerId,
+        accountTypeId: accountTypeId,
         accountIdentifier: accountIdentifier,
         accountTitle: accountTitle,
-        defaultLimit: defaultLimit,
+        limit: limit,
         priority: priority,
         isVisible: isVisible,
       );
 
       state = state.copyWith(
-        accounts: state.accounts
-            .map((a) => a.id == accountId ? updated : a)
-            .toList(),
+        accounts: _sorted(
+          state.accounts
+              .map((a) => a.id == accountId ? updated : a)
+              .toList(),
+        ),
       );
 
       return updated;
@@ -114,17 +124,32 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
     }
   }
 
-  Future<void> updatePriority(String accountId, int priority) async {
+  Future<void> updatePriority(String accountId, AccountPriority priority) async {
     try {
       final updated = await _service.updatePriority(accountId, priority);
       state = state.copyWith(
-        accounts: state.accounts
-            .map((a) => a.id == accountId ? updated : a)
-            .toList(),
+        accounts: _sorted(
+          state.accounts
+              .map((a) => a.id == accountId ? updated : a)
+              .toList(),
+        ),
       );
     } catch (e) {
       state = state.copyWith(error: 'Failed to update priority: $e');
     }
+  }
+
+  List<FinancialAccount> _sorted(List<FinancialAccount> list) {
+    const order = {'high': 0, 'medium': 1, 'low': 2};
+    list.sort((a, b) {
+      final pa = order[a.priority.name] ?? 1;
+      final pb = order[b.priority.name] ?? 1;
+      if (pa != pb) return pa.compareTo(pb);
+      final ca = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final cb = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return ca.compareTo(cb);
+    });
+    return list;
   }
 }
 

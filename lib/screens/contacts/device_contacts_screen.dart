@@ -1,4 +1,5 @@
 import 'package:Sendaal/services/device_contacts_service.dart';
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';
+import '../../core/theme/text_style.dart';
 import '../../providers/access_request_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/contacts_provider.dart';
@@ -73,7 +75,10 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
         centerTitle: true,
         title: Text(
           'Device Contacts',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.sp),
+          style: TextStyles.bodyBold.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 18.sp,
+          ),
         ),
       ),
       body: RefreshIndicator(
@@ -117,9 +122,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
                 sliver: SliverToBoxAdapter(
                   child: Text(
                     '',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w600,
+                    style: TextStyles.captionMedium.copyWith(
                       letterSpacing: 0.8,
                       color: Colors.grey[500],
                     ),
@@ -135,9 +138,8 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
                     child: Center(
                       child: Text(
                         'No contacts match "$_searchQuery"',
-                        style: TextStyle(
+                        style: TextStyles.bodySmall.copyWith(
                           color: Colors.grey[500],
-                          fontSize: 14.sp,
                         ),
                       ),
                     ),
@@ -173,10 +175,10 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
       ),
       child: TextField(
         controller: _searchController,
-        style: TextStyle(fontSize: 14.sp),
+        style: TextStyles.bodySmall,
         decoration: InputDecoration(
           hintText: 'Search by username or phone',
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14.sp),
+          hintStyle: TextStyles.bodySmall.copyWith(color: Colors.grey[400]),
           prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 20.sp),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -204,12 +206,12 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
           children: [
             Text(
               'Allow contacts access',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15.sp),
+              style: TextStyles.bodySmallBold.copyWith(fontSize: 15.sp),
             ),
             SizedBox(height: 6.h),
             Text(
               'We use your phone contacts to find friends already on Sendaal.',
-              style: TextStyle(color: Colors.grey[700], fontSize: 13.sp),
+              style: TextStyles.label.copyWith(color: Colors.grey[700]),
             ),
             SizedBox(height: 10.h),
             FilledButton(
@@ -233,14 +235,14 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
           children: [
             Text(
               permissionDenied ? 'No permission' : 'No contacts found',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15.sp),
+              style: TextStyles.bodySmallBold.copyWith(fontSize: 15.sp),
             ),
             SizedBox(height: 6.h),
             Text(
               permissionDenied
                   ? 'Grant permission to list your device contacts.'
                   : 'We could not find contacts with phone numbers.',
-              style: TextStyle(color: Colors.grey[700], fontSize: 13.sp),
+              style: TextStyles.label.copyWith(color: Colors.grey[700]),
             ),
           ],
         ),
@@ -308,9 +310,8 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
               child: avatarUrl == null
                   ? Text(
                       initials,
-                      style: TextStyle(
+                      style: TextStyles.bodySmallBold.copyWith(
                         fontSize: 15.sp,
-                        fontWeight: FontWeight.w600,
                         color: Colors.blue[700],
                       ),
                     )
@@ -324,9 +325,8 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
                 children: [
                   Text(
                     name,
-                    style: TextStyle(
+                    style: TextStyles.bodySmallBold.copyWith(
                       fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                     maxLines: 1,
@@ -336,10 +336,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
                     SizedBox(height: 2.h),
                     Text(
                       phone,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyles.label.copyWith(color: Colors.grey[500]),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -363,7 +360,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
               ),
               child: Text(
                 actionLabel,
-                style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500),
+                style: TextStyles.label.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -391,19 +388,14 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
     if (!mounted) return;
     setState(() => _requesting[user.id] = false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Access request sent to ${user.displayName}'
-              : error ?? 'Unable to send request',
-        ),
-        backgroundColor: success ? Colors.green : Colors.red,
-      ),
-    );
-
     if (success) {
+      AppSnackBar.success(
+        context,
+        'Access request sent to ${user.displayName}',
+      );
       await ref.read(contactsProvider.notifier).load();
+    } else {
+      AppSnackBar.error(context, error ?? 'Unable to send request');
     }
   }
 

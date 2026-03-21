@@ -72,11 +72,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (!hasInternet) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No internet connection. Please check your network.'),
-            backgroundColor: AppTheme.error,
-          ),
+        AppSnackBar.error(
+          context,
+          "No internet connection. Please try again later.",
         );
       }
       return;
@@ -464,9 +462,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   InputDecoration _inputDecoration({required String hint, String? errorText}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(fontSize: 14.sp, color: const Color(0xFFB0BAC8)),
+      hintStyle: TextStyles.bodySmall.copyWith(color: const Color(0xFFB0BAC8)),
       errorText: errorText,
-      errorStyle: TextStyle(fontSize: 11.sp),
+      errorStyle: TextStyles.captionRegular.copyWith(fontSize: 11.sp),
       contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       filled: true,
       fillColor: Colors.white,
@@ -563,7 +561,7 @@ class _PasswordStrengthIndicator extends StatelessWidget {
                   SizedBox(width: 8.w),
                   Text(
                     e.key,
-                    style: TextStyle(
+                    style: TextStyles.captionRegular.copyWith(
                       fontSize: 12.sp,
                       color: e.value
                           ? AppTheme.success

@@ -1,11 +1,13 @@
 import 'package:Sendaal/core/theme/app_theme.dart';
+import 'package:Sendaal/core/theme/text_style.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppSnackBar {
   static void show(
     BuildContext context, {
     required String message,
-    Color backgroundColor = Colors.black87,
+    Color backgroundColor = AppColors.textPrimary,
     IconData icon = Icons.info_outline,
     Duration duration = const Duration(seconds: 3),
   }) {
@@ -14,20 +16,23 @@ class AppSnackBar {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
+          margin: EdgeInsets.all(16.w),
           duration: duration,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
           backgroundColor: backgroundColor,
           content: Row(
             children: [
-              Icon(icon, color: Colors.white),
-              const SizedBox(width: 10),
+              Icon(icon, color: Colors.white, size: 20.r),
+              SizedBox(width: 10.w),
               Expanded(
                 child: Text(
                   message,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyles.label.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -40,7 +45,7 @@ class AppSnackBar {
     show(
       context,
       message: message,
-      backgroundColor: AppColors.textPrimary,
+      backgroundColor: AppColors.error,
       icon: Icons.error_outline,
     );
   }
@@ -60,6 +65,15 @@ class AppSnackBar {
       message: message,
       backgroundColor: AppColors.warning,
       icon: Icons.warning_amber_rounded,
+    );
+  }
+
+  static void info(BuildContext context, String message) {
+    show(
+      context,
+      message: message,
+      backgroundColor: AppColors.primary,
+      icon: Icons.info_outline,
     );
   }
 }

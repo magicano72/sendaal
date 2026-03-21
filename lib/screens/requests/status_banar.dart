@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/theme/app_theme.dart' show AppTheme;
+import '../../core/theme/text_style.dart';
 
 class StatusChip extends StatelessWidget {
   final AccessStatus status;
@@ -33,9 +34,8 @@ class StatusChip extends StatelessWidget {
       ),
       child: Text(
         status.name.toUpperCase(),
-        style: TextStyle(
+        style: TextStyles.captionBold.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
           fontSize: 12.sp,
         ),
       ),

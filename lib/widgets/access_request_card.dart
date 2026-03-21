@@ -1,3 +1,4 @@
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../core/models/user_model.dart';
 import '../core/router/app_router.dart';
+import '../core/theme/text_style.dart';
 import '../models/access_request_model.dart';
 import '../providers/access_request_provider.dart';
 import '../providers/auth_provider.dart';
@@ -79,8 +81,8 @@ class AccessRequestCard extends ConsumerWidget {
   }) {
     final statusColor = _getStatusColor();
     final subtitle = isReceived
-        ? 'Requested access\n${_timeAgo(request.createdAt)}'
-        : 'Access request sent\n${_timeAgo(request.createdAt)}';
+        ? 'Requested access\n${(request.createdAt.toString().split('.').first)}'
+        : 'Access request sent\n${(request.createdAt.toString().split('.').first)}';
     final allowHide = request.canHide || isReceived;
 
     return Slidable(
@@ -139,7 +141,7 @@ class AccessRequestCard extends ConsumerWidget {
                             displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: TextStyles.bodyBold.copyWith(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFF111827),
@@ -150,8 +152,7 @@ class AccessRequestCard extends ConsumerWidget {
                             subtitle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13.sp,
+                            style: TextStyles.label.copyWith(
                               color: const Color(0xFF6B7280),
                             ),
                           ),
@@ -187,9 +188,8 @@ class AccessRequestCard extends ConsumerWidget {
       ),
       child: Text(
         request.status.name.toUpperCase(),
-        style: TextStyle(
+        style: TextStyles.captionBold.copyWith(
           fontSize: 11.sp,
-          fontWeight: FontWeight.w700,
           color: statusColor,
         ),
       ),
@@ -219,7 +219,7 @@ class AccessRequestCard extends ConsumerWidget {
             : Center(
                 child: Text(
                   initial,
-                  style: TextStyle(
+                  style: TextStyles.bodyBold.copyWith(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1F2C3B),
@@ -243,10 +243,7 @@ class AccessRequestCard extends ConsumerWidget {
               ),
               padding: EdgeInsets.symmetric(vertical: 12.h),
             ),
-            child: Text(
-              'Approve',
-              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
-            ),
+            child: Text('Approve', style: TextStyles.bodySmallBold),
           ),
         ),
         SizedBox(width: 12.w),
@@ -262,10 +259,7 @@ class AccessRequestCard extends ConsumerWidget {
               padding: EdgeInsets.symmetric(vertical: 12.h),
               backgroundColor: const Color(0xFFF7F8FA),
             ),
-            child: Text(
-              'Decline',
-              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
-            ),
+            child: Text('Decline', style: TextStyles.bodySmallBold),
           ),
         ),
       ],
@@ -298,9 +292,7 @@ class AccessRequestCard extends ConsumerWidget {
           ),
           child: Text(
             'View Log Details',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
+            style: TextStyles.bodySmallBold.copyWith(
               color: const Color(0xFF4B5563),
             ),
           ),
@@ -316,11 +308,7 @@ class AccessRequestCard extends ConsumerWidget {
           icon: Icon(Icons.delete_outline, size: 16.r, color: statusColor),
           label: Text(
             'Delete',
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: statusColor,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyles.labelBold.copyWith(color: statusColor),
           ),
         ),
       );
@@ -332,11 +320,7 @@ class AccessRequestCard extends ConsumerWidget {
         request.status == AccessStatus.rejected
             ? 'Request rejected'
             : 'Awaiting response',
-        style: TextStyle(
-          fontSize: 13.sp,
-          fontWeight: FontWeight.w600,
-          color: statusColor,
-        ),
+        style: TextStyles.labelBold.copyWith(color: statusColor),
       ),
     );
   }
@@ -356,14 +340,6 @@ class AccessRequestCard extends ConsumerWidget {
     if (id.isEmpty) return '#0000';
     final trimmed = id.length > 6 ? id.substring(0, 6) : id;
     return '#$trimmed';
-  }
-
-  String _timeAgo(DateTime dateTime) {
-    final diff = DateTime.now().difference(dateTime);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
@@ -436,13 +412,7 @@ class AccessRequestCard extends ConsumerWidget {
     }
 
     if (success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Access request rejected'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.success(context, 'Access request rejected');
     } else if (!success && context.mounted) {
       final errorMsg = ref.read(accessRequestProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(

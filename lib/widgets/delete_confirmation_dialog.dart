@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../core/theme/app_theme.dart';
+import '../core/theme/text_style.dart';
 
 class DeleteConfirmationDialog extends StatelessWidget {
   final String title;
@@ -48,7 +49,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
           SizedBox(height: 16.h),
           Text(
             title,
-            style: TextStyle(
+            style: TextStyles.bodyBold.copyWith(
               fontSize: 18.sp,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -57,8 +58,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
           SizedBox(height: 8.h),
           Text(
             description,
-            style: TextStyle(
-              fontSize: 14.sp,
+            style: TextStyles.bodySmall.copyWith(
               color: AppTheme.textSecondary,
               height: 1.4,
             ),
@@ -79,10 +79,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
                   ),
                   child: Text(
                     cancelLabel,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyles.bodySmallBold,
                   ),
                 ),
               ),
@@ -99,8 +96,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
                   ),
                   child: Text(
                     confirmLabel,
-                    style: TextStyle(
-                      fontSize: 14.sp,
+                    style: TextStyles.bodySmallBold.copyWith(
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),

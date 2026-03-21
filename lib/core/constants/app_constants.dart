@@ -58,6 +58,10 @@ class AppConstants {
     'digital_wallet': 'Digital Wallet',
     'bank_account': 'Bank Account',
     'telda': 'Telda',
+    'fawry': 'Fawry',
+    'fiat': 'Fiat',
+    'crypto': 'Crypto',
+    'point': 'Point',
     'other': 'Other',
   };
 

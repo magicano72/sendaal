@@ -1,6 +1,7 @@
 import 'package:Sendaal/models/access_request_model.dart';
 import 'package:Sendaal/providers/access_request_provider.dart';
 import 'package:Sendaal/providers/auth_provider.dart';
+import 'package:Sendaal/widgets/account_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -276,8 +277,18 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
               child: ErrorBanner(message: 'Could not load accounts: $e'),
             ),
             data: (accounts) {
-              final visible = accounts.where((a) => a.isVisible).toList()
-                ..sort((a, b) => a.priority.compareTo(b.priority));
+              final visible = accounts.where((a) => a.isVisible).toList();
+              const order = {'high': 0, 'medium': 1, 'low': 2};
+              visible.sort((a, b) {
+                final pa = order[a.priority.name] ?? 1;
+                final pb = order[b.priority.name] ?? 1;
+                if (pa != pb) return pa.compareTo(pb);
+                final ca =
+                    a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                final cb =
+                    b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                return ca.compareTo(cb);
+              });
 
               return _buildAccessGrantedBody(context, visible);
             },
@@ -354,15 +365,15 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
         SizedBox(height: 12.h),
 
         // ── Access button / approved badge ────────────────────────────────
-        if (isApproved)
-          _buildApprovedBadge()
-        else
-          _buildRequestButton(
-            context,
-            lastRequest,
-            sentRequestsAsync.isLoading,
-            rejectionCountAsync: rejectionCountAsync,
-          ),
+        // if (isApproved)
+        //   _buildApprovedBadge()
+        // else
+        //   _buildRequestButton(
+        //     context,
+        //     lastRequest,
+        //     sentRequestsAsync.isLoading,
+        //     rejectionCountAsync: rejectionCountAsync,
+        //   ),
       ],
     );
   }

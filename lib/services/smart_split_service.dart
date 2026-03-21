@@ -44,7 +44,15 @@ class SmartSplitService {
     }
 
     // Sort by priority (lower number = higher priority)
-    visible.sort((a, b) => a.priority.compareTo(b.priority));
+    const order = {'high': 0, 'medium': 1, 'low': 2};
+    visible.sort((a, b) {
+      final pa = order[a.priority.name] ?? 1;
+      final pb = order[b.priority.name] ?? 1;
+      if (pa != pb) return pa.compareTo(pb);
+      final ca = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final cb = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return ca.compareTo(cb);
+    });
 
     // Compute total capacity from limits stored in the DB
     final totalCapacity = visible.fold<double>(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../core/theme/app_theme.dart';
+import '../core/theme/text_style.dart';
 // Shadow helper removed; using standard outline for compatibility.
 
 /// Reusable, modern InputDecoration for dropdown fields.
@@ -16,16 +17,8 @@ InputDecoration dropdownDecoration({
 
   return InputDecoration(
     labelText: label,
-    labelStyle: TextStyle(
-      fontWeight: FontWeight.w600,
-      color: AppTheme.textSecondary,
-      fontSize: 13.sp,
-    ),
-    floatingLabelStyle: TextStyle(
-      fontWeight: FontWeight.w700,
-      color: AppTheme.primary,
-      fontSize: 13.sp,
-    ),
+    labelStyle: TextStyles.labelBold.copyWith(color: AppTheme.textSecondary),
+    floatingLabelStyle: TextStyles.labelBold.copyWith(color: AppTheme.primary),
     filled: true,
     fillColor: fill,
     hoverColor: fill.withOpacity(0.94),

@@ -3,25 +3,27 @@
 class Endpoints {
   Endpoints._();
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
+  // Auth
   static const String login = '/auth/login';
   static const String logout = '/auth/logout';
   static const String register = '/users';
 
-  // ── Users ─────────────────────────────────────────────────────────────────
+  // Users
   static const String users = '/users';
   static const String currentUser = '/users/me';
   static String userById(String id) => '/users/$id';
 
-  // ── Financial Accounts ────────────────────────────────────────────────────
+  // Financial Accounts
   static const String financialAccounts = '/items/financial_accounts';
   static const String systemLimits = '/items/system_limits';
+  static const String countries = '/items/countries';
+  static const String providerAvailability = '/items/provider_availability';
 
-  // ── Access Requests ───────────────────────────────────────────────────────
+  // Access Requests
   static const String accessRequests = '/items/access_requests';
   static String accessRequestById(String id) => '/items/access_requests/$id';
 
-  // ── Notifications ─────────────────────────────────────────────────────────
+  // Notifications
   static const String notifications = '/items/notifications';
   static String notificationById(String id) => '/items/notifications/$id';
 }

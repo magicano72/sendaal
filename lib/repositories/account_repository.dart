@@ -16,15 +16,23 @@ class AccountRepository {
 
   Future<FinancialAccount> createAccount({
     required String userId,
-    required String type,
+    required String providerAvailabilityId,
+    required String countryId,
+    required String providerId,
+    required String accountTypeId,
     required String identifier,
-    String? title,
+    required String title,
     required double limit,
+    AccountPriority priority = AccountPriority.medium,
   }) => _service.createAccount(
     userId: userId,
-    type: type,
+    providerAvailabilityId: providerAvailabilityId,
+    countryId: countryId,
+    providerId: providerId,
+    accountTypeId: accountTypeId,
     accountIdentifier: identifier,
     accountTitle: title,
-    defaultLimit: limit,
+    limit: limit,
+    priority: priority,
   );
 }

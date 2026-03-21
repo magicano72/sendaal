@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 
-import '../core/constants/app_constants.dart';
 import '../core/models/notification_model.dart' as notification_model;
 import '../core/theme/app_theme.dart';
-import '../models/financial_account_model.dart';
-import '../models/system_limit_model.dart';
-import 'system_limit_icon.dart';
+import '../core/theme/text_style.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PrimaryButton
@@ -58,11 +54,7 @@ class PrimaryButton extends StatelessWidget {
                   if (icon != null) ...[icon!, SizedBox(width: 8.w)],
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                    style: TextStyles.button.copyWith(color: Colors.white),
                   ),
                 ],
               ),
@@ -133,219 +125,6 @@ class SearchField extends StatelessWidget {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// AccountCard
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-class AccountCard extends StatelessWidget {
-  final FinancialAccount account;
-  final bool showToggle;
-  final bool showStar;
-  final bool dense;
-  final ValueChanged<bool>? onToggleVisibility;
-  final VoidCallback? onStar;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
-  final VoidCallback? onTap;
-
-  const AccountCard({
-    super.key,
-    required this.account,
-    this.showToggle = false,
-    this.showStar = false,
-    this.dense = false,
-    this.onToggleVisibility,
-    this.onStar,
-    this.onEdit,
-    this.onDelete,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final label =
-        AppConstants.accountTypeLabels[account.type.name] ?? account.type.name;
-    final system =
-        AppConstants.systemLimitFor(account.type.name) ??
-        _fallbackSystem(account);
-    final title = account.accountTitle.trim().isNotEmpty
-        ? account.accountTitle.trim()
-        : label;
-    final subtitleParts = <String>[
-      label,
-      if (account.accountIdentifier.trim().isNotEmpty)
-        account.accountIdentifier.trim(),
-    ];
-    final subtitle = subtitleParts.join('\n');
-    final verticalPadding = dense ? 10.h : 12.h;
-    final horizontalPadding = dense ? 14.w : 16.w;
-    final bottomMargin = dense ? 8.h : 10.h;
-
-    final card = Card(
-      margin: EdgeInsets.only(bottom: bottomMargin),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: horizontalPadding,
-          vertical: verticalPadding,
-        ),
-        child: Row(
-          children: [
-            // Account type icon circle
-            Container(
-              width: dense ? 44.w : 46.w,
-              height: dense ? 44.w : 46.w,
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: SystemIcon(system: system, size: dense ? 22.r : 24.r),
-            ),
-            SizedBox(width: 14.w),
-
-            // Label + identifier
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: dense ? 14.sp : 15.sp,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Limit badge
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Text(
-                '${_fmtAmount(account.defaultLimit.toDouble())} EGP',
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  color: AppTheme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-
-            // Star action
-            if (showStar) ...[
-              SizedBox(width: 4.w),
-              IconButton(
-                icon: Icon(
-                  account.priority == 0 ? Icons.star : Icons.star_border,
-                  color: account.priority == 0
-                      ? AppTheme.primary
-                      : AppTheme.primary,
-                  size: 20.r,
-                ),
-                onPressed: onStar,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-
-            // Visibility toggle
-            if (showToggle) ...[
-              SizedBox(width: 4.w),
-              Switch.adaptive(
-                value: account.isVisible,
-                onChanged: onToggleVisibility,
-                activeColor: AppTheme.primary,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-
-    final tappableCard = onTap == null
-        ? card
-        : InkWell(
-            borderRadius: BorderRadius.circular(12.r),
-            onTap: onTap,
-            child: card,
-          );
-
-    // If no swipe actions are provided, return plain card
-    if (onEdit == null && onDelete == null) return tappableCard;
-
-    return Slidable(
-      key: ValueKey('account-${account.id}'),
-      closeOnScroll: true,
-      startActionPane: onEdit == null
-          ? null
-          : ActionPane(
-              motion: const DrawerMotion(),
-              extentRatio: 0.26,
-              children: [
-                SlidableAction(
-                  onPressed: (_) => onEdit!.call(),
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  icon: Icons.edit_outlined,
-                  label: 'Edit',
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12.r),
-                    bottomLeft: Radius.circular(12.r),
-                  ),
-                ),
-              ],
-            ),
-      endActionPane: onDelete == null
-          ? null
-          : ActionPane(
-              motion: const DrawerMotion(),
-              extentRatio: 0.26,
-              children: [
-                SlidableAction(
-                  onPressed: (_) => onDelete!.call(),
-                  backgroundColor: AppTheme.error,
-                  foregroundColor: Colors.white,
-                  icon: Icons.delete_outline,
-                  label: 'Delete',
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(12.r),
-                    bottomRight: Radius.circular(12.r),
-                  ),
-                ),
-              ],
-            ),
-      child: tappableCard,
-    );
-  }
-
-  String _fmtAmount(double v) {
-    if (v >= 1000) {
-      return '${(v / 1000).toStringAsFixed(v % 1000 == 0 ? 0 : 1)}K';
-    }
-    return v.toStringAsFixed(0);
-  }
-}
-
-SystemLimit _fallbackSystem(FinancialAccount account) => SystemLimit(
-  id: -1,
-  systemName: account.type.name,
-  dailyLimit: account.defaultLimit.toInt(),
-  systemImage: null,
-);
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // NotificationTile
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -395,19 +174,18 @@ class NotificationTile extends StatelessWidget {
                 children: [
                   Text(
                     notification.title,
-                    style: TextStyle(
-                      fontWeight: notification.isRead
-                          ? FontWeight.w500
-                          : FontWeight.w700,
-                      fontSize: 14.sp,
-                      color: AppTheme.textPrimary,
-                    ),
+                    style:
+                        (notification.isRead
+                                ? TextStyles.bodySmall.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  )
+                                : TextStyles.bodySmallBold)
+                            .copyWith(color: AppTheme.textPrimary),
                   ),
                   SizedBox(height: 3.h),
                   Text(
                     notification.body,
-                    style: TextStyle(
-                      fontSize: 13.sp,
+                    style: TextStyles.label.copyWith(
                       color: AppTheme.textSecondary,
                     ),
                     maxLines: 2,
@@ -484,9 +262,7 @@ class AmountInputField extends StatelessWidget {
       children: [
         Text(
           'Enter Amount (EGP)',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14.sp,
+          style: TextStyles.bodySmallBold.copyWith(
             color: AppTheme.textSecondary,
           ),
         ),
@@ -495,14 +271,13 @@ class AmountInputField extends StatelessWidget {
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: onChanged,
-          style: TextStyle(
+          style: TextStyles.h1Bold.copyWith(
             fontSize: 28.sp,
-            fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,
           ),
           decoration: InputDecoration(
             prefixText: 'EGP  ',
-            prefixStyle: TextStyle(
+            prefixStyle: TextStyles.bodyRegular.copyWith(
               fontSize: 18.sp,
               fontWeight: FontWeight.w500,
               color: AppTheme.textSecondary,
@@ -544,9 +319,8 @@ class EmptyState extends StatelessWidget {
             SizedBox(height: 16.h),
             Text(
               title,
-              style: TextStyle(
+              style: TextStyles.bodyBold.copyWith(
                 fontSize: 17.sp,
-                fontWeight: FontWeight.w600,
                 color: AppTheme.textSecondary,
               ),
               textAlign: TextAlign.center,
@@ -555,9 +329,7 @@ class EmptyState extends StatelessWidget {
               SizedBox(height: 8.h),
               Text(
                 subtitle!,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
+                style: TextStyles.bodySmallBold.copyWith(
                   color: AppTheme.textSecondary,
                 ),
                 textAlign: TextAlign.center,
@@ -611,7 +383,7 @@ class UserTile extends StatelessWidget {
         child: avatarProvider == null
             ? Text(
                 displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                style: TextStyle(
+                style: TextStyles.bodyBold.copyWith(
                   color: AppTheme.primary,
                   fontWeight: FontWeight.w700,
                   fontSize: 16.sp,
@@ -619,13 +391,10 @@ class UserTile extends StatelessWidget {
               )
             : null,
       ),
-      title: Text(
-        displayName,
-        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14.sp),
-      ),
+      title: Text(displayName, style: TextStyles.bodySmallBold),
       subtitle: Text(
         '@$username',
-        style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
+        style: TextStyles.label.copyWith(color: AppTheme.textSecondary),
       ),
       trailing: Icon(Icons.chevron_right, color: AppTheme.primary, size: 20.r),
     );
@@ -658,13 +427,13 @@ class ErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: AppColors.error, fontSize: 13.sp),
+              style: TextStyles.label.copyWith(color: AppColors.error),
             ),
           ),
           if (onRetry != null)
             TextButton(
               onPressed: onRetry,
-              child: Text('Retry', style: TextStyle(fontSize: 14.sp)),
+              child: Text('Retry', style: TextStyles.bodySmallBold),
             ),
         ],
       ),

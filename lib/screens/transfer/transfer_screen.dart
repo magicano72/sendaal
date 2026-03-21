@@ -8,6 +8,7 @@ import '../../core/models/split_suggestion_model.dart';
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/text_style.dart';
 import '../../widgets/app_widgets.dart';
 
 /// Transfer Instructions Screen
@@ -37,7 +38,7 @@ class TransferScreen extends ConsumerWidget {
               SizedBox(height: 22.h),
               Text(
                 'Follow these steps',
-                style: TextStyle(
+                style: TextStyles.bodyBold.copyWith(
                   fontSize: 17.sp,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -46,8 +47,7 @@ class TransferScreen extends ConsumerWidget {
               SizedBox(height: 6.h),
               Text(
                 'Complete your transfer manually in the payment app.',
-                style: TextStyle(
-                  fontSize: 13.sp,
+                style: TextStyles.label.copyWith(
                   color: AppTheme.textSecondary,
                 ),
               ),
@@ -69,8 +69,7 @@ class TransferScreen extends ConsumerWidget {
               Center(
                 child: Text(
                   'Complete transfers manually in each payment app.',
-                  style: TextStyle(
-                    fontSize: 12.sp,
+                  style: TextStyles.captionRegular.copyWith(
                     color: AppTheme.textSecondary,
                   ),
                   textAlign: TextAlign.center,
@@ -125,10 +124,9 @@ class _TransferHeroCard extends StatelessWidget {
                 ? null
                 : Text(
                     initials,
-                    style: TextStyle(
+                    style: TextStyles.bodySmallBold.copyWith(
                       color: AppTheme.primary,
                       fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
           ),
@@ -139,9 +137,8 @@ class _TransferHeroCard extends StatelessWidget {
               children: [
                 Text(
                   _displayName,
-                  style: TextStyle(
+                  style: TextStyles.bodySmallBold.copyWith(
                     fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
                     color: AppTheme.textPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -150,8 +147,7 @@ class _TransferHeroCard extends StatelessWidget {
                   SizedBox(height: 2.h),
                   Text(
                     _username!,
-                    style: TextStyle(
-                      fontSize: 13.sp,
+                    style: TextStyles.label.copyWith(
                       color: AppTheme.textSecondary,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -166,18 +162,15 @@ class _TransferHeroCard extends StatelessWidget {
             children: [
               Text(
                 'TOTAL',
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textSecondary,
+                style: TextStyles.captionMedium.copyWith(
                   letterSpacing: 0.5,
+                  color: AppTheme.textSecondary,
                 ),
               ),
               SizedBox(height: 2.h),
               Text(
                 amountLabel,
-                style: TextStyle(
-                  fontSize: 16.sp,
+                style: TextStyles.bodySmallBold.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AppTheme.primary,
                 ),
@@ -249,17 +242,15 @@ class _TransferStepCard extends StatelessWidget {
                   children: [
                     Text(
                       'Open $_label & enter details',
-                      style: TextStyle(
+                      style: TextStyles.bodySmallBold.copyWith(
                         fontSize: 15.sp,
-                        fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       'Manual transfer for this split',
-                      style: TextStyle(
-                        fontSize: 12.sp,
+                      style: TextStyles.captionRegular.copyWith(
                         color: AppTheme.textSecondary,
                       ),
                     ),
@@ -274,10 +265,8 @@ class _TransferStepCard extends StatelessWidget {
                 ),
                 child: Text(
                   _amountStr,
-                  style: TextStyle(
+                  style: TextStyles.labelBold.copyWith(
                     color: AppTheme.primary,
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -333,9 +322,7 @@ class _CopyPill extends StatelessWidget {
                 children: [
                   Text(
                     label.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w600,
+                    style: TextStyles.captionMedium.copyWith(
                       color: AppTheme.textSecondary,
                       letterSpacing: 0.5,
                     ),
@@ -343,7 +330,7 @@ class _CopyPill extends StatelessWidget {
                   SizedBox(height: 4.h),
                   Text(
                     value,
-                    style: TextStyle(
+                    style: TextStyles.bodySmallBold.copyWith(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -402,10 +389,8 @@ class _StepBadge extends StatelessWidget {
       child: Center(
         child: Text(
           '$step',
-          style: TextStyle(
+          style: TextStyles.labelBold.copyWith(
             color: Colors.white,
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w700,
           ),
         ),
       ),
