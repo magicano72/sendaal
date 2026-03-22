@@ -234,8 +234,8 @@ class AccessRequestCard extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-          child: FilledButton(
-            onPressed: () => _approveRequest(context, ref, request.id),
+        child: FilledButton(
+            onPressed: () => _approveRequest(context, ref),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF2D7AE8),
               shape: RoundedRectangleBorder(
@@ -362,37 +362,12 @@ class AccessRequestCard extends ConsumerWidget {
   Future<void> _approveRequest(
     BuildContext context,
     WidgetRef ref,
-    String requestId,
   ) async {
-    final notifier = ref.read(accessRequestProvider.notifier);
-    final success = await notifier.approveRequest(requestId);
-    final currentUser = ref.read(authProvider).user;
-
-    if (success && currentUser != null) {
-      await Future.wait([
-        notifier.loadReceivedRequests(currentUser.id),
-        notifier.loadSentRequests(currentUser.id),
-      ]);
-    }
-
-    if (success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Access request approved!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else if (!success && context.mounted) {
-      final errorMsg = ref.read(accessRequestProvider).error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMsg ?? 'Failed to approve request'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
+    Navigator.pushNamed(
+      context,
+      AppRoutes.requesterDetails,
+      arguments: request,
+    );
   }
 
   Future<void> _rejectRequest(

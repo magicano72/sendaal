@@ -2,6 +2,7 @@ import 'package:Sendaal/models/access_request_model.dart';
 import 'package:Sendaal/providers/access_request_provider.dart';
 import 'package:Sendaal/providers/auth_provider.dart';
 import 'package:Sendaal/widgets/account_card.dart';
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +39,7 @@ class RecipientScreen extends ConsumerStatefulWidget {
 class _RecipientScreenState extends ConsumerState<RecipientScreen> {
   final _amountCtrl = TextEditingController();
   String? _amountError;
+  bool _isRequestingAccess = false;
 
   @override
   void dispose() {
@@ -102,59 +104,65 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
   Future<void> _showAccessRequestDialog(BuildContext context) async {
     if (!mounted) return;
 
-    final freshUser = ref.read(authProvider).user;
+    setState(() => _isRequestingAccess = true);
+    try {
+      final freshUser = ref.read(authProvider).user;
 
-    if (freshUser == null || freshUser.id.isEmpty) {
-      _showSnackBar(context, 'User not authenticated', Colors.red);
-      return;
-    }
-
-    // ── Step 1: Check for existing pending request on the backend ──────────
-    final (canSend, errorMsg) = await ref
-        .read(accessRequestProvider.notifier)
-        .canSendRequest(
-          requesterId: freshUser.id,
-          receiverId: widget.recipient.id,
-        );
-
-    if (!canSend) {
-      // Show snackbar; do NOT change the button or open dialog.
-      if (mounted) {
-        _showSnackBar(
-          context,
-          errorMsg ??
-              'You already have a pending request. '
-                  'Please wait for approval or cancel it first.',
-          Colors.orange,
-          duration: const Duration(seconds: 4),
-        );
+      if (freshUser == null || freshUser.id.isEmpty) {
+        _showSnackBar(context, 'User not authenticated', Colors.red);
+        return;
       }
-      return;
-    }
 
-    // ── Step 2: No pending request – show dialog ────────────────────────────
-    if (!mounted) return;
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => SendAccessRequestDialog(
-        recipientId: widget.recipient.id,
-        recipientName: _preferredName(widget.recipient),
-      ),
-    );
-
-    if (!mounted) return;
-
-    if (result == true) {
-      // Force refresh so button switches to "Cancel Request" immediately.
-      ref.invalidate(sentRequestsProvider);
-      await ref
+      // ── Step 1: Check for existing pending request on the backend ──────────
+      final (canSend, errorMsg) = await ref
           .read(accessRequestProvider.notifier)
-          .loadSentRequests(freshUser.id);
-      _showSnackBar(context, 'Access request sent successfully', Colors.green);
-    } else if (result == false) {
-      _showSnackBar(context, 'Failed to send access request', Colors.red);
+          .canSendRequest(
+            requesterId: freshUser.id,
+            receiverId: widget.recipient.id,
+          );
+
+      if (!canSend) {
+        // Show snackbar; do NOT change the button or open dialog.
+        if (mounted) {
+          _showSnackBar(
+            context,
+            errorMsg ??
+                'You already have a pending request. '
+                    'Please wait for approval or cancel it first.',
+            Colors.orange,
+            duration: const Duration(seconds: 4),
+          );
+        }
+        return;
+      }
+
+      // ── Step 2: No pending request – show dialog ────────────────────────────
+      if (!mounted) return;
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => SendAccessRequestDialog(
+          recipientId: widget.recipient.id,
+          recipientName: _preferredName(widget.recipient),
+        ),
+      );
+
+      if (!mounted) return;
+
+      if (result == true) {
+        // Force refresh so button switches to "Cancel Request" immediately.
+        ref.invalidate(sentRequestsProvider);
+        await ref
+            .read(accessRequestProvider.notifier)
+            .loadSentRequests(freshUser.id);
+      } else if (result == false) {
+        //  AppSnackBar.error(context, 'Failed to send access request');
+      }
+      // result == null ⇒ user dismissed or dialog handled duplicate internally.
+    } finally {
+      if (mounted) {
+        setState(() => _isRequestingAccess = false);
+      }
     }
-    // result == null ⇒ user dismissed or dialog handled duplicate internally.
   }
 
   Future<void> _showCancelRequestDialog(BuildContext context) async {
@@ -162,7 +170,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
 
     final currentUser = ref.read(authProvider).user;
     if (currentUser == null) {
-      _showSnackBar(context, 'User not authenticated', Colors.red);
+      AppSnackBar.error(context, 'User not authenticated');
       return;
     }
 
@@ -205,7 +213,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
       if (success) {
         // Invalidate so button switches back to "Request Access" immediately.
         ref.invalidate(sentRequestsProvider);
-        _showSnackBar(context, 'Access request cancelled', Colors.green);
+        AppSnackBar.success(context, 'Access request cancelled');
       } else {
         _showSnackBar(context, 'Failed to cancel request', Colors.red);
       }
@@ -457,7 +465,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     bool filled = false,
   }) {
     // ── Loading ──────────────────────────────────────────────────────────────
-    if (isLoading && lastRequest == null) {
+    if (_isRequestingAccess || (isLoading && lastRequest == null)) {
       return _buildLoadingButton(filled);
     }
 

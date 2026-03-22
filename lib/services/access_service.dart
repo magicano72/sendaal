@@ -1,3 +1,4 @@
+import '../models/access_request_account_model.dart';
 import '../models/access_request_model.dart';
 import 'api_client.dart';
 import 'endpoint.dart';
@@ -13,6 +14,10 @@ class AccessService {
   Future<AccessRequest> createRequest({
     required String requesterId,
     required String receiverId,
+    required String requestAccessType,
+    bool visibleForRequester = true,
+    bool visibleForReceiver = true,
+    bool isFavorite = false,
   }) async {
     final response = await _api.post(
       Endpoints.accessRequests,
@@ -20,8 +25,10 @@ class AccessService {
         'requester': requesterId,
         'receiver': receiverId,
         'status': 'pending',
-        'visible_for_requester': true,
-        'visible_for_receiver': true,
+        'visible_for_requester': visibleForRequester,
+        'visible_for_receiver': visibleForReceiver,
+        'is_favorite': isFavorite,
+        'request_access_type': requestAccessType,
       },
     );
     return AccessRequest.fromJson(response['data'] as Map<String, dynamic>);
@@ -31,10 +38,15 @@ class AccessService {
   Future<AccessRequest> updateStatus({
     required String requestId,
     required String status, // 'approved' | 'rejected'
+    String? approvedAccessType,
   }) async {
     final response = await _api.patch(
       Endpoints.accessRequestById(requestId),
-      body: {'status': status},
+      body: {
+        'status': status,
+        if (approvedAccessType != null)
+          'approved_access_type': approvedAccessType,
+      },
     );
     return AccessRequest.fromJson(response['data'] as Map<String, dynamic>);
   }
@@ -229,6 +241,65 @@ class AccessService {
     final list = response['data'] as List<dynamic>? ?? [];
     return list
         .whereType<Map<String, dynamic>>()
+        .toList();
+  }
+
+  /// Add rows to access_request_accounts for a specific side.
+  Future<List<AccessRequestAccount>> addRequestAccounts({
+    required String accessRequestId,
+    required List<String> accountIds,
+    required String side,
+  }) async {
+    if (accountIds.isEmpty) return [];
+
+    final List<Map<String, dynamic>> payload = accountIds
+        .map((id) => <String, dynamic>{
+              'access_request': accessRequestId,
+              'financial_account': id,
+              'side': side,
+            })
+        .toList();
+
+    final response = await _api.post(
+      Endpoints.accessRequestAccounts,
+      body: payload,
+    );
+
+    final data = response['data'];
+    if (data is List) {
+      return data
+          .map(
+            (e) =>
+                AccessRequestAccount.fromJson(e as Map<String, dynamic>),
+          )
+          .toList();
+    }
+    if (data is Map<String, dynamic>) {
+      return [AccessRequestAccount.fromJson(data)];
+    }
+    return [];
+  }
+
+  /// Fetch access_request_accounts for a given request and optional side.
+  Future<List<AccessRequestAccount>> getRequestAccounts({
+    required String accessRequestId,
+    String? side,
+  }) async {
+    final response = await _api.get(
+      Endpoints.accessRequestAccounts,
+      queryParams: {
+        'filter[access_request][_eq]': accessRequestId,
+        if (side != null) 'filter[side][_eq]': side,
+        'fields':
+            'id,access_request,side,financial_account.*,financial_account.provider.logo,financial_account.provider.provider_name,financial_account.country.*,financial_account.account_type.*,financial_account.provider_availability.currency',
+      },
+    );
+
+    final list = response['data'] as List<dynamic>? ?? [];
+    return list
+        .map(
+          (e) => AccessRequestAccount.fromJson(e as Map<String, dynamic>),
+        )
         .toList();
   }
 

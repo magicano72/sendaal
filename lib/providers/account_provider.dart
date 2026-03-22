@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/financial_account_model.dart';
 import '../services/account_service.dart';
+import '../services/access_service.dart';
 import 'access_request_provider.dart';
+import 'auth_provider.dart';
 
 final accountServiceProvider = Provider<AccountService>(
   (ref) => AccountService(),
@@ -204,12 +206,41 @@ final recipientAccountsProvider =
 final approvedAccountsProvider = FutureProvider.family<
     ({bool hasAccess, List<FinancialAccount> accounts}),
     String>((ref, userId) async {
-  final hasAccess =
-      await ref.watch(hasAccessToAccountsProvider(userId).future);
-  if (!hasAccess) {
+  final currentUser = ref.watch(authProvider).user;
+  if (currentUser == null) {
     return (hasAccess: false, accounts: <FinancialAccount>[]);
   }
-  final service = ref.read(accountServiceProvider);
-  final accounts = await service.getAccountsForUser(userId);
+
+  final accessService = ref.read(accessServiceProvider);
+  final accountService = ref.read(accountServiceProvider);
+
+  final approvedRequest = await accessService.getApprovedRequestBetween(
+    userA: currentUser.id,
+    userB: userId,
+  );
+
+  if (approvedRequest == null) {
+    return (hasAccess: false, accounts: <FinancialAccount>[]);
+  }
+
+  final isRequester = approvedRequest.requesterId == currentUser.id;
+  final accessType = isRequester
+      ? (approvedRequest.approvedAccessType ?? 'full') // requester sees receiver's share
+      : approvedRequest.requestAccessType; // receiver sees requester share
+  final targetUserId =
+      isRequester ? approvedRequest.receiverId : approvedRequest.requesterId;
+
+  if (accessType == 'full') {
+    final accounts = await accountService.getAccountsForUser(targetUserId);
+    return (hasAccess: true, accounts: accounts);
+  }
+
+  final side = isRequester ? 'receiver' : 'requester';
+  final shared = await accessService.getRequestAccounts(
+    accessRequestId: approvedRequest.id,
+    side: side,
+  );
+  final accounts =
+      shared.map((a) => a.financialAccount).whereType<FinancialAccount>().toList();
   return (hasAccess: true, accounts: accounts);
 });

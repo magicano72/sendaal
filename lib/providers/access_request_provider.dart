@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/error/exceptions.dart';
 import '../core/repositories/access_request_repository.dart';
+import '../models/access_request_account_model.dart';
 import '../models/access_request_model.dart';
 import '../services/access_service.dart';
 import 'auth_provider.dart';
@@ -175,6 +176,8 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
   Future<(bool, String?)> createAccessRequest({
     required String requesterId,
     required String receiverId,
+    required String requestAccessType,
+    List<String> selectedAccountIds = const [],
   }) async {
     // Check if user can send request
     final (canSend, reason) = await canSendRequest(
@@ -203,6 +206,8 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
         requesterId: requesterId,
         receiverId: receiverId,
         rejectionCount: rejectionCount,
+        requestAccessType: requestAccessType,
+        selectedAccountIds: selectedAccountIds,
       );
       print('[AccessRequestNotifier] Access request created: ${request.id}');
 
@@ -229,9 +234,17 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
   }
 
   /// Approve an access request
-  Future<bool> approveRequest(String requestId) async {
+  Future<bool> approveRequest(
+    String requestId, {
+    required String approvedAccessType,
+    List<String> selectedAccountIds = const [],
+  }) async {
     try {
-      final approved = await _repository.approveRequest(requestId);
+      final approved = await _repository.approveRequest(
+        requestId,
+        approvedAccessType: approvedAccessType,
+        selectedAccountIds: selectedAccountIds,
+      );
       print('[AccessRequestNotifier] Request approved: $requestId');
 
       // Update the request in the list
@@ -390,6 +403,22 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
         error: e is ApiException ? e.message : 'Failed to hide request',
       );
       return false;
+    }
+  }
+
+  /// Fetch selected accounts for an access request by side.
+  Future<List<AccessRequestAccount>> getRequestAccounts({
+    required String requestId,
+    String? side,
+  }) async {
+    try {
+      return await _repository.getRequestAccounts(
+        requestId: requestId,
+        side: side,
+      );
+    } catch (e) {
+      print('[AccessRequestNotifier] Error loading request accounts: $e');
+      return [];
     }
   }
 }

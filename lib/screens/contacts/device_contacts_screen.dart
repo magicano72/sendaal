@@ -383,7 +383,11 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
     setState(() => _requesting[user.id] = true);
     final (success, error) = await ref
         .read(accessRequestProvider.notifier)
-        .createAccessRequest(requesterId: currentUser.id, receiverId: user.id);
+        .createAccessRequest(
+          requesterId: currentUser.id,
+          receiverId: user.id,
+          requestAccessType: 'full',
+        );
 
     if (!mounted) return;
     setState(() => _requesting[user.id] = false);

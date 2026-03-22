@@ -22,6 +22,7 @@ class Endpoints {
   // Access Requests
   static const String accessRequests = '/items/access_requests';
   static String accessRequestById(String id) => '/items/access_requests/$id';
+  static const String accessRequestAccounts = '/items/access_request_accounts';
 
   // Notifications
   static const String notifications = '/items/notifications';

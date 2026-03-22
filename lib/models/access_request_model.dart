@@ -18,6 +18,8 @@ class AccessRequest {
   final bool visibleForRequester;
   final bool visibleForReceiver;
   final bool isFavorite;
+  final String requestAccessType; // "full" | "custom"
+  final String? approvedAccessType; // "full" | "custom" | null
 
   const AccessRequest({
     required this.id,
@@ -29,6 +31,8 @@ class AccessRequest {
     this.visibleForRequester = true,
     this.visibleForReceiver = true,
     this.isFavorite = false,
+    this.requestAccessType = 'full',
+    this.approvedAccessType,
   });
 
   factory AccessRequest.fromJson(Map<String, dynamic> json) => AccessRequest(
@@ -37,7 +41,7 @@ class AccessRequest {
             json['requesterId']?.toString() ??
             '',
         receiverId: _extractId(json['receiver']) ??
-            json['receiverId']?.toString() ??
+            json['receiverId']?.toString() ?? 
             '',
         status: AccessStatus.fromString(json['status']?.toString() ?? 'pending'),
         createdAt:
@@ -54,6 +58,13 @@ class AccessRequest {
             json['visibleForReceiver'] != false,
         isFavorite: json['is_favorite'] == true ||
             json['isFavorite'] == true,
+        requestAccessType:
+            (json['request_access_type'] ?? json['requestAccessType'])
+                    ?.toString() ??
+                'full',
+        approvedAccessType: (json['approved_access_type'] ??
+                json['approvedAccessType'])
+            ?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -65,6 +76,8 @@ class AccessRequest {
     'visible_for_requester': visibleForRequester,
     'visible_for_receiver': visibleForReceiver,
     'is_favorite': isFavorite,
+    'request_access_type': requestAccessType,
+    'approved_access_type': approvedAccessType,
   };
 
   bool get canHide =>
@@ -80,6 +93,8 @@ class AccessRequest {
     bool? visibleForRequester,
     bool? visibleForReceiver,
     bool? isFavorite,
+    String? requestAccessType,
+    String? approvedAccessType,
   }) => AccessRequest(
     id: id ?? this.id,
     requesterId: requesterId ?? this.requesterId,
@@ -90,6 +105,8 @@ class AccessRequest {
     visibleForRequester: visibleForRequester ?? this.visibleForRequester,
     visibleForReceiver: visibleForReceiver ?? this.visibleForReceiver,
     isFavorite: isFavorite ?? this.isFavorite,
+    requestAccessType: requestAccessType ?? this.requestAccessType,
+    approvedAccessType: approvedAccessType ?? this.approvedAccessType,
   );
 
   static String? _extractId(dynamic value) {

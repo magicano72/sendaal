@@ -1,3 +1,4 @@
+import '../../models/access_request_account_model.dart';
 import '../../models/access_request_model.dart';
 import '../../services/access_service.dart';
 import '../error/exceptions.dart';
@@ -12,6 +13,8 @@ class AccessRequestRepository {
     required String requesterId,
     required String receiverId,
     required int rejectionCount,
+    required String requestAccessType,
+    List<String> selectedAccountIds = const [],
   }) async {
     try {
       // Backend-side guard: prevent duplicate pending requests
@@ -30,7 +33,18 @@ class AccessRequestRepository {
       final response = await accessService.createRequest(
         requesterId: requesterId,
         receiverId: receiverId,
+        requestAccessType: requestAccessType,
       );
+
+      // If custom access, attach selected accounts for requester side
+      if (requestAccessType == 'custom' && selectedAccountIds.isNotEmpty) {
+        await accessService.addRequestAccounts(
+          accessRequestId: response.id,
+          accountIds: selectedAccountIds,
+          side: 'requester',
+        );
+      }
+
       return response;
     } catch (e) {
       throw ApiException(
@@ -72,12 +86,26 @@ class AccessRequestRepository {
   }
 
   /// Approve an access request
-  Future<AccessRequest> approveRequest(String requestId) async {
+  Future<AccessRequest> approveRequest(
+    String requestId, {
+    required String approvedAccessType,
+    List<String> selectedAccountIds = const [],
+  }) async {
     try {
-      return await accessService.updateStatus(
+      final updated = await accessService.updateStatus(
         requestId: requestId,
         status: 'approved',
+        approvedAccessType: approvedAccessType,
       );
+
+      if (approvedAccessType == 'custom' && selectedAccountIds.isNotEmpty) {
+        await accessService.addRequestAccounts(
+          accessRequestId: requestId,
+          accountIds: selectedAccountIds,
+          side: 'receiver',
+        );
+      }
+      return updated;
     } catch (e) {
       throw ApiException(message: 'Failed to approve request: ${e.toString()}');
     }
@@ -111,5 +139,15 @@ class AccessRequestRepository {
     } catch (e) {
       throw ApiException(message: 'Failed to hide request: ${e.toString()}');
     }
+  }
+
+  Future<List<AccessRequestAccount>> getRequestAccounts({
+    required String requestId,
+    String? side,
+  }) {
+    return accessService.getRequestAccounts(
+      accessRequestId: requestId,
+      side: side,
+    );
   }
 }

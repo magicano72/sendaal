@@ -219,7 +219,8 @@ class ApiClient {
   }
 
   // ── POST ──────────────────────────────────────────────────────────────────
-  Future<dynamic> post(String path, {Map<String, dynamic>? body}) async {
+  /// POST – accepts either a map or a list (for bulk inserts)
+  Future<dynamic> post(String path, {dynamic body}) async {
     print('[ApiClient] POST request: $_baseUrl$path');
     print('[ApiClient] POST body: $body');
     try {

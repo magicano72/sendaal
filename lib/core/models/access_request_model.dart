@@ -16,6 +16,10 @@ class AccessRequest {
   final String? requesterUsername;
   @JsonKey(name: 'is_favorite', defaultValue: false)
   final bool isFavorite;
+  @JsonKey(name: 'request_access_type')
+  final String requestAccessType;
+  @JsonKey(name: 'approved_access_type')
+  final String? approvedAccessType;
 
   AccessRequest({
     required this.id,
@@ -26,6 +30,8 @@ class AccessRequest {
     this.requesterName,
     this.requesterUsername,
     this.isFavorite = false,
+    this.requestAccessType = 'full',
+    this.approvedAccessType,
   });
 
   factory AccessRequest.fromJson(Map<String, dynamic> json) =>
@@ -41,6 +47,8 @@ class AccessRequest {
     String? requesterName,
     String? requesterUsername,
     bool? isFavorite,
+    String? requestAccessType,
+    String? approvedAccessType,
   }) {
     return AccessRequest(
       id: id ?? this.id,
@@ -51,6 +59,8 @@ class AccessRequest {
       requesterName: requesterName ?? this.requesterName,
       requesterUsername: requesterUsername ?? this.requesterUsername,
       isFavorite: isFavorite ?? this.isFavorite,
+      requestAccessType: requestAccessType ?? this.requestAccessType,
+      approvedAccessType: approvedAccessType ?? this.approvedAccessType,
     );
   }
 
