@@ -356,10 +356,8 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
           country.contains(searchQuery) ||
           title.contains(searchQuery);
     }).toList();
-    final favouriteAccounts =
-        accounts.where((a) => a.isFavourite).toList();
-    final otherAccounts =
-        accounts.where((a) => !a.isFavourite).toList();
+    final favouriteAccounts = accounts.where((a) => a.isFavourite).toList();
+    final otherAccounts = accounts.where((a) => !a.isFavourite).toList();
     final activeCount = accounts.where((a) => a.isVisible).length;
 
     return Scaffold(
@@ -446,49 +444,48 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                       title: 'No accounts yet',
                       subtitle: 'Add your first account to get started.',
                     )
-            else
-              ...[
-                if (favouriteAccounts.isNotEmpty) ...[
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(4.w, 0, 4.w, 8.h),
-                    child: Text(
-                      'Favourites',
-                      style: TextStyles.bodySmallBold.copyWith(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+            else ...[
+              if (favouriteAccounts.isNotEmpty) ...[
+                // Padding(
+                //   padding: EdgeInsets.fromLTRB(4.w, 0, 4.w, 8.h),
+                //   child: Text(
+                //     'Favourites',
+                //     style: TextStyles.bodySmallBold.copyWith(
+                //       color: AppTheme.textPrimary,
+                //       fontWeight: FontWeight.w700,
+                //     ),
+                //   ),
+                // ),
+                ...favouriteAccounts.map(
+                  (account) => AccountCard(
+                    account: account,
+                    dense: true,
+                    showToggle: true,
+                    showStar: true,
+                    onStar: () => ref
+                        .read(accountsProvider.notifier)
+                        .toggleFavourite(account.id, account.isFavourite),
+                    onTap: () => _showAccountQuickActions(account),
+                    onToggleVisibility: (_) => ref
+                        .read(accountsProvider.notifier)
+                        .toggleVisibility(account.id, account.isVisible),
+                    onEdit: () => _openAccountForm(account: account),
+                    onDelete: () => _confirmDelete(account),
                   ),
-                  ...favouriteAccounts.map(
-                    (account) => AccountCard(
-                      account: account,
-                      dense: true,
-                      showToggle: true,
-                      showStar: true,
-                      onStar: () => ref
-                          .read(accountsProvider.notifier)
-                          .toggleFavourite(account.id, account.isFavourite),
-                      onTap: () => _showAccountQuickActions(account),
-                      onToggleVisibility: (_) => ref
-                          .read(accountsProvider.notifier)
-                          .toggleVisibility(account.id, account.isVisible),
-                      onEdit: () => _openAccountForm(account: account),
-                      onDelete: () => _confirmDelete(account),
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-                ],
-                if (otherAccounts.isNotEmpty && favouriteAccounts.isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(4.w, 0, 4.w, 8.h),
-                    child: Text(
-                      'All accounts',
-                      style: TextStyles.bodySmallBold.copyWith(
-                        color: AppTheme.textSecondary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                ),
+                SizedBox(height: 10.h),
+              ],
+              if (otherAccounts.isNotEmpty && favouriteAccounts.isNotEmpty)
+                // Padding(
+                //   padding: EdgeInsets.fromLTRB(4.w, 0, 4.w, 8.h),
+                //   child: Text(
+                //     'All accounts',
+                //     style: TextStyles.bodySmallBold.copyWith(
+                //       color: AppTheme.textSecondary,
+                //       fontWeight: FontWeight.w700,
+                //     ),
+                //   ),
+                // ),
                 ...otherAccounts.map(
                   (account) => AccountCard(
                     account: account,
@@ -506,7 +503,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                     onDelete: () => _confirmDelete(account),
                   ),
                 ),
-              ],
+            ],
             SizedBox(height: 72.h),
           ],
         ),
