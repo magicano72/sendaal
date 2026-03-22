@@ -402,6 +402,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ...accessRequests.sentRequests,
     ];
 
+    final receivedSorted = [...accessRequests.receivedRequests]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final sentSorted = [...accessRequests.sentRequests]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
     if (allRequests.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -414,7 +419,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
 
-    final pendingReceivedCount = accessRequests.receivedRequests
+    final pendingReceivedCount = receivedSorted
         .where((r) => r.status.name == 'pending')
         .length;
 
@@ -451,14 +456,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
-        if (accessRequests.receivedRequests.isNotEmpty) ...[
+        if (receivedSorted.isNotEmpty) ...[
           _buildSectionLabel(
             icon: Icons.inbox_outlined,
             label: 'Incoming Requests',
             pendingCount: pendingReceivedCount,
             pendingColor: const Color(0xFF2D7AE8),
           ),
-          ...accessRequests.receivedRequests.map(
+          ...receivedSorted.map(
             (req) => Padding(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
               child: AccessRequestCard(request: req, isReceived: true),
@@ -466,16 +471,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           SizedBox(height: 8.h),
         ],
-        if (accessRequests.sentRequests.isNotEmpty) ...[
+        if (sentSorted.isNotEmpty) ...[
           _buildSectionLabel(
             icon: Icons.send_outlined,
             label: 'My Requests',
-            pendingCount: accessRequests.sentRequests
+            pendingCount: sentSorted
                 .where((r) => r.status.name == 'pending')
                 .length,
             pendingColor: Colors.orange,
           ),
-          ...accessRequests.sentRequests.map(
+          ...sentSorted.map(
             (req) => Padding(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
               child: AccessRequestCard(request: req, isReceived: false),

@@ -41,6 +41,7 @@ class _AllRequestsScreenState extends ConsumerState<AllRequestsScreen> {
       ...accessState.receivedRequests.map((r) => (r, true)),
       ...accessState.sentRequests.map((r) => (r, false)),
     ];
+    combined.sort((a, b) => b.$1.createdAt.compareTo(a.$1.createdAt));
 
     return Scaffold(
       appBar: AppBar(
