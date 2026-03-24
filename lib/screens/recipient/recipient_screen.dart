@@ -261,46 +261,34 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
       );
     }
 
-    final hasAccessAsync = ref.watch(
-      hasAccessToAccountsProvider(widget.recipient.id),
-    );
-    final accountsAsync = ref.watch(
-      recipientAccountsProvider(widget.recipient.id),
-    );
+    final accountsAsync =
+        ref.watch(approvedAccountsProvider(widget.recipient.id));
 
     return Scaffold(
       appBar: AppBar(title: Text(_preferredName(widget.recipient))),
-      body: hasAccessAsync.when(
+      body: accountsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            Center(child: ErrorBanner(message: 'Error checking access: $e')),
-        data: (hasAccess) {
-          if (!hasAccess) {
+        error: (e, _) => Center(
+          child: ErrorBanner(message: 'Could not load accounts: $e'),
+        ),
+        data: (result) {
+          if (!result.hasAccess) {
             return _buildAccessRestrictedUI(context, currentUser);
           }
 
-          return accountsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: ErrorBanner(message: 'Could not load accounts: $e'),
-            ),
-            data: (accounts) {
-              final visible = accounts.where((a) => a.isVisible).toList();
-              const order = {'high': 0, 'medium': 1, 'low': 2};
-              visible.sort((a, b) {
-                final pa = order[a.priority.name] ?? 1;
-                final pb = order[b.priority.name] ?? 1;
-                if (pa != pb) return pa.compareTo(pb);
-                final ca =
-                    a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-                final cb =
-                    b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-                return ca.compareTo(cb);
-              });
+          final visible =
+              result.accounts.where((a) => a.isVisible).toList();
+          const order = {'high': 0, 'medium': 1, 'low': 2};
+          visible.sort((a, b) {
+            final pa = order[a.priority.name] ?? 1;
+            final pb = order[b.priority.name] ?? 1;
+            if (pa != pb) return pa.compareTo(pb);
+            final ca = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final cb = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return ca.compareTo(cb);
+          });
 
-              return _buildAccessGrantedBody(context, visible);
-            },
-          );
+          return _buildAccessGrantedBody(context, visible);
         },
       ),
     );

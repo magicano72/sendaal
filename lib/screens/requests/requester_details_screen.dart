@@ -1,4 +1,5 @@
 import 'package:Sendaal/screens/requests/status_banar.dart';
+import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -787,11 +788,9 @@ class _RequesterDetailsScreenState
     if (approve &&
         _receiverAccessType == 'custom' &&
         _receiverSelectedAccounts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Select at least one account to approve.'),
-          backgroundColor: Colors.orange,
-        ),
+      AppSnackBar.warning(
+        context,
+        'Please select at least one account to approve with custom access.',
       );
       return;
     }
@@ -835,15 +834,9 @@ class _RequesterDetailsScreenState
       }
 
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            approve ? 'Access request approved!' : 'Access request rejected',
-          ),
-          backgroundColor: approve ? Colors.green : Colors.orange,
-          duration: const Duration(seconds: 2),
-        ),
+      AppSnackBar.success(
+        context,
+        approve ? 'Request approved successfully.' : 'Request rejected.',
       );
     } else {
       final errorMsg =

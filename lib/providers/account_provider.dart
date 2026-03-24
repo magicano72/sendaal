@@ -212,7 +212,6 @@ final approvedAccountsProvider = FutureProvider.family<
   }
 
   final accessService = ref.read(accessServiceProvider);
-  final accountService = ref.read(accountServiceProvider);
 
   final approvedRequest = await accessService.getApprovedRequestBetween(
     userA: currentUser.id,
@@ -224,17 +223,6 @@ final approvedAccountsProvider = FutureProvider.family<
   }
 
   final isRequester = approvedRequest.requesterId == currentUser.id;
-  final accessType = isRequester
-      ? (approvedRequest.approvedAccessType ?? 'full') // requester sees receiver's share
-      : approvedRequest.requestAccessType; // receiver sees requester share
-  final targetUserId =
-      isRequester ? approvedRequest.receiverId : approvedRequest.requesterId;
-
-  if (accessType == 'full') {
-    final accounts = await accountService.getAccountsForUser(targetUserId);
-    return (hasAccess: true, accounts: accounts);
-  }
-
   final side = isRequester ? 'receiver' : 'requester';
   final shared = await accessService.getRequestAccounts(
     accessRequestId: approvedRequest.id,
