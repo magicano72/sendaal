@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+const _displayDatePattern = 'dd MMM yyyy hh:mm a';
+
 /// String formatting and parsing utilities
 class FormatUtils {
+  /// Shared display pattern: "30 Mar 2026 02:55 PM"
+  static const displayPattern = _displayDatePattern;
+
   /// Format currency value with commas
   static String formatCurrency(double amount) {
     final formatter = NumberFormat('#,##0.00', 'en_US');
@@ -23,22 +28,19 @@ class FormatUtils {
     return '${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}';
   }
 
-  /// Format date to readable format
+  /// Format date to the shared display pattern
   static String formatDate(DateTime date) {
-    final formatter = DateFormat('MMM dd, yyyy');
-    return formatter.format(date);
+    return DateFormat(_displayDatePattern).format(date);
   }
 
-  /// Format time to readable format
+  /// Format time to the shared display pattern
   static String formatTime(DateTime dateTime) {
-    final formatter = DateFormat('hh:mm a');
-    return formatter.format(dateTime);
+    return DateFormat(_displayDatePattern).format(dateTime);
   }
 
-  /// Format date and time
+  /// Format date and time to the shared display pattern
   static String formatDateTime(DateTime dateTime) {
-    final formatter = DateFormat('MMM dd, yyyy hh:mm a');
-    return formatter.format(dateTime);
+    return DateFormat(_displayDatePattern).format(dateTime);
   }
 
   /// Capitalize first letter

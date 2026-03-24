@@ -1,3 +1,5 @@
+import '../utils/date_utils.dart';
+
 /// Notification types supported by Sendaal
 enum NotificationType {
   access_request,
@@ -38,13 +40,9 @@ class NotificationModel {
         body: json['body']?.toString() ?? '',
         type: NotificationType.fromString(json['type']?.toString() ?? 'system'),
         isRead: json['is_read'] == true || json['isRead'] == true,
-        createdAt:
-            DateTime.tryParse(
-              json['date_created']?.toString() ??
-                  json['createdAt']?.toString() ??
-                  '',
-            ) ??
-            DateTime.now(),
+        createdAt: parseDirectusDateOrNow(
+          json['date_created']?.toString() ?? json['createdAt']?.toString(),
+        ),
       );
 
   Map<String, dynamic> toJson() => {

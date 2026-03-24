@@ -282,14 +282,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                         .toggleVisibility(account.id, account.isVisible);
                   },
                 ),
-                _AccountActionTile(
-                  icon: Icons.remove_red_eye_outlined,
-                  label: 'View details',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _openAccountForm(account: account);
-                  },
-                ),
+
                 _AccountActionTile(
                   icon: Icons.edit_outlined,
                   label: 'Edit account',

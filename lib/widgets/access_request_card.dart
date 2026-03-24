@@ -11,6 +11,7 @@ import '../models/access_request_model.dart';
 import '../providers/access_request_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
+import '../utils/format_util.dart';
 import 'delete_confirmation_dialog.dart';
 import 'shimmer_widgets.dart';
 
@@ -44,6 +45,7 @@ class AccessRequestCard extends ConsumerWidget {
 
     final showActions = isReceived && isPending && isReceiver;
     final userAsync = ref.watch(userProvider(userIdToFetch));
+    //final formattedDate = FormatUtils.formatDateTime(request.createdAt);
 
     return userAsync.when(
       loading: () => ShimmerCard(height: 150.h),
@@ -81,8 +83,8 @@ class AccessRequestCard extends ConsumerWidget {
   }) {
     final statusColor = _getStatusColor();
     final subtitle = isReceived
-        ? 'Requested access\n${(request.createdAt.toString().split('.').first)}'
-        : 'Access request sent\n${(request.createdAt.toString().split('.').first)}';
+        ? 'Requested access\n${FormatUtils.formatDateTime(request.createdAt)}'
+        : 'Access request sent\n${FormatUtils.formatDateTime(request.createdAt)}';
     final allowHide = request.canHide || isReceived;
 
     return Slidable(
@@ -234,7 +236,7 @@ class AccessRequestCard extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-        child: FilledButton(
+          child: FilledButton(
             onPressed: () => _approveRequest(context, ref),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF2D7AE8),
@@ -359,10 +361,7 @@ class AccessRequestCard extends ConsumerWidget {
     }
   }
 
-  Future<void> _approveRequest(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _approveRequest(BuildContext context, WidgetRef ref) async {
     Navigator.pushNamed(
       context,
       AppRoutes.requesterDetails,

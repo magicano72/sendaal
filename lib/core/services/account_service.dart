@@ -1,4 +1,5 @@
 import '../../services/api_client.dart';
+import '../../utils/date_utils.dart';
 import '../constants/app_constants.dart';
 import '../models/financial_account_model.dart';
 
@@ -32,9 +33,11 @@ class AccountService {
           final pa = order[(a['priority'] ?? 'medium').toString()] ?? 1;
           final pb = order[(b['priority'] ?? 'medium').toString()] ?? 1;
           if (pa != pb) return pa.compareTo(pb);
-          final ca = DateTime.tryParse(a['created_at']?.toString() ?? '') ??
+          final ca =
+              parseDirectusDate(a['created_at']?.toString()) ??
               DateTime.fromMillisecondsSinceEpoch(0);
-          final cb = DateTime.tryParse(b['created_at']?.toString() ?? '') ??
+          final cb =
+              parseDirectusDate(b['created_at']?.toString()) ??
               DateTime.fromMillisecondsSinceEpoch(0);
           return ca.compareTo(cb);
         });
@@ -77,15 +80,11 @@ class AccountService {
     // Sort by priority (ascending order means higher priority accounts first)
     final sortedAccounts = List<Map<String, dynamic>>.from(visibleAccounts);
     const priorityOrder = {'high': 0, 'medium': 1, 'low': 2};
-    sortedAccounts.sort(
-      (a, b) {
-        final pa =
-            priorityOrder[(a['priority'] ?? 'medium').toString()] ?? 1;
-        final pb =
-            priorityOrder[(b['priority'] ?? 'medium').toString()] ?? 1;
-        return pa.compareTo(pb);
-      },
-    );
+    sortedAccounts.sort((a, b) {
+      final pa = priorityOrder[(a['priority'] ?? 'medium').toString()] ?? 1;
+      final pb = priorityOrder[(b['priority'] ?? 'medium').toString()] ?? 1;
+      return pa.compareTo(pb);
+    });
 
     // Split amount across accounts
     final suggestions = <Map<String, dynamic>>[];

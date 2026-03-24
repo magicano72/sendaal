@@ -26,6 +26,6 @@ class Formatters {
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     if (diff.inDays == 1) return 'Yesterday';
     if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return DateFormat('d MMM yyyy').format(dt);
+    return DateFormat('dd MMM yyyy hh:mm a').format(dt);
   }
 }

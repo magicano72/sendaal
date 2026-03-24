@@ -11,6 +11,7 @@ import '../models/financial_account_model.dart';
 import '../providers/access_request_provider.dart';
 import '../providers/account_provider.dart';
 import '../providers/auth_provider.dart';
+import '../utils/format_util.dart';
 import 'country_flag_icon.dart';
 import 'provider_logo.dart';
 
@@ -195,8 +196,7 @@ class AccessRequestTile extends ConsumerWidget {
     );
   }
 
-  String _formatDate(DateTime dt) =>
-      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  String _formatDate(DateTime dt) => FormatUtils.formatDateTime(dt);
 
   ({Color color, String label}) get _statusData => switch (request.status) {
     AccessStatus.pending => (color: Colors.orange, label: 'Pending'),

@@ -1,3 +1,5 @@
+import '../utils/date_utils.dart';
+
 /// Status of an access request
 enum AccessStatus {
   pending,
@@ -36,36 +38,32 @@ class AccessRequest {
   });
 
   factory AccessRequest.fromJson(Map<String, dynamic> json) => AccessRequest(
-        id: json['id']?.toString() ?? '',
-        requesterId: _extractId(json['requester']) ??
-            json['requesterId']?.toString() ??
-            '',
-        receiverId: _extractId(json['receiver']) ??
-            json['receiverId']?.toString() ?? 
-            '',
-        status: AccessStatus.fromString(json['status']?.toString() ?? 'pending'),
-        createdAt:
-            DateTime.tryParse(json['created_at']?.toString() ?? '') ??
-            DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
-            DateTime.now(),
-        rejectionCount:
-            int.tryParse(json['rejection_count']?.toString() ?? '0') ?? 0,
-        visibleForRequester:
-            json['visible_for_requester'] != false &&
-            json['visibleForRequester'] != false,
-        visibleForReceiver:
-            json['visible_for_receiver'] != false &&
-            json['visibleForReceiver'] != false,
-        isFavorite: json['is_favorite'] == true ||
-            json['isFavorite'] == true,
-        requestAccessType:
-            (json['request_access_type'] ?? json['requestAccessType'])
-                    ?.toString() ??
-                'full',
-        approvedAccessType: (json['approved_access_type'] ??
-                json['approvedAccessType'])
+    id: json['id']?.toString() ?? '',
+    requesterId:
+        _extractId(json['requester']) ?? json['requesterId']?.toString() ?? '',
+    receiverId:
+        _extractId(json['receiver']) ?? json['receiverId']?.toString() ?? '',
+    status: AccessStatus.fromString(json['status']?.toString() ?? 'pending'),
+    createdAt: parseDirectusDateOrNow(
+      json['created_at']?.toString() ?? json['createdAt']?.toString(),
+    ),
+    rejectionCount:
+        int.tryParse(json['rejection_count']?.toString() ?? '0') ?? 0,
+    visibleForRequester:
+        json['visible_for_requester'] != false &&
+        json['visibleForRequester'] != false,
+    visibleForReceiver:
+        json['visible_for_receiver'] != false &&
+        json['visibleForReceiver'] != false,
+    isFavorite: json['is_favorite'] == true || json['isFavorite'] == true,
+    requestAccessType:
+        (json['request_access_type'] ?? json['requestAccessType'])
+            ?.toString() ??
+        'full',
+    approvedAccessType:
+        (json['approved_access_type'] ?? json['approvedAccessType'])
             ?.toString(),
-      );
+  );
 
   Map<String, dynamic> toJson() => {
     'id': id,

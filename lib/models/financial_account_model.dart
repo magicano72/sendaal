@@ -1,3 +1,5 @@
+import '../utils/date_utils.dart';
+
 /// Supported account types
 enum AccountType {
   instapay,
@@ -155,7 +157,7 @@ class FinancialAccount {
       priority: priorityFromString(json['priority']?.toString()),
       isVisible: json['is_visible'] != false && json['isVisible'] != false,
       isFavourite: json['is_favourite'] == true,
-      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
+      createdAt: parseDirectusDate(json['created_at']?.toString()),
     );
   }
 
