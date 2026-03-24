@@ -12,6 +12,7 @@ import '../../models/system_limit_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/system_limits_service.dart';
+import '../../utils/format_util.dart';
 import '../../widgets/account_type_badge.dart';
 import '../../widgets/app_widgets.dart';
 import '../../widgets/country_flag_icon.dart';
@@ -213,6 +214,12 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                           ? 'Low'
                           : 'Medium',
                     ),
+                    if (account.createdAt != null)
+                      _InfoChip(
+                        icon: Icons.access_time,
+                        label:
+                            'Created: ${FormatUtils.formatDateTime(account.createdAt!)}',
+                      ),
                   ],
                 ),
                 SizedBox(height: 10.h),
@@ -468,7 +475,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                 ),
                 SizedBox(height: 10.h),
               ],
-              if (otherAccounts.isNotEmpty && favouriteAccounts.isNotEmpty)
+              if (otherAccounts.isNotEmpty)
                 // Padding(
                 //   padding: EdgeInsets.fromLTRB(4.w, 0, 4.w, 8.h),
                 //   child: Text(

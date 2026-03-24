@@ -447,8 +447,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Navigator.pushNamed(context, AppRoutes.allAccessRequests),
                 child: Text(
                   'View all',
-                  style: TextStyles.bodySmall.copyWith(
-                    fontWeight: FontWeight.w500,
+                  style: TextStyles.bodySmallBold.copyWith(
                     color: AppColors.primary,
                   ),
                 ),
