@@ -40,6 +40,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
   final _amountCtrl = TextEditingController();
   String? _amountError;
   bool _isRequestingAccess = false;
+  String? _selectedCurrency;
 
   @override
   void dispose() {
@@ -53,6 +54,12 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
 
     if (amount == null || amount <= 0) {
       setState(() => _amountError = 'Enter a valid amount greater than zero');
+      return;
+    }
+    if (accounts.isEmpty) {
+      setState(
+        () => _amountError = 'No accounts available for this currency',
+      );
       return;
     }
 
@@ -276,8 +283,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
             return _buildAccessRestrictedUI(context, currentUser);
           }
 
-          final visible =
-              result.accounts.where((a) => a.isVisible).toList();
+          final visible = result.accounts.where((a) => a.isVisible).toList();
           const order = {'high': 0, 'medium': 1, 'low': 2};
           visible.sort((a, b) {
             final pa = order[a.priority.name] ?? 1;
@@ -288,7 +294,42 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
             return ca.compareTo(cb);
           });
 
-          return _buildAccessGrantedBody(context, visible);
+          final currencies = <String>[];
+          for (final account in visible) {
+            final currency = (account.currency?.isNotEmpty == true)
+                ? account.currency!
+                : 'EGP';
+            if (!currencies.contains(currency)) {
+              currencies.add(currency);
+            }
+          }
+
+          var selected = _selectedCurrency;
+          if (currencies.isNotEmpty &&
+              (selected == null || !currencies.contains(selected))) {
+            selected = currencies.first;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() => _selectedCurrency = selected);
+            });
+          }
+
+          final filtered = selected == null
+              ? <FinancialAccount>[]
+              : visible
+                  .where((a) =>
+                      (a.currency?.isNotEmpty == true
+                          ? a.currency!
+                          : 'EGP') ==
+                      selected)
+                  .toList();
+
+          return _buildAccessGrantedBody(
+            context,
+            visible: visible,
+            filtered: filtered,
+            currencies: currencies,
+            selectedCurrency: selected,
+          );
         },
       ),
     );
@@ -297,9 +338,12 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
   // ── Body when access is granted ──────────────────────────────────────────
 
   Widget _buildAccessGrantedBody(
-    BuildContext context,
-    List<FinancialAccount> visible,
-  ) {
+    BuildContext context, {
+    required List<FinancialAccount> visible,
+    required List<FinancialAccount> filtered,
+    required List<String> currencies,
+    required String? selectedCurrency,
+  }) {
     // Single source of truth for request state.
     final accessState = ref.watch(accessRequestProvider);
     final sentRequestsAsync = ref.watch(sentRequestsProvider);
@@ -333,20 +377,83 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
         ),
         SizedBox(height: 10.h),
 
+        if (currencies.isNotEmpty)
+          DropdownButtonFormField<String>(
+            value: selectedCurrency,
+            items: currencies
+                .map(
+                  (c) => DropdownMenuItem<String>(
+                    value: c,
+                    child: Text(
+                      c,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+            decoration: InputDecoration(
+              labelText: 'Currency',
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+            onChanged: (value) {
+              setState(() {
+                _selectedCurrency = value;
+                _amountError = null;
+              });
+            },
+          ),
+        if (currencies.isNotEmpty) SizedBox(height: 10.h),
+
         if (visible.isEmpty)
           const EmptyState(
             icon: Icons.block_outlined,
             title: 'No visible accounts',
             subtitle: 'This user has no visible payment accounts.',
           )
+        else if (filtered.isEmpty)
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.orange.shade100),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline,
+                    color: Colors.orange.shade800, size: 20.r),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    'No accounts available for this currency.',
+                    style: TextStyle(
+                      color: Colors.orange.shade800,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
         else
-          ...visible.map((a) => AccountCard(account: a)),
+          ...filtered.map((a) => AccountCard(account: a)),
 
         SizedBox(height: 28.h),
 
         AmountInputField(
           controller: _amountCtrl,
           errorText: _amountError,
+          currency: selectedCurrency ?? 'EGP',
           onChanged: (_) {
             if (_amountError != null) setState(() => _amountError = null);
           },
@@ -356,7 +463,8 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
         PrimaryButton(
           label: 'Split Automatically',
           icon: Icon(Icons.auto_fix_high, color: Colors.white, size: 20.r),
-          onPressed: visible.isEmpty ? null : () => _splitAndNavigate(visible),
+          onPressed:
+              filtered.isEmpty ? null : () => _splitAndNavigate(filtered),
         ),
         SizedBox(height: 12.h),
 

@@ -397,59 +397,126 @@ class _RequesterDetailsScreenState
   }
 
   Widget _receiverAccessChips() {
-    Widget chip(String label, String value, String subtitle, IconData icon) {
+    Widget card(
+      String label,
+      String value,
+      String subtitle,
+      IconData icon,
+      double width,
+    ) {
       final selected = _receiverAccessType == value;
-      return Expanded(
-        child: ChoiceChip(
-          label: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: Theme.of(context).textTheme.bodySmall),
-              SizedBox(height: 2.h),
-              Text(
-                subtitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: AppTheme.textSecondary),
-              ),
-            ],
-          ),
-          avatar: Icon(
-            icon,
-            size: 18.r,
-            color: selected ? Colors.white : AppTheme.textSecondary,
-          ),
-          selected: selected,
-          selectedColor: AppTheme.primary,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          visualDensity: VisualDensity.compact,
-          onSelected: (_) {
+      final bg = selected ? AppTheme.primary : Colors.white;
+      final fg = selected ? Colors.white : AppTheme.textPrimary;
+      final subFg = selected
+          ? Colors.white.withOpacity(0.9)
+          : AppTheme.textSecondary;
+      return SizedBox(
+        width: width,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14.r),
+          onTap: () {
             setState(() {
               _receiverAccessType = value;
               if (value == 'full') _receiverSelectedAccounts.clear();
             });
           },
-          labelPadding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 8.w),
-          padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 8.w),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(
+                color: selected ? AppTheme.primary : Colors.grey.shade300,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10.r),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? Colors.white.withOpacity(0.18)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 18.r,
+                    color: selected ? Colors.white : AppTheme.primary,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: fg,
+                            ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: subFg,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  selected
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  size: 18.r,
+                  color: selected ? Colors.white : Colors.grey.shade400,
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    return Row(
-      children: [
-        chip(
-          'Full Access',
-          'full',
-          'Share all your accounts',
-          Icons.all_inclusive,
-        ),
-        SizedBox(width: 10.w),
-        chip('Custom Access', 'custom', 'Pick specific accounts', Icons.tune),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final gap = 12.w;
+        final isNarrow = constraints.maxWidth < 360;
+        final cardWidth = isNarrow
+            ? constraints.maxWidth
+            : (constraints.maxWidth - gap) / 2;
+        return Wrap(
+          spacing: gap,
+          runSpacing: 12.h,
+          children: [
+            card(
+              'Full Access',
+              'full',
+              'Share all your accounts',
+              Icons.all_inclusive,
+              cardWidth,
+            ),
+            card(
+              'Custom',
+              'custom',
+              'Pick specific accounts',
+              Icons.tune,
+              cardWidth,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -846,13 +913,7 @@ class _RequesterDetailsScreenState
         _pendingAction = null;
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMsg),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.error(context, errorMsg);
     }
   }
 

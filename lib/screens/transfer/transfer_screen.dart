@@ -25,6 +25,10 @@ class TransferScreen extends ConsumerWidget {
     final suggestions = args.suggestions;
     final recipient = args.recipient;
     final total = suggestions.fold<double>(0, (s, e) => s + e.amount);
+    final currency = (args.accounts.isNotEmpty &&
+            args.accounts.first.currency?.isNotEmpty == true)
+        ? args.accounts.first.currency!
+        : 'EGP';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Transfer Instructions')),
@@ -34,7 +38,11 @@ class TransferScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _TransferHeroCard(recipient: recipient, total: total),
+              _TransferHeroCard(
+                recipient: recipient,
+                total: total,
+                currency: currency,
+              ),
               SizedBox(height: 22.h),
               Text(
                 'Follow these steps',
@@ -56,6 +64,7 @@ class TransferScreen extends ConsumerWidget {
                 (entry) => _TransferStepCard(
                   step: entry.key + 1,
                   suggestion: entry.value,
+                  currency: currency,
                 ),
               ),
               SizedBox(height: 24.h),
@@ -88,8 +97,13 @@ class TransferScreen extends ConsumerWidget {
 class _TransferHeroCard extends StatelessWidget {
   final User recipient;
   final double total;
+  final String currency;
 
-  const _TransferHeroCard({required this.recipient, required this.total});
+  const _TransferHeroCard({
+    required this.recipient,
+    required this.total,
+    required this.currency,
+  });
 
   String get _displayName =>
       recipient.displayName.isNotEmpty ? recipient.displayName : 'Recipient';
@@ -105,7 +119,7 @@ class _TransferHeroCard extends StatelessWidget {
         ? _displayName[0].toUpperCase()
         : '?';
     final amountLabel =
-        '${total.toStringAsFixed(total.truncateToDouble() == total ? 0 : 2)} EGP';
+        '${total.toStringAsFixed(total.truncateToDouble() == total ? 0 : 2)} $currency';
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -188,8 +202,13 @@ class _TransferHeroCard extends StatelessWidget {
 class _TransferStepCard extends StatelessWidget {
   final int step;
   final SplitSuggestion suggestion;
+  final String currency;
 
-  const _TransferStepCard({required this.step, required this.suggestion});
+  const _TransferStepCard({
+    required this.step,
+    required this.suggestion,
+    required this.currency,
+  });
 
   String get _label =>
       AppConstants.accountTypeLabels[suggestion.type.name] ??
@@ -197,7 +216,7 @@ class _TransferStepCard extends StatelessWidget {
 
   String get _amountStr {
     final v = suggestion.amount;
-    return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} EGP';
+    return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} $currency';
   }
 
   void _copy(BuildContext context, String text, String label) {

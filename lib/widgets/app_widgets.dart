@@ -247,21 +247,24 @@ class AmountInputField extends StatelessWidget {
   final TextEditingController controller;
   final String? errorText;
   final ValueChanged<String>? onChanged;
+  final String currency;
 
   const AmountInputField({
     super.key,
     required this.controller,
     this.errorText,
     this.onChanged,
+    this.currency = 'EGP',
   });
 
   @override
   Widget build(BuildContext context) {
+    final displayCurrency = currency.isNotEmpty ? currency : 'EGP';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Enter Amount (EGP)',
+          'Enter Amount ($displayCurrency)',
           style: TextStyles.bodySmallBold.copyWith(
             color: AppTheme.textSecondary,
           ),
@@ -276,7 +279,7 @@ class AmountInputField extends StatelessWidget {
             color: AppTheme.textPrimary,
           ),
           decoration: InputDecoration(
-            prefixText: 'EGP  ',
+            prefixText: '$displayCurrency  ',
             prefixStyle: TextStyles.bodyRegular.copyWith(
               fontSize: 18.sp,
               fontWeight: FontWeight.w500,
