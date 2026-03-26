@@ -112,9 +112,13 @@ class _RequesterDetailsScreenState
     final accountsState = ref.watch(accountsProvider);
     final userAsync = ref.watch(userProvider(profileUserId));
 
+    final isRevoked = _request.isRevoked;
+    final isRevoker =
+        _request.revokerId != null && _request.revokerId == currentUser?.id;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Access Request'),
+        title: Text('Access Request'),
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 12.w),
@@ -145,6 +149,8 @@ class _RequesterDetailsScreenState
               user,
               accountsState,
               isReceiver: isReceiver,
+              isRevoked: isRevoked,
+              isRevoker: isRevoker,
             ),
           ),
         ),
@@ -157,7 +163,13 @@ class _RequesterDetailsScreenState
     User user,
     AccountsState accountsState, {
     required bool isReceiver,
+    required bool isRevoked,
+    required bool isRevoker,
   }) {
+    if (isRevoked) {
+      return _buildRevokedBody(context, user, isRevoker: isRevoker);
+    }
+
     final canAct = isReceiver && _request.status == AccessStatus.pending;
     final otherName = _displayName(user);
 
@@ -171,7 +183,7 @@ class _RequesterDetailsScreenState
         _buildRequestSummary(otherName),
         if (_request.requestAccessType == 'custom') ...[
           SizedBox(height: 12.h),
-          _buildRequesterAccountsSection(),
+          _buildRequesterAccountsSection(otherName, isReceiver: isReceiver),
         ],
         if (canAct) ...[
           SizedBox(height: 8.h),
@@ -179,7 +191,7 @@ class _RequesterDetailsScreenState
         ],
         if (_request.status == AccessStatus.approved) ...[
           SizedBox(height: 8.h),
-          _buildSharedSections(),
+          _buildSharedSections(otherUserName: _displayName(user)),
         ],
         if (_request.status == AccessStatus.rejected) ...[
           SizedBox(height: 8.h),
@@ -199,6 +211,110 @@ class _RequesterDetailsScreenState
           ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
         ),
       ],
+    );
+  }
+
+  Widget _buildRevokedBody(
+    BuildContext context,
+    User user, {
+    required bool isRevoker,
+  }) {
+    return ListView(
+      padding: EdgeInsets.all(20.w),
+      children: [
+        _buildRevokedProfileHeader(user),
+        SizedBox(height: 12.h),
+        StatusBanner(status: _request.status),
+        SizedBox(height: 12.h),
+        Card(
+          child: Padding(
+            padding: EdgeInsets.all(14.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Access Denied',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.redAccent,
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  isRevoker
+                      ? 'You revoked access for this user. Cancel revoke to restore full visibility.'
+                      : 'This connection has been revoked. You cannot view any data for this user.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (isRevoker) ...[
+          SizedBox(height: 14.h),
+          FilledButton(
+            onPressed: _isProcessing ? null : _handleCancelRevoke,
+            style: FilledButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 14.h),
+              backgroundColor: AppTheme.primary,
+            ),
+            child: _isProcessing
+                ? SizedBox(
+                    height: 18.r,
+                    width: 18.r,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Cancel Revoke'),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildRevokedProfileHeader(User user) {
+    final name = _displayName(user);
+    final avatarUrl = user.avatarUrl;
+    final initials = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 36.r,
+              backgroundColor: AppTheme.primary.withOpacity(0.1),
+              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                  ? NetworkImage(avatarUrl)
+                  : null,
+              child: (avatarUrl == null || avatarUrl.isEmpty)
+                  ? Text(
+                      initials,
+                      style: TextStyle(
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18.sp,
+                      ),
+                    )
+                  : null,
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                name,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -281,7 +397,10 @@ class _RequesterDetailsScreenState
     return SizedBox(height: 2.h);
   }
 
-  Widget _buildRequesterAccountsSection() {
+  Widget _buildRequesterAccountsSection(
+    String otherName, {
+    required bool isReceiver,
+  }) {
     if (_accountsLoading && _requesterSharedAccounts.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -296,8 +415,10 @@ class _RequesterDetailsScreenState
     }
 
     if (_requesterSharedAccounts.isEmpty) {
+      final requesterName = isReceiver ? otherName : 'You';
+      final verb = isReceiver ? 'hasn\'t' : 'haven\'t';
       return Text(
-        'Requester hasn\'t attached any accounts yet.',
+        '$requesterName $verb attached any accounts yet.',
         style: Theme.of(
           context,
         ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
@@ -461,24 +582,22 @@ class _RequesterDetailsScreenState
                       Text(
                         label,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: fg,
-                            ),
+                          fontWeight: FontWeight.w700,
+                          color: fg,
+                        ),
                       ),
                       SizedBox(height: 4.h),
                       Text(
                         subtitle,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: subFg,
-                            ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelSmall?.copyWith(color: subFg),
                       ),
                     ],
                   ),
                 ),
                 Icon(
-                  selected
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
+                  selected ? Icons.check_circle : Icons.radio_button_unchecked,
                   size: 18.r,
                   color: selected ? Colors.white : Colors.grey.shade400,
                 ),
@@ -670,9 +789,17 @@ class _RequesterDetailsScreenState
     );
   }
 
-  Widget _buildSharedSections() {
+  Widget _buildSharedSections({required String otherUserName}) {
     final receiverAccessType =
         _request.approvedAccessType ?? _receiverAccessType;
+    final currentUser = ref.read(authProvider).user;
+    final isRequester = currentUser?.id == _request.requesterId;
+    final requesterTitle = isRequester
+        ? 'Shared by you'
+        : 'Shared by $otherUserName';
+    final receiverTitle = isRequester
+        ? 'Shared by $otherUserName'
+        : 'Shared by you';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -684,7 +811,7 @@ class _RequesterDetailsScreenState
         ),
         SizedBox(height: 10.h),
         _buildSharedSection(
-          title: 'Shared by requester',
+          title: requesterTitle,
           accessType: _request.requestAccessType,
           accounts: _request.requestAccessType == 'custom'
               ? _requesterSharedAccounts
@@ -693,7 +820,7 @@ class _RequesterDetailsScreenState
         ),
         SizedBox(height: 12.h),
         _buildSharedSection(
-          title: 'Shared by receiver',
+          title: receiverTitle,
           accessType: receiverAccessType,
           accounts: receiverAccessType == 'custom'
               ? _receiverSharedAccounts
@@ -849,6 +976,53 @@ class _RequesterDetailsScreenState
     );
   }
 
+  Future<void> _handleCancelRevoke() async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+
+    final updated = await ref
+        .read(accessRequestProvider.notifier)
+        .cancelRevoke(_request.id);
+
+    if (!mounted) return;
+
+    if (updated != null) {
+      setState(() {
+        _localStatus = updated.status;
+        _localApprovedAccessType = updated.approvedAccessType;
+        _isProcessing = false;
+      });
+
+      await _fetchRequestAccounts();
+
+      final currentUser = ref.read(authProvider).user;
+      if (currentUser != null) {
+        await Future.wait([
+          ref.read(accessRequestProvider.notifier).loadReceivedRequests(
+                currentUser.id,
+              ),
+          ref.read(accessRequestProvider.notifier).loadSentRequests(
+                currentUser.id,
+              ),
+        ]);
+      }
+
+      if (!mounted) return;
+      AppSnackBar.success(context, 'Access restored.');
+      ref.invalidate(
+        latestRequestBetweenProvider((
+          _request.requesterId,
+          _request.receiverId,
+        )),
+      );
+    } else {
+      final msg =
+          ref.read(accessRequestProvider).error ?? 'Unable to cancel revoke';
+      setState(() => _isProcessing = false);
+      AppSnackBar.error(context, msg);
+    }
+  }
+
   Future<void> _handleAction({required bool approve}) async {
     if (_isProcessing) return;
 
@@ -932,4 +1106,10 @@ class _RequesterDetailsScreenState
     if (user.displayName.isNotEmpty) return user.displayName;
     return user.username;
   }
+}
+
+String _displayuserName(User user) {
+  if ((user.username ?? '').isNotEmpty) return user.username;
+  if (user.username.isNotEmpty) return user.username;
+  return user.username;
 }

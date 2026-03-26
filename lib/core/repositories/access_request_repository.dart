@@ -92,7 +92,7 @@ class AccessRequestRepository {
     List<String> selectedAccountIds = const [],
   }) async {
     try {
-      final updated = await accessService.updateStatus(
+      final updated = await accessService.patchRequest(
         requestId: requestId,
         status: 'approved',
         approvedAccessType: approvedAccessType,
@@ -114,7 +114,7 @@ class AccessRequestRepository {
   /// Reject an access request
   Future<AccessRequest> rejectRequest(String requestId) async {
     try {
-      return await accessService.updateStatus(
+      return await accessService.patchRequest(
         requestId: requestId,
         status: 'rejected',
       );
@@ -149,5 +149,127 @@ class AccessRequestRepository {
       accessRequestId: requestId,
       side: side,
     );
+  }
+
+  Future<AccessRequest> patchRequest({
+    required String requestId,
+    String? status,
+    String? requestAccessType,
+    String? approvedAccessType,
+  }) {
+    return accessService.patchRequest(
+      requestId: requestId,
+      status: status,
+      requestAccessType: requestAccessType,
+      approvedAccessType: approvedAccessType,
+    );
+  }
+
+  Future<void> deleteAccountsForSide({
+    required String requestId,
+    required String side,
+  }) {
+    return accessService.deleteAccountsForSide(
+      accessRequestId: requestId,
+      side: side,
+    );
+  }
+
+  Future<void> deleteRequestAccount(String accountLinkId) {
+    return accessService.deleteRequestAccountById(accountLinkId);
+  }
+
+  /// Update access type for a side and sync selected accounts.
+  Future<AccessRequest> updateAccessTypeAndAccounts({
+    required String requestId,
+    required bool isRequesterSide,
+    required String accessType, // full | custom
+    List<String> selectedAccountIds = const [],
+  }) async {
+    try {
+      final side = isRequesterSide ? 'requester' : 'receiver';
+      final updated = await accessService.patchRequest(
+        requestId: requestId,
+        requestAccessType: isRequesterSide ? accessType : null,
+        approvedAccessType: isRequesterSide ? null : accessType,
+      );
+
+      if (accessType == 'full') {
+        await accessService.deleteAccountsForSide(
+          accessRequestId: requestId,
+          side: side,
+        );
+        return updated;
+      }
+
+      final current = await accessService.getRequestAccounts(
+        accessRequestId: requestId,
+        side: side,
+      );
+      final currentIds = current
+          .map((a) => a.financialAccount.id)
+          .where((id) => id.isNotEmpty)
+          .toSet();
+      final desired = selectedAccountIds.toSet();
+
+      final toRemove = current
+          .where((a) => !desired.contains(a.financialAccount.id))
+          .map((a) => a.id)
+          .toList();
+      final toAdd = desired.difference(currentIds).toList();
+
+      for (final linkId in toRemove) {
+        await accessService.deleteRequestAccountById(linkId);
+      }
+      if (toAdd.isNotEmpty) {
+        await accessService.addRequestAccounts(
+          accessRequestId: requestId,
+          accountIds: toAdd,
+          side: side,
+        );
+      }
+      return updated;
+    } catch (e) {
+      throw ApiException(
+        message: 'Failed to update access type: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<AccessRequest> revokeAccess({
+    required String requestId,
+    required bool isRequesterSide,
+    required String currentUserId,
+  }) async {
+    try {
+      // Unified revoked status; revoker tracked via revoked_by.
+      final updated = await accessService.patchRequest(
+        requestId: requestId,
+        status: AccessStatus.revoked.apiValue,
+        revokedByUserId: currentUserId,
+      );
+      return updated;
+    } catch (e) {
+      throw ApiException(
+        message: 'Failed to revoke access: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<AccessRequest> cancelRevoke({
+    required String requestId,
+  }) async {
+    try {
+      // Restores access; backend keeps account links intact.
+      return await accessService.patchRequest(
+        requestId: requestId,
+        status: AccessStatus.approved.apiValue,
+        clearRevokedBy: true,
+      );
+    } catch (e) {
+      throw ApiException(
+        message: 'Failed to cancel revoke: ${e.toString()}',
+      );
+    }
   }
 }

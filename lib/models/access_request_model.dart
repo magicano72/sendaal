@@ -1,13 +1,26 @@
 import '../utils/date_utils.dart';
 
 /// Status of an access request
+///
+/// Enum names stay camelCase for readability while [apiValue] matches the
+/// Directus values we send/receive (snake_case).
 enum AccessStatus {
-  pending,
-  approved,
-  rejected;
+  pending('pending'),
+  approved('approved'),
+  rejected('rejected'),
+  cancelled('cancelled'),
+  revoked('revoked'),
+  revokedByRequester('revoked_by_requester'),
+  revokedByReceiver('revoked_by_receiver');
 
-  static AccessStatus fromString(String value) => AccessStatus.values
-      .firstWhere((e) => e.name == value, orElse: () => AccessStatus.pending);
+  final String apiValue;
+  const AccessStatus(this.apiValue);
+
+  static AccessStatus fromString(String value) =>
+      AccessStatus.values.firstWhere(
+        (e) => e.apiValue == value || e.name == value,
+        orElse: () => AccessStatus.pending,
+      );
 }
 
 class AccessRequest {
@@ -22,6 +35,7 @@ class AccessRequest {
   final bool isFavorite;
   final String requestAccessType; // "full" | "custom"
   final String? approvedAccessType; // "full" | "custom" | null
+  final String? revokedByUserId;
 
   const AccessRequest({
     required this.id,
@@ -35,6 +49,7 @@ class AccessRequest {
     this.isFavorite = false,
     this.requestAccessType = 'full',
     this.approvedAccessType,
+    this.revokedByUserId,
   });
 
   factory AccessRequest.fromJson(Map<String, dynamic> json) => AccessRequest(
@@ -63,23 +78,25 @@ class AccessRequest {
     approvedAccessType:
         (json['approved_access_type'] ?? json['approvedAccessType'])
             ?.toString(),
+    revokedByUserId:
+        _extractId(json['revoked_by']) ?? json['revokedBy']?.toString(),
   );
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'requester': requesterId,
     'receiver': receiverId,
-    'status': status.name,
+    'status': status.apiValue,
     'created_at': createdAt.toIso8601String().split('T')[0],
     'visible_for_requester': visibleForRequester,
     'visible_for_receiver': visibleForReceiver,
     'is_favorite': isFavorite,
     'request_access_type': requestAccessType,
     'approved_access_type': approvedAccessType,
+    if (revokedByUserId != null) 'revoked_by': revokedByUserId,
   };
 
-  bool get canHide =>
-      status == AccessStatus.approved || status == AccessStatus.rejected;
+  bool get canHide => status != AccessStatus.pending;
 
   AccessRequest copyWith({
     String? id,
@@ -93,6 +110,7 @@ class AccessRequest {
     bool? isFavorite,
     String? requestAccessType,
     String? approvedAccessType,
+    String? revokedByUserId,
   }) => AccessRequest(
     id: id ?? this.id,
     requesterId: requesterId ?? this.requesterId,
@@ -105,7 +123,22 @@ class AccessRequest {
     isFavorite: isFavorite ?? this.isFavorite,
     requestAccessType: requestAccessType ?? this.requestAccessType,
     approvedAccessType: approvedAccessType ?? this.approvedAccessType,
+    revokedByUserId: revokedByUserId ?? this.revokedByUserId,
   );
+
+  /// True when either side has revoked access.
+  bool get isRevoked =>
+      status == AccessStatus.revoked ||
+      status == AccessStatus.revokedByRequester ||
+      status == AccessStatus.revokedByReceiver;
+
+  /// Returns the user id that performed the revoke, if known.
+  String? get revokerId {
+    if (revokedByUserId != null) return revokedByUserId;
+    if (status == AccessStatus.revokedByRequester) return requesterId;
+    if (status == AccessStatus.revokedByReceiver) return receiverId;
+    return null;
+  }
 
   static String? _extractId(dynamic value) {
     if (value is Map<String, dynamic>) {
@@ -155,3 +188,6 @@ class Contact {
     'matched_user': matchedUserId,
   };
 }
+
+/// Backwards alias to align with API naming in docs.
+typedef AccessRequestStatus = AccessStatus;

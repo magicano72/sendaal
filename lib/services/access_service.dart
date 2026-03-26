@@ -37,16 +37,37 @@ class AccessService {
   /// Approve or reject an incoming request
   Future<AccessRequest> updateStatus({
     required String requestId,
-    required String status, // 'approved' | 'rejected'
+    required String status, // 'approved' | 'rejected' | custom statuses
     String? approvedAccessType,
   }) async {
+    return patchRequest(
+      requestId: requestId,
+      status: status,
+      approvedAccessType: approvedAccessType,
+    );
+  }
+
+  /// Generic patch for an access request (status/access types)
+  Future<AccessRequest> patchRequest({
+    required String requestId,
+    String? status,
+    String? requestAccessType,
+    String? approvedAccessType,
+    String? revokedByUserId,
+    bool clearRevokedBy = false,
+  }) async {
+    final body = <String, dynamic>{
+      if (status != null) 'status': status,
+      if (requestAccessType != null) 'request_access_type': requestAccessType,
+      if (approvedAccessType != null)
+        'approved_access_type': approvedAccessType,
+      if (revokedByUserId != null) 'revoked_by': revokedByUserId,
+      if (clearRevokedBy) 'revoked_by': null,
+    };
+
     final response = await _api.patch(
       Endpoints.accessRequestById(requestId),
-      body: {
-        'status': status,
-        if (approvedAccessType != null)
-          'approved_access_type': approvedAccessType,
-      },
+      body: body,
     );
     return AccessRequest.fromJson(response['data'] as Map<String, dynamic>);
   }
@@ -175,6 +196,28 @@ class AccessService {
     return AccessRequest.fromJson(list.first as Map<String, dynamic>);
   }
 
+  /// Find the most recent access request between two users (any status).
+  Future<AccessRequest?> getLatestRequestBetween({
+    required String userA,
+    required String userB,
+  }) async {
+    final response = await _api.get(
+      Endpoints.accessRequests,
+      queryParams: {
+        'filter[_or][0][_and][0][requester][_eq]': userA,
+        'filter[_or][0][_and][1][receiver][_eq]': userB,
+        'filter[_or][1][_and][0][requester][_eq]': userB,
+        'filter[_or][1][_and][1][receiver][_eq]': userA,
+        'sort': '-created_at',
+        'limit': '1',
+      },
+    );
+
+    final list = response['data'] as List<dynamic>? ?? [];
+    if (list.isEmpty) return null;
+    return AccessRequest.fromJson(list.first as Map<String, dynamic>);
+  }
+
   /// Find active request (pending or approved) between requester and receiver
   /// Only one active request allowed per sender → receiver pair
   Future<AccessRequest?> getActiveRequest({
@@ -202,6 +245,53 @@ class AccessService {
   /// Delete/Cancel an access request
   Future<void> deleteRequest(String requestId) async {
     await _api.delete(Endpoints.accessRequestById(requestId));
+  }
+
+  /// Fetch access_request_account IDs for a given side.
+  Future<List<String>> getAccountLinkIdsForSide({
+    required String accessRequestId,
+    required String side,
+  }) async {
+    final response = await _api.get(
+      Endpoints.accessRequestAccounts,
+      queryParams: {
+        'fields': 'id',
+        'filter[access_request][_eq]': accessRequestId,
+        'filter[side][_eq]': side,
+      },
+    );
+
+    final data = response['data'];
+    if (data is List) {
+      return data
+          .map((e) => e['id'])
+          .where((id) => id != null)
+          .map((id) => id.toString())
+          .toList();
+    }
+    return [];
+  }
+
+  /// Delete all account links for a given side using Directus keys payload.
+  Future<void> deleteAccountsForSide({
+    required String accessRequestId,
+    required String side,
+  }) async {
+    final ids = await getAccountLinkIdsForSide(
+      accessRequestId: accessRequestId,
+      side: side,
+    );
+    if (ids.isEmpty) return;
+
+    await _api.delete(
+      Endpoints.accessRequestAccounts,
+      body: ids,
+    );
+  }
+
+  /// Delete a specific access_request_accounts row.
+  Future<void> deleteRequestAccountById(String accountLinkId) async {
+    await _api.delete('${Endpoints.accessRequestAccounts}/$accountLinkId');
   }
 
   /// Hide a request for the requester (UI clear)

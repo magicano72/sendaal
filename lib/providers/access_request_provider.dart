@@ -58,6 +58,19 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
   AccessRequestNotifier(this._repository, this._ref)
     : super(const AccessRequestsState());
 
+  void _updateRequestInState(AccessRequest updated) {
+    state = state.copyWith(
+      receivedRequests: [
+        for (final req in state.receivedRequests)
+          if (req.id == updated.id) updated else req,
+      ],
+      sentRequests: [
+        for (final req in state.sentRequests)
+          if (req.id == updated.id) updated else req,
+      ],
+    );
+  }
+
   /// Load all received access requests for current user
   Future<void> loadReceivedRequests(String userId) async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -307,8 +320,6 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
       );
 
       final service = _ref.read(accessServiceProvider);
-
-      // Find the pending request
       final pendingRequest = await service.getPendingRequest(
         requesterId: requesterId,
         receiverId: receiverId,
@@ -319,17 +330,19 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
         return false;
       }
 
-      // Delete the request
-      await service.deleteRequest(pendingRequest.id);
-      print('[AccessRequestNotifier] Request cancelled: ${pendingRequest.id}');
-
-      // Remove from sent requests list
-      state = state.copyWith(
-        sentRequests: [
-          for (final req in state.sentRequests)
-            if (req.id != pendingRequest.id) req,
-        ],
+      final updated = await _repository.patchRequest(
+        requestId: pendingRequest.id,
+        status: AccessStatus.cancelled.apiValue,
       );
+
+      if (pendingRequest.requestAccessType == 'custom') {
+        await _repository.deleteAccountsForSide(
+          requestId: pendingRequest.id,
+          side: 'requester',
+        );
+      }
+
+      _updateRequestInState(updated);
 
       // Invalidate sentRequestsProvider to refresh UI
       _ref.invalidate(sentRequestsProvider);
@@ -421,6 +434,66 @@ class AccessRequestNotifier extends StateNotifier<AccessRequestsState> {
       return [];
     }
   }
+
+  /// Update access type + account selection for the current user's side.
+  Future<AccessRequest?> updateAccessType({
+    required AccessRequest request,
+    required bool isRequesterSide,
+    required String accessType,
+    List<String> selectedAccountIds = const [],
+  }) async {
+    try {
+      final updated = await _repository.updateAccessTypeAndAccounts(
+        requestId: request.id,
+        isRequesterSide: isRequesterSide,
+        accessType: accessType,
+        selectedAccountIds: selectedAccountIds,
+      );
+      _updateRequestInState(updated);
+      return updated;
+    } catch (e) {
+      state = state.copyWith(
+        error: e is ApiException ? e.message : e.toString(),
+      );
+      return null;
+    }
+  }
+
+  /// Revoke access for the caller's side.
+  Future<AccessRequest?> revokeAccess({
+    required AccessRequest request,
+    required bool isRequesterSide,
+    required String currentUserId,
+  }) async {
+    try {
+      final updated = await _repository.revokeAccess(
+        requestId: request.id,
+        isRequesterSide: isRequesterSide,
+        currentUserId: currentUserId,
+      );
+      _updateRequestInState(updated);
+      return updated;
+    } catch (e) {
+      state = state.copyWith(
+        error: e is ApiException ? e.message : e.toString(),
+      );
+      return null;
+    }
+  }
+
+  /// Cancel a revoke (revoker only) and restore approved status.
+  Future<AccessRequest?> cancelRevoke(String requestId) async {
+    try {
+      final updated = await _repository.cancelRevoke(requestId: requestId);
+      _updateRequestInState(updated);
+      return updated;
+    } catch (e) {
+      state = state.copyWith(
+        error: e is ApiException ? e.message : e.toString(),
+      );
+      return null;
+    }
+  }
 }
 
 /// Provider for access request state
@@ -453,6 +526,21 @@ final hasAccessToAccountsProvider = FutureProvider.family<bool, String>((
     return false;
   }
 });
+
+/// Latest access request between two users (any direction/status).
+final latestRequestBetweenProvider =
+    FutureProvider.autoDispose.family<AccessRequest?, (String, String)>((
+      ref,
+      params,
+    ) async {
+      final (userA, userB) = params;
+      final service = ref.read(accessServiceProvider);
+      try {
+        return await service.getLatestRequestBetween(userA: userA, userB: userB);
+      } catch (_) {
+        return null;
+      }
+    });
 
 /// Get a specific access request by ID
 final getAccessRequestProvider = FutureProvider.family<AccessRequest?, String>((

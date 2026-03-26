@@ -20,6 +20,8 @@ import '../../widgets/delete_confirmation_dialog.dart';
 import '../../widgets/provider_logo.dart';
 import 'account_form_screen.dart';
 
+part 'widgets/accounts_empty_state.dart';
+
 /// Dedicated Accounts screen for managing payment accounts.
 class AccountsScreen extends ConsumerStatefulWidget {
   const AccountsScreen({super.key});
@@ -439,11 +441,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                       title: 'No accounts match your search',
                       subtitle: 'Try a different provider or country name.',
                     )
-                  : const EmptyState(
-                      icon: Icons.account_balance_wallet_outlined,
-                      title: 'No accounts yet',
-                      subtitle: 'Add your first account to get started.',
-                    )
+                  : const AccountsEmptyState()
             else ...[
               if (favouriteAccounts.isNotEmpty) ...[
                 // Padding(

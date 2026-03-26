@@ -264,11 +264,19 @@ class ApiClient {
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
-  Future<dynamic> delete(String path) async {
+  Future<dynamic> delete(
+    String path, {
+    Map<String, String>? queryParams,
+    dynamic body,
+  }) async {
     try {
       return await _sendWithRefreshRetry(
         () => http
-            .delete(_buildUri(path), headers: _headers)
+            .delete(
+              _buildUri(path, queryParams),
+              headers: _headers,
+              body: body != null ? jsonEncode(body) : null,
+            )
             .timeout(_timeout),
       );
     } on SocketException {

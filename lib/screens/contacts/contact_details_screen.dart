@@ -3,12 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../models/access_request_model.dart';
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/text_style.dart';
 import '../../providers/account_provider.dart';
+import '../../providers/access_request_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/app_widgets.dart';
+import '../requests/status_banar.dart';
 
 class ContactDetailsScreen extends ConsumerWidget {
   final User contact;
@@ -17,6 +21,12 @@ class ContactDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(authProvider).user;
+    final latestRequestAsync = currentUser == null
+        ? const AsyncValue<AccessRequest?>.data(null)
+        : ref.watch(
+            latestRequestBetweenProvider((currentUser.id, contact.id)),
+          );
     final accountsAsync = ref.watch(approvedAccountsProvider(contact.id));
 
     return Scaffold(
@@ -74,13 +84,17 @@ class ContactDetailsScreen extends ConsumerWidget {
               onRetry: () => ref.refresh(approvedAccountsProvider(contact.id)),
             ),
             data: (result) {
+              final latest = latestRequestAsync.value;
+              final isRevoked = latest?.isRevoked == true;
+              final isRevoker =
+                  isRevoked && latest?.revokerId == currentUser?.id;
+
+              if (isRevoked) {
+                return _buildAccessDeniedCard(isRevoker);
+              }
+
               if (!result.hasAccess) {
-                return const EmptyState(
-                  icon: Icons.lock_outline,
-                  title: 'Access not approved',
-                  subtitle:
-                      'You can view accounts once an access request is approved.',
-                );
+                return _buildAccessNotApproved();
               }
 
               final visible = result.accounts
@@ -204,6 +218,45 @@ class ContactDetailsScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAccessDeniedCard(bool isRevoker) {
+    return Column(
+      children: [
+        StatusBanner(status: AccessStatus.revoked),
+        SizedBox(height: 10.h),
+        Card(
+          child: Padding(
+            padding: EdgeInsets.all(14.w),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.block, color: Colors.redAccent, size: 20.r),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Text(
+                    isRevoker
+                        ? 'You revoked access for this contact. Cancel revoke from the requests screen to restore visibility.'
+                        : 'Access to this contact is revoked. No data is available.',
+                    style: TextStyles.label.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAccessNotApproved() {
+    return const EmptyState(
+      icon: Icons.lock_outline,
+      title: 'Access not approved',
+      subtitle: 'You can view accounts once an access request is approved.',
     );
   }
 

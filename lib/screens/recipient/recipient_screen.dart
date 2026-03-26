@@ -16,6 +16,7 @@ import '../../providers/account_provider.dart';
 import '../../services/smart_split_service.dart';
 import '../../widgets/access_request_widget.dart';
 import '../../widgets/app_widgets.dart';
+import '../requests/status_banar.dart';
 
 String _preferredName(User user) {
   if (user.firstName?.isNotEmpty ?? false) return user.firstName!;
@@ -40,6 +41,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
   final _amountCtrl = TextEditingController();
   String? _amountError;
   bool _isRequestingAccess = false;
+  bool _isRevocationProcessing = false;
   String? _selectedCurrency;
 
   @override
@@ -246,11 +248,19 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(authProvider).user;
+    final latestRequestAsync = currentUser == null
+        ? const AsyncValue<AccessRequest?>.data(null)
+        : ref.watch(
+            latestRequestBetweenProvider(
+              (currentUser.id, widget.recipient.id),
+            ),
+          );
 
-    // Prevent viewing own account – redirect to profile.
+    // Prevent viewing own account - redirect to profile.
     if (currentUser != null && currentUser.id == widget.recipient.id) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -268,71 +278,205 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
       );
     }
 
-    final accountsAsync =
-        ref.watch(approvedAccountsProvider(widget.recipient.id));
-
     return Scaffold(
       appBar: AppBar(title: Text(_preferredName(widget.recipient))),
-      body: accountsAsync.when(
+      body: latestRequestAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: ErrorBanner(message: 'Could not load accounts: $e'),
+          child: ErrorBanner(message: 'Could not load status: $e'),
         ),
-        data: (result) {
-          if (!result.hasAccess) {
-            return _buildAccessRestrictedUI(context, currentUser);
+        data: (latest) {
+          final isRevoked = latest?.isRevoked == true;
+          final isRevoker = isRevoked &&
+              currentUser != null &&
+              latest?.revokerId == currentUser.id;
+
+          if (isRevoked && latest != null) {
+            return _buildRevokedRecipientUI(
+              context,
+              request: latest,
+              isRevoker: isRevoker,
+            );
           }
 
-          final visible = result.accounts.where((a) => a.isVisible).toList();
-          const order = {'high': 0, 'medium': 1, 'low': 2};
-          visible.sort((a, b) {
-            final pa = order[a.priority.name] ?? 1;
-            final pb = order[b.priority.name] ?? 1;
-            if (pa != pb) return pa.compareTo(pb);
-            final ca = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-            final cb = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-            return ca.compareTo(cb);
-          });
 
-          final currencies = <String>[];
-          for (final account in visible) {
-            final currency = (account.currency?.isNotEmpty == true)
-                ? account.currency!
-                : 'EGP';
-            if (!currencies.contains(currency)) {
-              currencies.add(currency);
-            }
-          }
+          final accountsAsync =
+              ref.watch(approvedAccountsProvider(widget.recipient.id));
 
-          var selected = _selectedCurrency;
-          if (currencies.isNotEmpty &&
-              (selected == null || !currencies.contains(selected))) {
-            selected = currencies.first;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) setState(() => _selectedCurrency = selected);
-            });
-          }
+          return accountsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: ErrorBanner(message: 'Could not load accounts: $e'),
+            ),
+            data: (result) {
+              if (!result.hasAccess) {
+                return _buildAccessRestrictedUI(context, currentUser);
+              }
 
-          final filtered = selected == null
-              ? <FinancialAccount>[]
-              : visible
-                  .where((a) =>
-                      (a.currency?.isNotEmpty == true
-                          ? a.currency!
-                          : 'EGP') ==
-                      selected)
-                  .toList();
+              final visible =
+                  result.accounts.where((a) => a.isVisible).toList();
+              const order = {'high': 0, 'medium': 1, 'low': 2};
+              visible.sort((a, b) {
+                final pa = order[a.priority.name] ?? 1;
+                final pb = order[b.priority.name] ?? 1;
+                if (pa != pb) return pa.compareTo(pb);
+                final ca =
+                    a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                final cb =
+                    b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+                return ca.compareTo(cb);
+              });
 
-          return _buildAccessGrantedBody(
-            context,
-            visible: visible,
-            filtered: filtered,
-            currencies: currencies,
-            selectedCurrency: selected,
+              final currencies = <String>[];
+              for (final account in visible) {
+                final currency = (account.currency?.isNotEmpty == true)
+                    ? account.currency!
+                    : 'EGP';
+                if (!currencies.contains(currency)) {
+                  currencies.add(currency);
+                }
+              }
+
+              var selected = _selectedCurrency;
+              if (currencies.isNotEmpty &&
+                  (selected == null || !currencies.contains(selected))) {
+                selected = currencies.first;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _selectedCurrency = selected);
+                });
+              }
+
+              final filtered = selected == null
+                  ? <FinancialAccount>[]
+                  : visible
+                      .where((a) =>
+                          (a.currency?.isNotEmpty == true
+                              ? a.currency!
+                              : 'EGP') ==
+                          selected)
+                      .toList();
+
+              return _buildAccessGrantedBody(
+                context,
+                visible: visible,
+                filtered: filtered,
+                currencies: currencies,
+                selectedCurrency: selected,
+              );
+            },
           );
         },
       ),
     );
+  }
+
+
+  Widget _buildRevokedRecipientUI(
+    BuildContext context, {
+    required AccessRequest request,
+    required bool isRevoker,
+  }) {
+    return ListView(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      children: [
+        _RecipientHeader(recipient: widget.recipient),
+        SizedBox(height: 12.h),
+        StatusBanner(status: request.status),
+        SizedBox(height: 12.h),
+        Card(
+          child: Padding(
+            padding: EdgeInsets.all(14.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Access Denied',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.redAccent,
+                      ),
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  isRevoker
+                      ? 'You revoked this connection. Cancel revoke to restore access and visibility.'
+                      : 'This connection has been revoked. You cannot view any accounts.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (isRevoker) ...[
+          SizedBox(height: 12.h),
+          FilledButton(
+            onPressed: _isRevocationProcessing
+                ? null
+                : () => _cancelRevokeFromRecipient(request.id),
+            style: FilledButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 14.h),
+              backgroundColor: AppTheme.primary,
+            ),
+            child: _isRevocationProcessing
+                ? SizedBox(
+                    height: 18.r,
+                    width: 18.r,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Cancel Revoke'),
+          ),
+        ],
+      ],
+    );
+  }
+
+
+  Future<void> _cancelRevokeFromRecipient(String requestId) async {
+    if (_isRevocationProcessing) return;
+    setState(() => _isRevocationProcessing = true);
+
+    final updated = await ref
+        .read(accessRequestProvider.notifier)
+        .cancelRevoke(requestId);
+
+    if (!mounted) return;
+
+    setState(() => _isRevocationProcessing = false);
+
+    if (updated != null) {
+      final currentUser = ref.read(authProvider).user;
+      if (currentUser != null) {
+        await Future.wait([
+          ref.read(accessRequestProvider.notifier).loadSentRequests(
+                currentUser.id,
+              ),
+          ref.read(accessRequestProvider.notifier).loadReceivedRequests(
+                currentUser.id,
+              ),
+        ]);
+      }
+
+      ref.invalidate(
+        latestRequestBetweenProvider((
+          currentUser?.id ?? '',
+          widget.recipient.id,
+        )),
+      );
+      ref.invalidate(approvedAccountsProvider(widget.recipient.id));
+
+      if (mounted) {
+        AppSnackBar.success(context, 'Access restored');
+      }
+    } else {
+      final err =
+          ref.read(accessRequestProvider).error ?? 'Failed to cancel revoke';
+      AppSnackBar.error(context, err);
+    }
   }
 
   // ── Body when access is granted ──────────────────────────────────────────

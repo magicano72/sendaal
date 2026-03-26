@@ -9,6 +9,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
   final String description;
   final String confirmLabel;
   final String cancelLabel;
+  final Color? confirmColor;
 
   const DeleteConfirmationDialog({
     super.key,
@@ -16,6 +17,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
     required this.description,
     this.confirmLabel = 'Delete',
     this.cancelLabel = 'Cancel',
+    this.confirmColor,
   });
 
   @override
@@ -88,7 +90,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
                 child: FilledButton(
                   onPressed: () => Navigator.of(context).pop(true),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.error,
+                    backgroundColor: confirmColor ?? AppTheme.error,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14.r),
                     ),

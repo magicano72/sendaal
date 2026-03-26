@@ -12,16 +12,30 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color color;
+    late final Color color;
+    late final String label;
     switch (status) {
       case AccessStatus.pending:
         color = Colors.orange;
+        label = 'PENDING';
         break;
       case AccessStatus.approved:
         color = Colors.green;
+        label = 'APPROVED';
         break;
       case AccessStatus.rejected:
         color = Colors.red;
+        label = 'REJECTED';
+        break;
+      case AccessStatus.cancelled:
+        color = Colors.redAccent;
+        label = 'CANCELLED';
+        break;
+      case AccessStatus.revoked:
+      case AccessStatus.revokedByReceiver:
+      case AccessStatus.revokedByRequester:
+        color = Colors.redAccent;
+        label = 'REVOKED';
         break;
     }
 
@@ -33,11 +47,8 @@ class StatusChip extends StatelessWidget {
         border: Border.all(color: color.withOpacity(0.35)),
       ),
       child: Text(
-        status.name.toUpperCase(),
-        style: TextStyles.captionBold.copyWith(
-          color: color,
-          fontSize: 12.sp,
-        ),
+        label,
+        style: TextStyles.captionBold.copyWith(color: color, fontSize: 12.sp),
       ),
     );
   }
@@ -65,6 +76,20 @@ class StatusBanner extends StatelessWidget {
       case AccessStatus.rejected:
         bannerColor = AppTheme.error;
         message = 'Request rejected.';
+        break;
+      case AccessStatus.cancelled:
+        bannerColor = AppTheme.error;
+        message = 'Request cancelled.';
+        break;
+      case AccessStatus.revoked:
+      case AccessStatus.revokedByReceiver:
+      case AccessStatus.revokedByRequester:
+        bannerColor = AppTheme.error;
+        message = 'Access revoked';
+        break;
+      default:
+        bannerColor = AppTheme.accent;
+        message = 'Unknown status.';
         break;
     }
 

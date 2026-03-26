@@ -6,9 +6,11 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../core/models/user_model.dart';
 import '../core/router/app_router.dart';
+import '../core/theme/app_theme.dart';
 import '../core/theme/text_style.dart';
 import '../models/access_request_model.dart';
 import '../providers/access_request_provider.dart';
+import '../providers/account_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import '../utils/format_util.dart';
@@ -29,23 +31,30 @@ class AccessRequestCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isPending = request.status == AccessStatus.pending;
     final currentUser = ref.watch(authProvider).user;
+    final isPending = request.status == AccessStatus.pending;
+    final isApproved = request.status == AccessStatus.approved;
+    final isRevoked = request.isRevoked;
 
     // Fetch user info (requester if received, receiver if sent)
     final userIdToFetch = isReceived ? request.requesterId : request.receiverId;
     final isRequester = currentUser?.id == request.requesterId;
     final isReceiver = currentUser?.id == request.receiverId;
+    final isRevoker =
+        (request.revokerId != null && request.revokerId == currentUser?.id);
 
     final canOpenDetails = () {
-      if (isRequester) return request.status == AccessStatus.approved;
+      if (isRevoked && !isRevoker) return false;
+      if (isRequester) {
+        return request.status == AccessStatus.approved || isRevoker;
+      }
       if (isReceiver) return userIdToFetch.isNotEmpty;
       return false;
     }();
 
-    final showActions = isReceived && isPending && isReceiver;
+    final showPendingActions = isPending && isRequester;
+    final showManageActions = isApproved && (isRequester || isReceiver);
     final userAsync = ref.watch(userProvider(userIdToFetch));
-    //final formattedDate = FormatUtils.formatDateTime(request.createdAt);
 
     return userAsync.when(
       loading: () => ShimmerCard(height: 150.h),
@@ -56,7 +65,12 @@ class AccessRequestCard extends ConsumerWidget {
         firstName: null,
         avatarUrl: null,
         canOpenDetails: canOpenDetails,
-        showActions: showActions,
+        showPendingActions: showPendingActions,
+        showManageActions: showManageActions,
+        isRequester: isRequester,
+        isReceiver: isReceiver,
+        isRevoked: isRevoked,
+        isRevoker: isRevoker,
       ),
       data: (User user) => _buildCard(
         context,
@@ -67,7 +81,12 @@ class AccessRequestCard extends ConsumerWidget {
         firstName: user.firstName,
         avatarUrl: user.avatarUrl,
         canOpenDetails: canOpenDetails,
-        showActions: showActions,
+        showPendingActions: showPendingActions,
+        showManageActions: showManageActions,
+        isRequester: isRequester,
+        isReceiver: isReceiver,
+        isRevoked: isRevoked,
+        isRevoker: isRevoker,
       ),
     );
   }
@@ -79,7 +98,12 @@ class AccessRequestCard extends ConsumerWidget {
     required String? firstName,
     required String? avatarUrl,
     required bool canOpenDetails,
-    required bool showActions,
+    required bool showPendingActions,
+    required bool showManageActions,
+    required bool isRequester,
+    required bool isReceiver,
+    required bool isRevoked,
+    required bool isRevoker,
   }) {
     final statusColor = _getStatusColor();
     final subtitle = isReceived
@@ -165,14 +189,18 @@ class AccessRequestCard extends ConsumerWidget {
                   ],
                 ),
                 SizedBox(height: 14.h),
-                showActions
-                    ? _buildActionButtons(context, ref)
-                    : _buildStatusFooter(
-                        context,
-                        ref,
-                        statusColor,
-                        canOpenDetails,
-                      ),
+                _buildActionArea(
+                  context,
+                  ref,
+                  statusColor: statusColor,
+                  canOpenDetails: canOpenDetails,
+                  showPendingActions: showPendingActions,
+                  showManageActions: showManageActions,
+                  isRequester: isRequester,
+                  isReceiver: isReceiver,
+                  isRevoked: isRevoked,
+                  isRevoker: isRevoker,
+                ),
               ],
             ),
           ),
@@ -189,11 +217,95 @@ class AccessRequestCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Text(
-        request.status.name.toUpperCase(),
+        _statusLabel(),
         style: TextStyles.captionBold.copyWith(
           fontSize: 11.sp,
           color: statusColor,
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionArea(
+    BuildContext context,
+    WidgetRef ref, {
+    required Color statusColor,
+    required bool canOpenDetails,
+    required bool showPendingActions,
+    required bool showManageActions,
+    required bool isRequester,
+    required bool isReceiver,
+    required bool isRevoked,
+    required bool isRevoker,
+  }) {
+    if (isRevoked) {
+      return _buildRevokedActions(context, ref, isRevoker);
+    }
+    if (showPendingActions) {
+      return _buildPendingActions(context, ref);
+    }
+    if (showManageActions) {
+      return _buildManageButton(context, ref, isRequesterSide: isRequester);
+    }
+
+    return _buildStatusFooter(
+      context,
+      ref,
+      statusColor,
+      canOpenDetails,
+      isRequester: isRequester,
+      isReceiver: isReceiver,
+    );
+  }
+
+  Widget _buildRevokedActions(
+    BuildContext context,
+    WidgetRef ref,
+    bool isRevoker,
+  ) {
+    if (isRevoker) {
+      return SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: () async {
+            final success = await ref
+                .read(accessRequestProvider.notifier)
+                .cancelRevoke(request.id);
+            if (!context.mounted) return;
+            if (success != null) {
+              AppSnackBar.success(context, 'Revoke cancelled');
+              ref.invalidate(
+                latestRequestBetweenProvider((
+                  request.requesterId,
+                  request.receiverId,
+                )),
+              );
+            } else {
+              final error =
+                  ref.read(accessRequestProvider).error ?? 'Failed to restore';
+              AppSnackBar.error(context, error);
+            }
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: AppTheme.primary,
+            padding: EdgeInsets.symmetric(vertical: 12.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+          ),
+          child: Text(
+            'Cancel Revoke',
+            style: TextStyles.bodySmallBold.copyWith(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 6.h),
+      child: Text(
+        'Access Denied',
+        style: TextStyles.labelBold.copyWith(color: Colors.red.shade600),
       ),
     );
   }
@@ -232,39 +344,67 @@ class AccessRequestCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
+  Widget _buildPendingActions(BuildContext context, WidgetRef ref) {
     return Row(
       children: [
         Expanded(
           child: FilledButton(
-            onPressed: () => _approveRequest(context, ref),
+            onPressed: () => _openEditSheet(context, ref),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2D7AE8),
+              backgroundColor: AppTheme.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18.r),
               ),
               padding: EdgeInsets.symmetric(vertical: 12.h),
             ),
-            child: Text('Approve', style: TextStyles.bodySmallBold),
+            child: Text('Edit', style: TextStyles.bodySmallBold),
           ),
         ),
         SizedBox(width: 12.w),
         Expanded(
           child: OutlinedButton(
-            onPressed: () => _rejectRequest(context, ref, request.id),
+            onPressed: () => _confirmCancel(context, ref),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF6B7280),
-              side: const BorderSide(color: Color(0xFFE5E7EB)),
+              foregroundColor: Colors.red.shade600,
+              side: BorderSide(color: Colors.red.shade200),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18.r),
               ),
               padding: EdgeInsets.symmetric(vertical: 12.h),
-              backgroundColor: const Color(0xFFF7F8FA),
+              backgroundColor: Colors.red.shade50,
             ),
-            child: Text('Decline', style: TextStyles.bodySmallBold),
+            child: Text('Cancel', style: TextStyles.bodySmallBold),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildManageButton(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool isRequesterSide,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () => _openManageSheet(context, ref, isRequesterSide),
+        icon: Icon(Icons.settings_outlined, size: 18.r),
+        label: Text(
+          'Manage',
+          style: TextStyles.bodySmallBold.copyWith(
+            color: const Color(0xFF1F2C3B),
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFD1D9E6)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+          backgroundColor: const Color(0xFFF9FBFF),
+        ),
+      ),
     );
   }
 
@@ -272,8 +412,10 @@ class AccessRequestCard extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     Color statusColor,
-    bool canOpenDetails,
-  ) {
+    bool canOpenDetails, {
+    required bool isRequester,
+    required bool isReceiver,
+  }) {
     if (request.status == AccessStatus.approved) {
       return SizedBox(
         width: double.infinity,
@@ -316,6 +458,32 @@ class AccessRequestCard extends ConsumerWidget {
       );
     }
 
+    if (request.status == AccessStatus.cancelled) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 4.h),
+        child: Text(
+          'Request cancelled by requester',
+          style: TextStyles.labelBold.copyWith(color: statusColor),
+        ),
+      );
+    }
+
+    if (request.status == AccessStatus.revoked ||
+        request.status == AccessStatus.revokedByRequester ||
+        request.status == AccessStatus.revokedByReceiver) {
+      //final who = request.status == AccessStatus.revokedByRequester
+      //     ? 'Requester'
+      //     : 'Receiver';
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 4.h),
+        child: Text(
+          //$who
+          'revoked access',
+          style: TextStyles.labelBold.copyWith(color: statusColor),
+        ),
+      );
+    }
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4.h),
       child: Text(
@@ -323,6 +491,404 @@ class AccessRequestCard extends ConsumerWidget {
             ? 'Request rejected'
             : 'Awaiting response',
         style: TextStyles.labelBold.copyWith(color: statusColor),
+      ),
+    );
+  }
+
+  Future<void> _confirmCancel(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => DeleteConfirmationDialog(
+        title: 'Cancel Request?',
+        description: 'Are you sure you want to cancel this request?',
+        confirmLabel: 'Cancel request',
+        cancelLabel: 'Keep request',
+        confirmColor: Colors.red,
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final success = await ref
+        .read(accessRequestProvider.notifier)
+        .cancelRequest(
+          requesterId: request.requesterId,
+          receiverId: request.receiverId,
+        );
+
+    if (!context.mounted) return;
+    if (success) {
+      AppSnackBar.success(context, 'Request cancelled');
+      final currentUser = ref.read(authProvider).user;
+      if (currentUser != null) {
+        await Future.wait([
+          ref
+              .read(accessRequestProvider.notifier)
+              .loadReceivedRequests(currentUser.id),
+          ref
+              .read(accessRequestProvider.notifier)
+              .loadSentRequests(currentUser.id),
+        ]);
+      }
+    } else {
+      AppSnackBar.error(context, 'Failed to cancel request');
+    }
+  }
+
+  Future<void> _openEditSheet(BuildContext context, WidgetRef ref) async {
+    await _openAccessEditor(
+      context,
+      ref,
+      isRequesterSide: true,
+      title: 'Edit access request',
+      initialAccessType: request.requestAccessType,
+      allowRevoke: false,
+    );
+  }
+
+  Future<void> _openManageSheet(
+    BuildContext context,
+    WidgetRef ref,
+    bool isRequesterSide,
+  ) async {
+    final initialAccessType = isRequesterSide
+        ? request.requestAccessType
+        : (request.approvedAccessType ?? 'full');
+
+    await _openAccessEditor(
+      context,
+      ref,
+      isRequesterSide: isRequesterSide,
+      title: 'Manage shared access',
+      initialAccessType: initialAccessType,
+      allowRevoke: true,
+    );
+  }
+
+  Future<void> _openAccessEditor(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool isRequesterSide,
+    required String title,
+    required String initialAccessType,
+    required bool allowRevoke,
+  }) async {
+    final currentUser = ref.read(authProvider).user;
+    if (currentUser == null) {
+      AppSnackBar.error(context, 'User not authenticated');
+      return;
+    }
+
+    await ref.read(accountsProvider.notifier).loadAccounts(currentUser.id);
+    final accountsState = ref.read(accountsProvider);
+    final side = isRequesterSide ? 'requester' : 'receiver';
+    final existingLinks = await ref
+        .read(accessRequestProvider.notifier)
+        .getRequestAccounts(requestId: request.id, side: side);
+
+    final selectedIds = existingLinks
+        .map((a) => a.financialAccount.id)
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    String accessType = initialAccessType.isNotEmpty
+        ? initialAccessType
+        : 'full';
+    String? errorText;
+    bool isSaving = false;
+
+    await showModalBottomSheet(
+      backgroundColor: AppColors.background,
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setState) {
+            final accounts = accountsState.accounts;
+            final isCustom = accessType == 'custom';
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+                left: 20.w,
+                right: 20.w,
+                top: 18.h,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 42.w,
+                    height: 4.h,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                  SizedBox(height: 14.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyles.bodyBold.copyWith(fontSize: 16.sp),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: isSaving
+                            ? null
+                            : () => Navigator.of(sheetContext).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  _accessTypeSelector(
+                    accessType: accessType,
+                    onChanged: (value) {
+                      setState(() {
+                        accessType = value;
+                        if (value == 'full') {
+                          selectedIds.clear();
+                          errorText = null;
+                        }
+                      });
+                    },
+                  ),
+                  SizedBox(height: 12.h),
+                  if (isCustom)
+                    _accountChecklist(accountsState, selectedIds, setState),
+                  if (errorText != null) ...[
+                    SizedBox(height: 10.h),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        errorText!,
+                        style: TextStyles.labelBold.copyWith(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: 16.h),
+                  FilledButton(
+                    onPressed: isSaving
+                        ? null
+                        : () async {
+                            if (accessType == 'custom' && selectedIds.isEmpty) {
+                              setState(
+                                () => errorText =
+                                    'Select at least one account or switch to Full access.',
+                              );
+                              return;
+                            }
+                            setState(() {
+                              isSaving = true;
+                              errorText = null;
+                            });
+
+                            final updated = await ref
+                                .read(accessRequestProvider.notifier)
+                                .updateAccessType(
+                                  request: request,
+                                  isRequesterSide: isRequesterSide,
+                                  accessType: accessType,
+                                  selectedAccountIds: isCustom
+                                      ? selectedIds.toList()
+                                      : const [],
+                                );
+                            if (!sheetContext.mounted) return;
+                            setState(() => isSaving = false);
+
+                            if (updated != null) {
+                              Navigator.of(sheetContext).pop();
+                              AppSnackBar.success(context, 'Access updated');
+                            } else {
+                              setState(
+                                () => errorText =
+                                    ref.read(accessRequestProvider).error ??
+                                    'Failed to update',
+                              );
+                            }
+                          },
+                    style: FilledButton.styleFrom(
+                      minimumSize: Size(double.infinity, 48.h),
+                      backgroundColor: AppTheme.primary,
+                    ),
+                    child: isSaving
+                        ? SizedBox(
+                            height: 18.r,
+                            width: 18.r,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Save changes'),
+                  ),
+                  if (allowRevoke) ...[
+                    SizedBox(height: 12.h),
+                    TextButton(
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              final confirmed = await _confirmRevoke(
+                                sheetContext,
+                              );
+                              if (confirmed != true) return;
+                              setState(() => isSaving = true);
+                              final currentUserId = ref
+                                  .read(authProvider)
+                                  .user
+                                  ?.id;
+                              if (currentUserId == null ||
+                                  currentUserId.isEmpty) {
+                                setState(() {
+                                  isSaving = false;
+                                  errorText = 'User not authenticated';
+                                });
+                                return;
+                              }
+                              final updated = await ref
+                                  .read(accessRequestProvider.notifier)
+                                  .revokeAccess(
+                                    request: request,
+                                    isRequesterSide: isRequesterSide,
+                                    currentUserId: currentUserId,
+                                  );
+                              if (!sheetContext.mounted) return;
+                              setState(() => isSaving = false);
+                              if (updated != null) {
+                                Navigator.of(sheetContext).pop();
+                                AppSnackBar.success(context, 'Access revoked');
+                                ref.invalidate(
+                                  latestRequestBetweenProvider((
+                                    request.requesterId,
+                                    request.receiverId,
+                                  )),
+                                );
+                              } else {
+                                setState(
+                                  () => errorText =
+                                      ref.read(accessRequestProvider).error ??
+                                      'Failed to revoke access',
+                                );
+                              }
+                            },
+                      child: Text(
+                        'Revoke access',
+                        style: TextStyles.bodySmallBold.copyWith(
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: 8.h),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _accessTypeSelector({
+    required String accessType,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: ChoiceChip(
+            label: const Text('Full'),
+            selected: accessType == 'full',
+            onSelected: (_) => onChanged('full'),
+          ),
+        ),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: ChoiceChip(
+            label: const Text('Custom'),
+            selected: accessType == 'custom',
+            onSelected: (_) => onChanged('custom'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _accountChecklist(
+    AccountsState accountsState,
+    Set<String> selectedIds,
+    void Function(void Function()) setState,
+  ) {
+    if (accountsState.isLoading) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.h),
+        child: const CircularProgressIndicator(),
+      );
+    }
+
+    if (accountsState.error != null) {
+      return Text(
+        accountsState.error!,
+        style: TextStyles.labelBold.copyWith(color: Colors.red),
+      );
+    }
+
+    if (accountsState.accounts.isEmpty) {
+      return Text(
+        'No accounts available to share.',
+        style: TextStyles.labelBold.copyWith(color: Colors.red),
+      );
+    }
+
+    return Column(
+      children: accountsState.accounts.map((account) {
+        final selected = selectedIds.contains(account.id);
+        return CheckboxListTile(
+          value: selected,
+          contentPadding: EdgeInsets.zero,
+          onChanged: (_) {
+            setState(() {
+              if (selected) {
+                selectedIds.remove(account.id);
+              } else {
+                selectedIds.add(account.id);
+              }
+            });
+          },
+          title: Text(
+            account.accountTitle.isNotEmpty
+                ? account.accountTitle
+                : account.providerName,
+            style: TextStyles.bodySmallBold,
+          ),
+          subtitle: Text(
+            account.accountIdentifier.isNotEmpty
+                ? account.accountIdentifier
+                : account.accountTypeName,
+            style: TextStyles.label,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Future<bool?> _confirmRevoke(BuildContext context) {
+    final contactName = isReceived ? 'Requester' : 'Receiver';
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => DeleteConfirmationDialog(
+        title: 'Revoke access?',
+        description:
+            'Are you sure you want to revoke access? $contactName will no longer see your accounts.',
+        confirmLabel: 'Revoke',
+        cancelLabel: 'Keep access',
+        confirmColor: Colors.red,
       ),
     );
   }
@@ -335,6 +901,29 @@ class AccessRequestCard extends ConsumerWidget {
         return const Color(0xFF24B177);
       case AccessStatus.rejected:
         return Colors.red;
+      case AccessStatus.cancelled:
+        return Colors.grey;
+      case AccessStatus.revoked:
+      case AccessStatus.revokedByRequester:
+      case AccessStatus.revokedByReceiver:
+        return Colors.deepOrange.shade400;
+    }
+  }
+
+  String _statusLabel() {
+    switch (request.status) {
+      case AccessStatus.pending:
+        return 'PENDING';
+      case AccessStatus.approved:
+        return 'APPROVED';
+      case AccessStatus.rejected:
+        return 'REJECTED';
+      case AccessStatus.cancelled:
+        return 'CANCELLED';
+      case AccessStatus.revoked:
+      case AccessStatus.revokedByRequester:
+      case AccessStatus.revokedByReceiver:
+        return 'REVOKED';
     }
   }
 
@@ -358,44 +947,6 @@ class AccessRequestCard extends ConsumerWidget {
 
     if (confirmed == true) {
       await _clearRequest(context, ref);
-    }
-  }
-
-  Future<void> _approveRequest(BuildContext context, WidgetRef ref) async {
-    Navigator.pushNamed(
-      context,
-      AppRoutes.requesterDetails,
-      arguments: request,
-    );
-  }
-
-  Future<void> _rejectRequest(
-    BuildContext context,
-    WidgetRef ref,
-    String requestId,
-  ) async {
-    final notifier = ref.read(accessRequestProvider.notifier);
-    final success = await notifier.rejectRequest(requestId);
-    final currentUser = ref.read(authProvider).user;
-
-    if (success && currentUser != null) {
-      await Future.wait([
-        notifier.loadReceivedRequests(currentUser.id),
-        notifier.loadSentRequests(currentUser.id),
-      ]);
-    }
-
-    if (success && context.mounted) {
-      AppSnackBar.success(context, 'Access request rejected');
-    } else if (!success && context.mounted) {
-      final errorMsg = ref.read(accessRequestProvider).error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMsg ?? 'Failed to reject request'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
     }
   }
 

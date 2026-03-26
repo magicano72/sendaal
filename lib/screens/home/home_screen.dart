@@ -1034,85 +1034,245 @@ class _ApprovedContactsScreenState
   }
 }
 
-class _UserResultCard extends StatelessWidget {
+class _UserResultCard extends ConsumerStatefulWidget {
   final User user;
   final VoidCallback onTap;
 
   const _UserResultCard({required this.user, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    final displayName = user.displayName.isNotEmpty
-        ? user.displayName
-        : user.username;
-    final avatarUrl = user.avatarUrl;
-    final initials = displayName.isNotEmpty
-        ? displayName[0].toUpperCase()
-        : '?';
+  ConsumerState<_UserResultCard> createState() => _UserResultCardState();
+}
 
+class _UserResultCardState extends ConsumerState<_UserResultCard> {
+  bool _isCancelling = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.user;
+    final displayName =
+        user.displayName.isNotEmpty ? user.displayName : user.username;
+    final avatarUrl = user.avatarUrl;
+    final initials = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    final currentUser = ref.watch(authProvider).user;
+
+    if (currentUser == null) {
+      return _buildCard(
+        context,
+        displayName: displayName,
+        avatarUrl: avatarUrl,
+        initials: initials,
+        subtitle: '@${user.username}',
+        canTap: true,
+      );
+    }
+
+    final latestAsync = ref.watch(
+      latestRequestBetweenProvider((currentUser.id, user.id)),
+    );
+
+    return latestAsync.when(
+      loading: () => _buildCard(
+        context,
+        displayName: displayName,
+        avatarUrl: avatarUrl,
+        initials: initials,
+        subtitle: '@${user.username}',
+        canTap: false,
+        showSpinner: true,
+      ),
+      error: (_, __) => _buildCard(
+        context,
+        displayName: displayName,
+        avatarUrl: avatarUrl,
+        initials: initials,
+        subtitle: '@${user.username}',
+        canTap: true,
+      ),
+      data: (latest) {
+        final isRevoked = latest?.isRevoked == true;
+        final isRevoker =
+            isRevoked && latest?.revokerId == currentUser.id;
+        final subtitle =
+            isRevoked ? 'Access Denied' : '@${user.username}';
+
+        return _buildCard(
+          context,
+          displayName: displayName,
+          avatarUrl: avatarUrl,
+          initials: initials,
+          subtitle: subtitle,
+          canTap: !isRevoked || isRevoker,
+          isRevoked: isRevoked,
+          isRevoker: isRevoker,
+          requestId: latest?.id,
+        );
+      },
+    );
+  }
+
+  Widget _buildCard(
+    BuildContext context, {
+    required String displayName,
+    required String? avatarUrl,
+    required String initials,
+    required String subtitle,
+    required bool canTap,
+    bool showSpinner = false,
+    bool isRevoked = false,
+    bool isRevoker = false,
+    String? requestId,
+  }) {
     return Card(
       elevation: 1.5,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16.r),
-        onTap: onTap,
+        onTap: canTap ? widget.onTap : null,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 24.r,
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
-                backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                    ? NetworkImage(avatarUrl)
-                    : null,
-                child: (avatarUrl == null || avatarUrl.isEmpty)
-                    ? Text(
-                        initials,
-                        style: TextStyles.bodyBold.copyWith(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16.sp,
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24.r,
+                    backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
+                    backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                        ? NetworkImage(avatarUrl)
+                        : null,
+                    child: (avatarUrl == null || avatarUrl.isEmpty)
+                        ? Text(
+                            initials,
+                            style: TextStyles.bodyBold.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16.sp,
+                            ),
+                          )
+                        : null,
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          style: TextStyles.bodySmallBold.copyWith(
+                            fontSize: 15.sp,
+                            color: AppTheme.textPrimaryColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      )
-                    : null,
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: TextStyles.bodySmallBold.copyWith(
-                        fontSize: 15.sp,
-                        color: AppTheme.textPrimaryColor,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                        SizedBox(height: 2.h),
+                        Text(
+                          subtitle,
+                          style: TextStyles.label.copyWith(
+                            color: isRevoked
+                                ? Colors.redAccent
+                                : AppTheme.textSecondaryColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      '@${user.username}',
-                      style: TextStyles.label.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  ),
+                  if (showSpinner)
+                    SizedBox(
+                      height: 18.r,
+                      width: 18.r,
+                      child: const CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else
+                    Icon(
+                      Icons.chevron_right,
+                      color: AppTheme.primaryColor,
+                      size: 20.r,
                     ),
-                  ],
-                ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right,
-                color: AppTheme.primaryColor,
-                size: 20.r,
-              ),
+              if (isRevoked) ...[
+                SizedBox(height: 10.h),
+                if (isRevoker && requestId != null)
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed:
+                          _isCancelling ? null : () => _cancelRevoke(requestId),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 10.h),
+                        side: BorderSide(color: AppTheme.primaryColor),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      child: _isCancelling
+                          ? SizedBox(
+                              height: 16.r,
+                              width: 16.r,
+                              child:
+                                  const CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              'Cancel Revoke',
+                              style: TextStyles.bodySmallBold.copyWith(
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                    ),
+                  )
+                else
+                  Text(
+                    'Access Denied',
+                    style: TextStyles.labelBold.copyWith(
+                      color: Colors.red.shade600,
+                    ),
+                  ),
+              ],
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _cancelRevoke(String requestId) async {
+    if (_isCancelling) return;
+    setState(() => _isCancelling = true);
+
+    final updated = await ref
+        .read(accessRequestProvider.notifier)
+        .cancelRevoke(requestId);
+
+    if (!mounted) return;
+
+    setState(() => _isCancelling = false);
+
+    if (updated != null) {
+      final currentUser = ref.read(authProvider).user;
+      if (currentUser != null) {
+        ref.invalidate(
+          latestRequestBetweenProvider((currentUser.id, widget.user.id)),
+        );
+        await Future.wait([
+          ref.read(accessRequestProvider.notifier).loadSentRequests(
+                currentUser.id,
+              ),
+          ref.read(accessRequestProvider.notifier).loadReceivedRequests(
+                currentUser.id,
+              ),
+        ]);
+      }
+      AppSnackBar.success(context, 'Access restored');
+    } else {
+      final err =
+          ref.read(accessRequestProvider).error ?? 'Failed to cancel revoke';
+      AppSnackBar.error(context, err);
+    }
   }
 }

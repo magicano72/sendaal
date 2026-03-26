@@ -202,6 +202,12 @@ class AccessRequestTile extends ConsumerWidget {
     AccessStatus.pending => (color: Colors.orange, label: 'Pending'),
     AccessStatus.approved => (color: Colors.green, label: 'Approved'),
     AccessStatus.rejected => (color: Colors.red, label: 'Rejected'),
+    AccessStatus.cancelled => (color: Colors.grey, label: 'Cancelled'),
+    AccessStatus.revoked => (color: Colors.red, label: 'Revoked'),
+    AccessStatus.revokedByRequester =>
+      (color: Colors.red, label: 'Revoked'),
+    AccessStatus.revokedByReceiver =>
+      (color: Colors.red, label: 'Revoked'),
   };
 
   void _openDetails(BuildContext context) => Navigator.pushNamed(
