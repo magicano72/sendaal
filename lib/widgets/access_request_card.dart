@@ -927,12 +927,6 @@ class AccessRequestCard extends ConsumerWidget {
     }
   }
 
-  String _formatRequestNumber(String id) {
-    if (id.isEmpty) return '#0000';
-    final trimmed = id.length > 6 ? id.substring(0, 6) : id;
-    return '#$trimmed';
-  }
-
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
