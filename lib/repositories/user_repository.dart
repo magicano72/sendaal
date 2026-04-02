@@ -14,7 +14,7 @@ class UserRepository {
   Future<List<User>> searchUsers(String query) {
     final isPhone = RegExp(r'^\+?[0-9\s\-]{7,}$').hasMatch(query.trim());
     return isPhone
-        ? _service.searchByPhone(query)
+        ? _service.searchByPhoneNumber(query)
         : _service.searchByUsername(query);
   }
 

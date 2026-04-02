@@ -20,10 +20,10 @@ class FormatUtils {
     return formatter.format(amount);
   }
 
-  /// Format phone number
-  static String formatPhoneNumber(String phone) {
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 7) return phone;
+  /// Format phone number for display
+  static String formatPhoneNumber(String phoneNumber) {
+    final digits = phoneNumber.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 7) return phoneNumber;
 
     return '${digits.substring(0, 3)} ${digits.substring(3, 6)} ${digits.substring(6)}';
   }
@@ -64,9 +64,9 @@ class ValidationUtils {
     return emailRegex.hasMatch(email);
   }
 
-  static bool isValidPhoneNumber(String phone) {
-    final phoneRegex = RegExp(r'^\d{10,}$');
-    return phoneRegex.hasMatch(phone.replaceAll(RegExp(r'\D'), ''));
+  static bool isValidPhoneNumber(String phoneNumber) {
+    final phoneRegex = RegExp(r'^\+?[0-9]{7,}$');
+    return phoneRegex.hasMatch(phoneNumber.replaceAll(RegExp(r'\s'), ''));
   }
 
   static bool isValidPassword(String password) {

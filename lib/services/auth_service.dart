@@ -30,7 +30,8 @@ class AuthService {
     required String password,
     required String username,
     required String firstName,
-    required String phone,
+    required String phoneNumber,
+    String? countryCode,
   }) async {
     final response = await _api.post(
       Endpoints.register,
@@ -39,7 +40,8 @@ class AuthService {
         'password': password,
         'username': username,
         'first_name': firstName,
-        'phone': phone,
+        'phone_number': phoneNumber,
+        if (countryCode != null) 'country_code': countryCode,
       },
     );
     final data = response['data'] as Map<String, dynamic>? ?? {};

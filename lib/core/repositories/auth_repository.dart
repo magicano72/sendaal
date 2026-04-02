@@ -12,7 +12,8 @@ class AuthRepository {
     required String password,
     required String username,
     required String firstName,
-    required String phone,
+    required String phoneNumber,
+    String? countryCode,
   }) async {
     try {
       final response = await authService.register(
@@ -20,7 +21,8 @@ class AuthRepository {
         password: password,
         username: username,
         firstName: firstName,
-        phone: phone,
+        phoneNumber: phoneNumber,
+        countryCode: countryCode,
       );
       return User.fromJson(response);
     } catch (e) {

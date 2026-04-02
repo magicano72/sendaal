@@ -1,8 +1,10 @@
 import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:Sendaal/widgets/app_widgets.dart' show ErrorBanner;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 
 import '../../core/error/exceptions.dart';
 import '../../core/router/app_router.dart';
@@ -12,6 +14,9 @@ import '../../core/services/validation_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/text_style.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/phone_verification_service.dart';
+import '../../services/user_service.dart';
+import 'otp_args.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -24,24 +29,33 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _firstNameCtrl = TextEditingController();
   final _usernameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
   bool _agreedToTerms = false;
+  bool _isRequestingOtp = false;
+  bool _isCheckingAvailability = false;
   final _formKey = GlobalKey<FormState>();
   String? _formError; // non-field specific API errors
+  final _userService = UserService();
 
   // Field-level error tracking for API errors
   String? _usernameError;
   String? _emailError;
   String? _phoneError;
+  String _phoneNumber = '';
+  String _countryCode = '+20';
+  int _phoneMaxLength = 10; // default for EG; updated when country changes
+  int _phoneMinLength = 8;
+  String? _lastEmailChecked;
+  String? _lastUsernameChecked;
+  String? _lastPhoneChecked;
+  UserAvailability? _lastAvailability;
 
   @override
   void dispose() {
     _firstNameCtrl.dispose();
     _usernameCtrl.dispose();
     _emailCtrl.dispose();
-    _phoneCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
@@ -56,6 +70,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     if (!_formKey.currentState!.validate()) return;
+
+    if (_phoneNumber.isEmpty) {
+      setState(() => _phoneError = 'Phone number is required');
+      return;
+    }
 
     if (!_agreedToTerms) {
       AppSnackBar.error(
@@ -80,60 +99,188 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    final success = await ref
-        .read(authProvider.notifier)
-        .register(
-          email: _emailCtrl.text.trim(),
-          password: _passwordCtrl.text,
-          username: _usernameCtrl.text.trim(),
-          firstName: _firstNameCtrl.text.trim(),
-          phone: _phoneCtrl.text.trim(),
-        );
+    // Backend uniqueness check before sending OTP
+    final email = _emailCtrl.text.trim();
+    final username = _usernameCtrl.text.trim();
+    final phone = _phoneNumber.trim();
 
-    if (!mounted) return;
+    final availability = await _checkAvailability(
+      email: email,
+      username: username,
+      phoneNumber: phone,
+    );
 
-    // Check for field-level errors in the auth error
-    final authError = ref.read(authProvider).error;
-    if (authError != null && !success) {
-      try {
-        final apiEx = ApiException(message: authError);
-
-        _usernameError = DirectusErrorParser.parseFieldError(apiEx, 'username');
-        _emailError = DirectusErrorParser.parseFieldError(apiEx, 'email');
-        _phoneError = DirectusErrorParser.parseFieldError(apiEx, 'phone');
-
-        final hasFieldError =
-            _usernameError != null ||
-            _emailError != null ||
-            _phoneError != null;
-
-        if (hasFieldError) {
-          setState(() {});
-          _formKey.currentState?.validate();
-        } else {
-          setState(
-            () =>
-                _formError = DirectusErrorParser.getGeneralErrorMessage(apiEx),
-          );
-        }
-      } catch (e) {
-        debugPrint('Error parsing field error: $e');
-        setState(() => _formError = 'Something went wrong. $authError');
-      }
+    if (availability == null) {
+      // Network/API error already handled with form error/snackbar
+      return;
     }
 
-    if (success) {
+    if (!availability.isAllFree) {
+      setState(() {
+        if (availability.emailTaken) {
+          _emailError = 'Email already registered';
+        }
+        if (availability.phoneTaken) {
+          _phoneError = 'Phone number already used';
+        }
+        if (availability.usernameTaken) {
+          _usernameError = 'Username already taken';
+        }
+      });
+      return; // Do not request OTP
+    }
+
+    final payload = RegisterPayload(
+      email: _emailCtrl.text.trim(),
+      password: _passwordCtrl.text,
+      username: _usernameCtrl.text.trim(),
+      firstName: _firstNameCtrl.text.trim(),
+      phoneNumber: _phoneNumber,
+      countryCode: _countryCode,
+    );
+
+    final phoneService = PhoneVerificationService();
+
+    try {
+      setState(() => _isRequestingOtp = true);
+      final session = await phoneService.requestVerification(
+        phoneNumber: _phoneNumber,
+        countryCode: _countryCode,
+      );
+
+      if (!mounted) return;
+
       AppSnackBar.success(
         context,
-        'Account created successfully! Please log in.',
+        'Verification code sent to $_phoneNumber',
       );
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
+
+      Navigator.pushNamed(
+        context,
+        AppRoutes.otp,
+        arguments: OtpFlowArgs(
+          registerPayload: payload,
+          session: session,
+        ),
+      );
+    } on ApiException catch (e) {
+      final apiEx = ApiException(message: e.message, statusCode: e.statusCode);
+
+      _usernameError = null;
+      _emailError = null;
+      _phoneError = DirectusErrorParser.parseFieldError(
+        apiEx,
+        'phone_number',
+      );
+
+      if (_phoneError != null) {
+        setState(() {});
+        _formKey.currentState?.validate();
+      } else {
+        final friendly = _mapOtpError(e);
+        setState(() => _formError = friendly);
+        if (mounted) AppSnackBar.error(context, friendly);
+      }
+    } catch (e) {
+      setState(() => _formError = 'Something went wrong. Please try again.');
+      if (mounted) {
+        AppSnackBar.error(
+          context,
+          'Something went wrong. Please try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isRequestingOtp = false);
+    }
+  }
+
+  Future<UserAvailability?> _checkAvailability({
+    required String email,
+    required String username,
+    required String phoneNumber,
+  }) async {
+    final trimmedEmail = email.trim();
+    final trimmedUsername = username.trim();
+    final trimmedPhone = phoneNumber.trim();
+
+    if (_lastEmailChecked == trimmedEmail &&
+        _lastUsernameChecked == trimmedUsername &&
+        _lastPhoneChecked == trimmedPhone &&
+        _lastAvailability != null) {
+      return _lastAvailability;
+    }
+
+    setState(() {
+      _isCheckingAvailability = true;
+      _formError = null;
+    });
+
+    try {
+      final availability = await _userService.checkAvailability(
+        email: trimmedEmail,
+        username: trimmedUsername,
+        phoneNumber: trimmedPhone,
+      );
+      setState(() {
+        _lastEmailChecked = trimmedEmail;
+        _lastUsernameChecked = trimmedUsername;
+        _lastPhoneChecked = trimmedPhone;
+        _lastAvailability = availability;
+      });
+      return availability;
+    } on ApiException catch (e) {
+      setState(() {
+        _formError = e.message;
+      });
+      if (mounted) {
+        AppSnackBar.error(
+          context,
+          e.message.isNotEmpty
+              ? e.message
+              : 'Could not validate availability. Please try again.',
+        );
+      }
+      return null;
+    } catch (e) {
+      setState(() {
+        _formError = 'Could not validate availability. Please try again.';
+      });
+      if (mounted) {
+        AppSnackBar.error(
+          context,
+          'Could not validate availability. Please try again.',
+        );
+      }
+      return null;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingAvailability = false;
+        });
+      }
+    }
+  }
+
+  String _mapOtpError(ApiException exception) {
+    switch (exception.statusCode) {
+      case 400:
+        return 'Invalid phone number. Please check and try again.';
+      case 404:
+        return 'No pending verification. Please try again.';
+      case 409:
+        return 'This phone number is already verified. Try logging in.';
+      case 429:
+        return 'Too many attempts. Please wait before retrying.';
+      default:
+        return DirectusErrorParser.getGeneralErrorMessage(exception);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+    final isSubmitting =
+        auth.isRegisterLoading || _isRequestingOtp || _isCheckingAvailability;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -250,19 +397,51 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             // ── Phone ──────────────────────────────────────
                             _FieldLabel(label: 'Phone Number'),
                             SizedBox(height: 8.h),
-                            TextFormField(
-                              controller: _phoneCtrl,
-                              keyboardType: TextInputType.phone,
-                              style: TextStyles.bodySmall.copyWith(
-                                fontSize: 15.sp,
-                                color: const Color(0xFF1A1A2E),
-                              ),
+                            IntlPhoneField(
+                              initialCountryCode: 'EG',
+                              disableLengthCheck: false, // respect per-country lengths
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(_phoneMaxLength),
+                              ],
                               decoration: _inputDecoration(
-                                hint: '01x-xxx-xxxx',
+                                hint: 'Enter phone number',
                                 errorText: _phoneError,
                               ),
-                              validator: (v) =>
-                                  ValidationService.validatePhone(v),
+                              onChanged: (phone) {
+                                setState(() {
+                                  _phoneError = null;
+                                  _phoneNumber =
+                                      phone.completeNumber.replaceAll(' ', '');
+                                  _countryCode = phone.countryCode;
+                                });
+                              },
+                              onCountryChanged: (country) {
+                                setState(() {
+                                  _phoneError = null;
+                                  _phoneMaxLength =
+                                      country.maxLength ?? _phoneMaxLength;
+                                  _phoneMinLength =
+                                      country.minLength ?? _phoneMinLength;
+                                  _countryCode = '+${country.dialCode}';
+                                });
+                              },
+                              validator: (phone) {
+                                if (_phoneError != null) return _phoneError;
+                                if (phone == null) {
+                                  return 'Phone number is required';
+                                }
+
+                                final digits =
+                                    phone.number.replaceAll(RegExp(r'\D'), '');
+                                if (digits.length < _phoneMinLength ||
+                                    digits.length > _phoneMaxLength) {
+                                  return 'Enter a valid phone number for ${phone.countryISOCode}';
+                                }
+
+                                return ValidationService.validatePhoneNumber(
+                                  phone.completeNumber,
+                                );
+                              },
                             ),
 
                             SizedBox(height: 12.h),
@@ -383,9 +562,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               width: double.infinity,
                               height: 54.h,
                               child: ElevatedButton.icon(
-                                onPressed: auth.isRegisterLoading
-                                    ? null
-                                    : _register,
+                                onPressed: isSubmitting ? null : _register,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   disabledBackgroundColor: AppColors.primary
@@ -396,7 +573,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     borderRadius: BorderRadius.circular(14.r),
                                   ),
                                 ),
-                                icon: auth.isRegisterLoading
+                                icon: isSubmitting
                                     ? SizedBox(
                                         width: 20.r,
                                         height: 20.r,
@@ -407,9 +584,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                       )
                                     : Icon(Icons.person_add_alt_1, size: 20.r),
                                 label: Text(
-                                  auth.isRegisterLoading
-                                      ? 'Creating...'
-                                      : 'Register',
+                                  isSubmitting ? 'Sending OTP...' : 'Register',
                                   style: TextStyles.bodyRegular.copyWith(
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: 0.3,

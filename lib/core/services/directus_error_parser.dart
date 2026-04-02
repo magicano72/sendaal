@@ -9,12 +9,15 @@ class DirectusErrorParser {
       final message = exception.message;
       final lowerMessage = message.toLowerCase();
       bool mentionsField(String field) => lowerMessage.contains(field);
+      bool mentionsPhone() =>
+          mentionsField('phone') || mentionsField('phone_number');
       bool mentionsValidEmailMessage() =>
           lowerMessage.contains('valid email') ||
           lowerMessage.contains('email address');
       bool mentionsValidPhoneMessage() =>
           lowerMessage.contains('valid phone') ||
-          lowerMessage.contains('phone number');
+          lowerMessage.contains('phone number') ||
+          lowerMessage.contains('phone_number');
       bool mentionsValidationFailure() =>
           lowerMessage.contains('validation failed') ||
           lowerMessage.contains('failed validation') ||
@@ -36,7 +39,8 @@ class DirectusErrorParser {
         if (targetField == 'email' && mentionsField('email')) {
           return 'Email is already registered.';
         }
-        if (targetField == 'phone' && mentionsField('phone')) {
+        if ((targetField == 'phone_number' || targetField == 'phone') &&
+            mentionsPhone()) {
           return 'This phone number is already registered.';
         }
       }
@@ -46,7 +50,8 @@ class DirectusErrorParser {
         if (targetField == 'email' && mentionsField('email')) {
           return 'Please enter a valid email address.';
         }
-        if (targetField == 'phone' && mentionsField('phone')) {
+        if ((targetField == 'phone_number' || targetField == 'phone') &&
+            mentionsPhone()) {
           return 'Please enter a valid phone number.';
         }
         if (targetField == 'username' && mentionsField('username')) {
@@ -60,8 +65,8 @@ class DirectusErrorParser {
           mentionsValidEmailMessage()) {
         return 'Please enter a valid email address.';
       }
-      if (targetField == 'phone' &&
-          mentionsField('phone') &&
+      if ((targetField == 'phone_number' || targetField == 'phone') &&
+          mentionsPhone() &&
           mentionsValidPhoneMessage()) {
         return 'Please enter a valid phone number.';
       }
@@ -76,13 +81,15 @@ class DirectusErrorParser {
   static String getGeneralErrorMessage(ApiException exception) {
     final message = exception.message;
     final lowerMessage = message.toLowerCase();
+    bool mentionsPhone() =>
+        lowerMessage.contains('phone') || lowerMessage.contains('phone_number');
 
     // Unique constraint friendly mapping
     if (message.contains('has to be unique')) {
       if (message.contains('email')) {
         return 'Email is already registered.';
       }
-      if (message.contains('phone')) {
+      if (mentionsPhone()) {
         return 'This phone number is already registered.';
       }
       if (message.contains('username')) {
@@ -122,7 +129,7 @@ class DirectusErrorParser {
       if (lowerMessage.contains('email')) {
         return 'Please enter a valid email address.';
       }
-      if (lowerMessage.contains('phone')) {
+      if (mentionsPhone()) {
         return 'Please enter a valid phone number.';
       }
       if (lowerMessage.contains('username')) {

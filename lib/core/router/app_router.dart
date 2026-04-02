@@ -7,6 +7,8 @@ import '../../screens/accounts/accounts_screen.dart';
 import '../../screens/accounts/edit_account_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
+import '../../screens/auth/otp_screen.dart';
+import '../../screens/auth/otp_args.dart';
 import '../../screens/contacts/contact_details_screen.dart';
 import '../../screens/contacts/device_contacts_screen.dart';
 import '../../screens/main_shell.dart';
@@ -33,6 +35,7 @@ class AppRoutes {
   static const String notifications = '/notifications';
   static const String deviceContacts = '/device-contacts';
   static const String contactDetails = '/contact-details';
+  static const String otp = '/otp';
   static const String requesterDetails = '/requester-details';
   // Backwards-compatible alias
   static const String allAccessRequests = '/all-requests';
@@ -50,6 +53,9 @@ class AppRouter {
         return _fade(const LoginScreen());
       case AppRoutes.register:
         return _fade(const RegisterScreen());
+      case AppRoutes.otp:
+        final args = settings.arguments as OtpFlowArgs;
+        return _fade(OtpScreen(args: args));
       case AppRoutes.home:
         return _fade(const MainShell());
       case AppRoutes.accounts:

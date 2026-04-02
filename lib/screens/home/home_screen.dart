@@ -193,7 +193,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _searchCtrl.clear();
                   ref.read(searchProvider.notifier).clear();
                 },
-                hint: 'Search username or phone',
+                hint: 'Search username or phone number',
                 onContactsTap: _openDeviceContacts,
               ),
             ),
@@ -878,7 +878,7 @@ class _ApprovedContactsScreenState
     final filtered = contactsState.contacts.where((c) {
       if (query.isEmpty) return true;
       final user = c.user;
-      final phone = user.phone ?? '';
+      final phone = user.phoneNumber ?? '';
       return user.displayName.toLowerCase().contains(query) ||
           user.username.toLowerCase().contains(query) ||
           phone.toLowerCase().contains(query);
@@ -897,7 +897,7 @@ class _ApprovedContactsScreenState
                     controller: _searchCtrl,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText: 'Search by username or phone',
+                      hintText: 'Search by username or phone number',
                       prefixIcon: Icon(
                         Icons.search,
                         color: AppTheme.textSecondaryColor,
@@ -963,7 +963,7 @@ class _ApprovedContactsScreenState
                           itemBuilder: (_, i) {
                             final contact = filtered[i];
                             final user = contact.user;
-                            final phone = user.phone ?? '';
+                            final phone = user.phoneNumber ?? '';
                             final fullName =
                                 (user.firstName?.isNotEmpty ?? false)
                                 ? user.firstName!

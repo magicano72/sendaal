@@ -4,7 +4,7 @@ class UserModel {
   final String username;
   final String name;
   final String? avatar;
-  final String? phone;
+  final String? phoneNumber;
   final bool isVerified;
 
   const UserModel({
@@ -12,7 +12,7 @@ class UserModel {
     required this.username,
     required this.name,
     this.avatar,
-    this.phone,
+    this.phoneNumber,
     this.isVerified = false,
   });
 
@@ -21,7 +21,7 @@ class UserModel {
     username: json['username']?.toString() ?? '',
     name: json['first_name']?.toString() ?? 'User',
     avatar: json['avatar']?.toString() ?? json['profileImage']?.toString(),
-    phone: json['phone']?.toString(),
+    phoneNumber: json['phone_number']?.toString(),
     isVerified: json['is_verified'] == true || json['isVerified'] == true,
   );
 
@@ -30,7 +30,7 @@ class UserModel {
     'username': username,
     'first_name': name,
     'avatar': avatar,
-    'phone': phone,
+    'phone_number': phoneNumber,
     'is_verified': isVerified,
   };
 
@@ -39,14 +39,14 @@ class UserModel {
     String? username,
     String? displayName,
     String? profileImage,
-    String? phone,
+    String? phoneNumber,
     bool? isVerified,
   }) => UserModel(
     id: id ?? this.id,
     username: username ?? this.username,
     name: displayName ?? this.name,
     avatar: profileImage ?? this.avatar,
-    phone: phone ?? this.phone,
+    phoneNumber: phoneNumber ?? this.phoneNumber,
     isVerified: isVerified ?? this.isVerified,
   );
 }

@@ -15,8 +15,8 @@ class User {
   final String? firstName;
   @JsonKey(name: 'avatar')
   final String? avatar;
-  @JsonKey(name: 'phone')
-  final String? phone;
+  @JsonKey(name: 'phone_number')
+  final String? phoneNumber;
   @JsonKey(defaultValue: false)
   final bool isVerified;
   @JsonKey(name: 'email')
@@ -28,7 +28,7 @@ class User {
     required this.displayName,
     this.firstName,
     this.avatar,
-    this.phone,
+    this.phoneNumber,
     required this.isVerified,
     this.email,
   }) {
@@ -98,7 +98,7 @@ class User {
     String? displayName,
     String? firstName,
     String? avatar,
-    String? phone,
+    String? phoneNumber,
     bool? isVerified,
     String? email,
   }) {
@@ -108,7 +108,7 @@ class User {
       displayName: displayName ?? this.displayName,
       firstName: firstName ?? this.firstName,
       avatar: avatar ?? this.avatar,
-      phone: phone ?? this.phone,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       isVerified: isVerified ?? this.isVerified,
       email: email ?? this.email,
     );

@@ -79,7 +79,7 @@ class SearchField extends StatelessWidget {
     required this.controller,
     this.onChanged,
     this.onClear,
-    this.hint = 'Search by username or phone...',
+    this.hint = 'Search by username or phone number...',
     this.onContactsTap,
   });
 

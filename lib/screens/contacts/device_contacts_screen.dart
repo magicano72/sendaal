@@ -178,6 +178,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
         style: TextStyles.bodySmall,
         decoration: InputDecoration(
           hintText: 'Search by username or phone',
+
           hintStyle: TextStyles.bodySmall.copyWith(color: Colors.grey[400]),
           prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 20.sp),
           suffixIcon: _searchQuery.isNotEmpty
@@ -278,7 +279,9 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
     } else {
       final user = matchedUser!;
       name = user.displayName ?? user.username;
-      phone = user.phone?.isNotEmpty == true ? user.phone : '@${user.username}';
+      phone = user.phoneNumber?.isNotEmpty == true
+          ? user.phoneNumber
+          : '@${user.username}';
       avatarUrl = user.avatar;
       actionLabel = alreadyApproved ? 'View' : 'Request';
       onAction = alreadyApproved

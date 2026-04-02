@@ -127,8 +127,8 @@ class ContactDetailsScreen extends ConsumerWidget {
 
   Widget _buildHeader() {
     final avatarUrl = contact.avatarUrl;
-    final subtitle = contact.phone?.isNotEmpty == true
-        ? contact.phone!
+    final subtitle = contact.phoneNumber?.isNotEmpty == true
+        ? contact.phoneNumber!
         : '@${contact.username}';
     final title = (contact.firstName?.isNotEmpty ?? false)
         ? contact.firstName!
@@ -187,7 +187,7 @@ class ContactDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildContactInfoCard() {
-    final phone = contact.phone ?? '';
+    final phone = contact.phoneNumber ?? '';
     final fullName = contact.firstName?.isNotEmpty == true
         ? contact.firstName!
         : (contact.displayName.isNotEmpty

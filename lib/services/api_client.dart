@@ -88,6 +88,22 @@ class ApiClient {
     if (_authToken != null) 'Authorization': 'Bearer $_authToken',
   };
 
+  /// Headers for endpoints that should be callable without a user token.
+  /// Optionally adds a static token from .env (PUBLIC_STATIC_TOKEN or PUBLIC_TOKEN).
+  Map<String, String> get _publicHeaders {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    final staticToken = dotenv.env['PHONE_VALIDATOR_TOKEN'] ??
+        dotenv.env['PUBLIC_STATIC_TOKEN'] ??
+        dotenv.env['PUBLIC_TOKEN'];
+    if (staticToken != null && staticToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $staticToken';
+    }
+    return headers;
+  }
+
   // ── URI builder ───────────────────────────────────────────────────────────
   Uri _buildUri(String path, [Map<String, String>? queryParams]) {
     final uri = Uri.parse('$_baseUrl$path');
@@ -218,6 +234,32 @@ class ApiClient {
     }
   }
 
+  /// GET without user auth; uses optional static token if provided.
+  Future<dynamic> getPublic(
+    String path, {
+    Map<String, String>? queryParams,
+  }) async {
+    print('[ApiClient] PUBLIC GET request: $_baseUrl$path');
+    try {
+      await _ensureOnline();
+      if (!_publicHeaders.containsKey('Authorization')) {
+        print(
+          '[ApiClient] Warning: no PUBLIC_STATIC_TOKEN/PUBLIC_TOKEN/PHONE_VALIDATOR_TOKEN set; request may be rejected.',
+        );
+      }
+      final response = await http
+          .get(_buildUri(path, queryParams), headers: _publicHeaders)
+          .timeout(_timeout);
+      return _parseResponse(response);
+    } on SocketException {
+      throw const ApiException(
+        'No internet connection. Please check your network.',
+      );
+    } on TimeoutException {
+      throw const ApiException('Request timed out. Please try again.');
+    }
+  }
+
   // ── POST ──────────────────────────────────────────────────────────────────
   /// POST – accepts either a map or a list (for bulk inserts)
   Future<dynamic> post(String path, {dynamic body}) async {
@@ -233,6 +275,34 @@ class ApiClient {
             )
             .timeout(_timeout),
       );
+    } on SocketException {
+      throw const ApiException(
+        'No internet connection. Please check your network.',
+      );
+    } on TimeoutException {
+      throw const ApiException('Request timed out. Please try again.');
+    }
+  }
+
+  /// POST without user auth; uses optional static token if provided.
+  Future<dynamic> postPublic(String path, {dynamic body}) async {
+    print('[ApiClient] PUBLIC POST request: $_baseUrl$path');
+    print('[ApiClient] POST body: $body');
+    try {
+      await _ensureOnline();
+      if (!_publicHeaders.containsKey('Authorization')) {
+        print(
+          '[ApiClient] Warning: no PUBLIC_STATIC_TOKEN/PUBLIC_TOKEN/PHONE_VALIDATOR_TOKEN set; request may be rejected.',
+        );
+      }
+      final response = await http
+          .post(
+            _buildUri(path),
+            headers: _publicHeaders,
+            body: body != null ? jsonEncode(body) : null,
+          )
+          .timeout(_timeout);
+      return _parseResponse(response);
     } on SocketException {
       throw const ApiException(
         'No internet connection. Please check your network.',

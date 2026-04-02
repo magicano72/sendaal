@@ -118,7 +118,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String password,
     required String username,
     required String firstName,
-    required String phone,
+    required String phoneNumber,
+    String? countryCode,
   }) async {
     print(
       '[AuthNotifier] Starting registration for: $email, username: $username',
@@ -126,13 +127,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isRegisterLoading: true, clearError: true);
     try {
       // Set 30 second timeout for registration request
-      final userId = await _authService
+      final registrationResponse = await _authService
           .register(
             email: email,
             password: password,
             username: username,
             firstName: firstName,
-            phone: phone,
+            phoneNumber: phoneNumber,
+            countryCode: countryCode,
           )
           .timeout(
             const Duration(seconds: 30),
@@ -143,9 +145,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
             },
           );
       final createdId =
-          (userId['data'] is Map && (userId['data']['id'] != null))
-          ? userId['data']['id'].toString()
-          : '';
+          registrationResponse['data'] is Map &&
+                  registrationResponse['data']['id'] != null
+              ? registrationResponse['data']['id'].toString()
+              : '';
       if (createdId.isNotEmpty) {
         // Fire-and-forget welcome notification; errors shouldn’t block signup
         unawaited(_notificationService.createWelcomeNotification(createdId));

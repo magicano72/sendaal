@@ -43,22 +43,14 @@ class ValidationService {
     return null;
   }
 
-  /// Validate phone - numbers only, exactly 11 digits, starts with 01
-  static String? validatePhone(String? value) {
+  /// Validate international phone number (expects leading + with country code).
+  static String? validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Phone is required';
+      return 'Phone number is required';
     }
-    // Remove any whitespace
-    final cleanedPhone = value.replaceAll(RegExp(r'\s+'), '');
-
-    if (!RegExp(r'^[0-9]+$').hasMatch(cleanedPhone)) {
-      return 'Phone must contain only numbers';
-    }
-    if (cleanedPhone.length != 11) {
-      return 'Phone must be exactly 11 digits';
-    }
-    if (!RegExp(r'^01[0-9]{9}$').hasMatch(cleanedPhone)) {
-      return 'Phone must start with 01';
+    final cleaned = value.replaceAll(RegExp(r'\s+'), '');
+    if (!RegExp(r'^\\+?[0-9]{7,}$').hasMatch(cleaned)) {
+      return 'Enter a valid phone number with country code';
     }
     return null;
   }

@@ -27,4 +27,12 @@ class Endpoints {
   // Notifications
   static const String notifications = '/items/notifications';
   static String notificationById(String id) => '/items/notifications/$id';
+
+  // Phone number verification (Directus extension)
+  static const String phoneValidatorBase = '/phone-number-validator';
+  static const String requestPhoneVerification =
+      '$phoneValidatorBase/request-verification';
+  static const String verifyPhoneOtp = '$phoneValidatorBase/verify-otp';
+  static const String resendPhoneOtp = '$phoneValidatorBase/resend-otp';
+  static const String phoneVerificationStatus = '$phoneValidatorBase/status';
 }

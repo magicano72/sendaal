@@ -48,7 +48,7 @@ class ContactCard extends StatelessWidget {
                     : user.username))
         : (user.username.isNotEmpty
               ? '@${user.username}'
-              : (user.phone ?? '?'));
+              : (user.phoneNumber ?? '?'));
 
     return GestureDetector(
       onTap: onTap,

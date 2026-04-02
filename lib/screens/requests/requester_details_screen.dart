@@ -322,7 +322,7 @@ class _RequesterDetailsScreenState
     final name = _displayName(user);
     final avatarUrl = user.avatarUrl;
     final initials = name.isNotEmpty ? name[0].toUpperCase() : '?';
-    final phone = (user.phone ?? '').trim();
+    final phone = (user.phoneNumber ?? '').trim();
     final email = (user.email ?? '').trim();
 
     Widget infoRow(IconData icon, String value) => Row(

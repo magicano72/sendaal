@@ -91,7 +91,7 @@ class DeviceContactsNotifier extends StateNotifier<DeviceContactsState> {
   ) async {
     state = state.copyWith(isMatching: true);
     try {
-      final phoneMap = await _userService.findUsersByPhones(
+      final phoneMap = await _userService.findUsersByPhoneNumbers(
         contacts.map((c) => c.phone).toList(),
       );
       final results = contacts

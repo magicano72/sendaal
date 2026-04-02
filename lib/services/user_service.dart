@@ -28,21 +28,21 @@ class UserService {
   }
 
   /// Search users by phone number
-  Future<List<User>> searchByPhone(String phone) async {
+  Future<List<User>> searchByPhoneNumber(String phoneNumber) async {
     final response = await _api.get(
       Endpoints.users,
-      queryParams: {'filter[phone][_contains]': phone},
+      queryParams: {'filter[phone_number][_contains]': phoneNumber},
     );
     final list = response['data'] as List<dynamic>? ?? [];
     return list.map((e) => User.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   /// Find a user by an exact phone match.
-  Future<User?> findByPhone(String phone) async {
-    final normalized = _normalizePhone(phone);
+  Future<User?> findByPhoneNumber(String phoneNumber) async {
+    final normalized = _normalizePhone(phoneNumber);
     final response = await _api.get(
       Endpoints.users,
-      queryParams: {'filter[phone][_eq]': normalized, 'limit': '1'},
+      queryParams: {'filter[phone_number][_eq]': normalized, 'limit': '1'},
     );
     final list = response['data'] as List<dynamic>? ?? [];
     if (list.isEmpty) return null;
@@ -50,9 +50,11 @@ class UserService {
   }
 
   /// Batch lookup by phone numbers, returned as map phone -> User.
-  Future<Map<String, User>> findUsersByPhones(List<String> phones) async {
-    if (phones.isEmpty) return {};
-    final normalized = phones
+  Future<Map<String, User>> findUsersByPhoneNumbers(
+    List<String> phoneNumbers,
+  ) async {
+    if (phoneNumbers.isEmpty) return {};
+    final normalized = phoneNumbers
         .map(_normalizePhone)
         .where((p) => p.isNotEmpty)
         .toSet()
@@ -61,7 +63,7 @@ class UserService {
     final response = await _api.get(
       Endpoints.users,
       queryParams: {
-        'filter[phone][_in]': normalized.join(','),
+        'filter[phone_number][_in]': normalized.join(','),
         'limit': normalized.length.toString(),
       },
     );
@@ -71,10 +73,52 @@ class UserService {
     for (final item in list) {
       if (item is! Map<String, dynamic>) continue;
       final user = User.fromJson(item);
-      final phone = _normalizePhone(user.phone ?? '');
+      final phone = _normalizePhone(user.phoneNumber ?? '');
       if (phone.isNotEmpty) map[phone] = user;
     }
     return map;
+  }
+
+  /// Check uniqueness of email/username/phone using a single public query.
+  Future<UserAvailability> checkAvailability({
+    required String email,
+    required String username,
+    required String phoneNumber,
+  }) async {
+    final normalizedPhone = _normalizePhone(phoneNumber);
+    final response = await _api.getPublic(
+      Endpoints.users,
+      queryParams: {
+        'fields': 'email,phone_number,username',
+        'limit': '3',
+        'filter[_or][0][email][_eq]': email.trim().toLowerCase(),
+        'filter[_or][1][phone_number][_eq]': normalizedPhone,
+        'filter[_or][2][username][_eq]': username.trim(),
+      },
+    );
+
+    final list = response['data'] as List<dynamic>? ?? [];
+    var emailTaken = false;
+    var phoneTaken = false;
+    var usernameTaken = false;
+
+    for (final item in list) {
+      if (item is! Map<String, dynamic>) continue;
+      final user = item;
+      final uEmail = (user['email'] ?? '').toString().toLowerCase();
+      final uPhone = _normalizePhone(user['phone_number']?.toString() ?? '');
+      final uUsername = (user['username'] ?? '').toString();
+
+      if (uEmail == email.trim().toLowerCase()) emailTaken = true;
+      if (uPhone.isNotEmpty && uPhone == normalizedPhone) phoneTaken = true;
+      if (uUsername == username.trim()) usernameTaken = true;
+    }
+
+    return UserAvailability(
+      emailTaken: emailTaken,
+      phoneTaken: phoneTaken,
+      usernameTaken: usernameTaken,
+    );
   }
 
   /// Get current logged-in user profile
@@ -137,4 +181,18 @@ class UserService {
 
   String _normalizePhone(String raw) =>
       raw.replaceAll(RegExp(r'[^0-9+]'), '');
+}
+
+class UserAvailability {
+  final bool emailTaken;
+  final bool phoneTaken;
+  final bool usernameTaken;
+
+  const UserAvailability({
+    required this.emailTaken,
+    required this.phoneTaken,
+    required this.usernameTaken,
+  });
+
+  bool get isAllFree => !emailTaken && !phoneTaken && !usernameTaken;
 }

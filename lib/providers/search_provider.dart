@@ -56,7 +56,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
       // Run both username + phone searches and merge unique users by id.
       final lists = await Future.wait<List<User>>([
         _service.searchByUsername(trimmed),
-        _service.searchByPhone(trimmed),
+        _service.searchByPhoneNumber(trimmed),
       ]);
 
       final merged = <String, User>{};
