@@ -47,5 +47,14 @@
 	<true/>
 	<key>NSContactsUsageDescription</key>
 	<string>Sendaal needs access to your contacts to help you find friends and send access requests.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>sendaal</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

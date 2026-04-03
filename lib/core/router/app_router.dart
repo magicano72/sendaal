@@ -19,11 +19,15 @@ import '../../screens/requests/all_requests_screen.dart';
 import '../../screens/requests/requester_details_screen.dart';
 import '../../screens/transfer/transfer_screen.dart';
 import '../../screens/transfer/transfer_success_screen.dart';
+import '../../screens/auth/forgot_password_screen.dart';
+import '../../screens/auth/reset_password_screen.dart';
 
 /// Named route constants — avoids magic strings throughout the app
 class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
+  static const String resetPassword = '/reset-password';
   static const String home = '/home';
   static const String accounts = '/accounts';
   static const String profile = '/profile';
@@ -53,6 +57,11 @@ class AppRouter {
         return _fade(const LoginScreen());
       case AppRoutes.register:
         return _fade(const RegisterScreen());
+      case AppRoutes.forgotPassword:
+        return _fade(const ForgotPasswordScreen());
+      case AppRoutes.resetPassword:
+        final token = settings.arguments as String?;
+        return _fade(ResetPasswordScreen(token: token));
       case AppRoutes.otp:
         final args = settings.arguments as OtpFlowArgs;
         return _fade(OtpScreen(args: args));

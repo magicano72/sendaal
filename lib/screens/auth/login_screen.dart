@@ -173,7 +173,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () => Navigator.pushNamed(
+                              context,
+                              AppRoutes.forgotPassword,
+                            ),
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
                               minimumSize: Size(0, 0),

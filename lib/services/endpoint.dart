@@ -35,4 +35,8 @@ class Endpoints {
   static const String verifyPhoneOtp = '$phoneValidatorBase/verify-otp';
   static const String resendPhoneOtp = '$phoneValidatorBase/resend-otp';
   static const String phoneVerificationStatus = '$phoneValidatorBase/status';
+
+  // Password reset
+  static const String requestPasswordReset = '/auth/password/request';
+  static const String resetPassword = '/auth/password/reset';
 }
