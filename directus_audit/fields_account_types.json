@@ -1,0 +1,116 @@
+{
+    "data":  [
+                 {
+                     "collection":  "account_types",
+                     "field":  "id",
+                     "type":  "integer",
+                     "schema":  {
+                                    "name":  "id",
+                                    "table":  "account_types",
+                                    "data_type":  "integer",
+                                    "default_value":  "nextval(\u0027account_types_id_seq\u0027::regclass)",
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  32,
+                                    "numeric_scale":  0,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  true,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  true,
+                                    "has_auto_increment":  true,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  53,
+                                  "collection":  "account_types",
+                                  "field":  "id",
+                                  "special":  null,
+                                  "interface":  "input",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  true,
+                                  "hidden":  true,
+                                  "sort":  1,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "account_types",
+                     "field":  "type",
+                     "type":  "string",
+                     "schema":  {
+                                    "name":  "type",
+                                    "table":  "account_types",
+                                    "data_type":  "character varying",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  255,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  54,
+                                  "collection":  "account_types",
+                                  "field":  "type",
+                                  "special":  null,
+                                  "interface":  "select-dropdown",
+                                  "options":  {
+                                                  "choices":  [
+                                                                  {
+                                                                      "text":  "Fiat",
+                                                                      "value":  "fiat",
+                                                                      "color":  "#2ECDA7"
+                                                                  },
+                                                                  {
+                                                                      "text":  "Crypto",
+                                                                      "value":  "crypto",
+                                                                      "color":  "#E35169"
+                                                                  },
+                                                                  {
+                                                                      "text":  "Point",
+                                                                      "value":  "point",
+                                                                      "color":  "#A2B5CD"
+                                                                  }
+                                                              ]
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  2,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 }
+             ]
+}

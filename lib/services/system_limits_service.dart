@@ -17,7 +17,13 @@ class SystemLimitsService {
 
   /// Retrieve system limits (with images) from the backend.
   Future<List<SystemLimit>> fetchSystemLimits() async {
-    final response = await _apiClient.get(Endpoints.systemLimits);
+    final response = await _apiClient.get(
+      Endpoints.systemLimits,
+      queryParams: {
+        'fields':
+            'id,default_limit,country,provider,account_type.id,account_type.type,created_at,updated_at',
+      },
+    );
     final data = response is Map ? response['data'] : null;
     final limits = _extractSystemLimitsFromData(data);
     if (limits.isNotEmpty) {
@@ -105,7 +111,13 @@ class SystemLimitsService {
   Map<String, double> _mapLimits(List<SystemLimit> limits) {
     final map = <String, double>{};
     for (final limit in limits) {
-      map[limit.systemName] = limit.dailyLimit.toDouble();
+      final key = (limit.systemName.isNotEmpty
+              ? limit.systemName
+              : limit.accountTypeId ??
+                  limit.providerId ??
+                  limit.id.toString())
+          .toLowerCase();
+      map[key] = limit.dailyLimit.toDouble();
     }
     return map;
   }

@@ -93,7 +93,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
         SystemLimit(
           id: -1,
           systemName: rawType,
-          dailyLimit: account.defaultLimit.toInt(),
+          dailyLimit: account.defaultLimit.toDouble(),
           systemImage: null,
         );
 

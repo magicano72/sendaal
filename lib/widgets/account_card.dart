@@ -297,6 +297,6 @@ SystemLimit _fallbackSystem(FinancialAccount account) => SystemLimit(
   systemName: account.accountTypeName.isNotEmpty
       ? account.accountTypeName
       : account.type.name,
-  dailyLimit: account.defaultLimit.toInt(),
+  dailyLimit: account.defaultLimit.toDouble(),
   systemImage: null,
 );

@@ -2,18 +2,39 @@ import '../utils/date_utils.dart';
 
 /// Supported account types
 enum AccountType {
-  instapay,
-  digital_wallet,
-  bank_account,
-  telda,
-  fawry,
+  fiat,
+  crypto,
+  point,
+  // instapay,
+  // digital_wallet,
+  // bank_account,
+  // telda,
+  // fawry,
   other;
 
   static AccountType fromString(String value) {
-    return AccountType.values.firstWhere(
-      (e) => e.name == value,
-      orElse: () => AccountType.other,
-    );
+    switch (value.toLowerCase()) {
+      case 'fiat':
+        return AccountType.fiat;
+      case 'crypto':
+        return AccountType.crypto;
+      case 'point':
+        return AccountType.point;
+      // case 'instapay':
+      //   return AccountType.instapay;
+      // case 'digital_wallet':
+      // case 'digital wallet':
+      //   return AccountType.digital_wallet;
+      // case 'bank_account':
+      // case 'bank account':
+      //   return AccountType.bank_account;
+      // case 'telda':
+      //   return AccountType.telda;
+      // case 'fawry':
+      //   return AccountType.fawry;
+      default:
+        return AccountType.other;
+    }
   }
 }
 

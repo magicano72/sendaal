@@ -45,6 +45,12 @@ Widget buildSystemIcon({
 
 Widget _fallbackIcon(String name, double size) {
   switch (name.toLowerCase()) {
+    case 'fiat':
+      return Icon(Icons.payments_outlined, size: size);
+    case 'crypto':
+      return Icon(Icons.currency_bitcoin_outlined, size: size);
+    case 'point':
+      return Icon(Icons.card_giftcard_outlined, size: size);
     case 'instapay':
       return Icon(Icons.flash_on, size: size);
     case 'digital_wallet':

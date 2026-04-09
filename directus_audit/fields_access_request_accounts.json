@@ -1,0 +1,211 @@
+{
+    "data":  [
+                 {
+                     "collection":  "access_request_accounts",
+                     "field":  "id",
+                     "type":  "integer",
+                     "schema":  {
+                                    "name":  "id",
+                                    "table":  "access_request_accounts",
+                                    "data_type":  "integer",
+                                    "default_value":  "nextval(\u0027access_request_accounts_id_seq\u0027::regclass)",
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  32,
+                                    "numeric_scale":  0,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  true,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  true,
+                                    "has_auto_increment":  true,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  79,
+                                  "collection":  "access_request_accounts",
+                                  "field":  "id",
+                                  "special":  null,
+                                  "interface":  "input",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  true,
+                                  "hidden":  true,
+                                  "sort":  1,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_request_accounts",
+                     "field":  "access_request",
+                     "type":  "integer",
+                     "schema":  {
+                                    "name":  "access_request",
+                                    "table":  "access_request_accounts",
+                                    "data_type":  "integer",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  32,
+                                    "numeric_scale":  0,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  "public",
+                                    "foreign_key_table":  "access_requests",
+                                    "foreign_key_column":  "id",
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  80,
+                                  "collection":  "access_request_accounts",
+                                  "field":  "access_request",
+                                  "special":  [
+                                                  "m2o"
+                                              ],
+                                  "interface":  "select-dropdown-m2o",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  2,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_request_accounts",
+                     "field":  "financial_account",
+                     "type":  "integer",
+                     "schema":  {
+                                    "name":  "financial_account",
+                                    "table":  "access_request_accounts",
+                                    "data_type":  "integer",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  32,
+                                    "numeric_scale":  0,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  "public",
+                                    "foreign_key_table":  "financial_accounts",
+                                    "foreign_key_column":  "id",
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  81,
+                                  "collection":  "access_request_accounts",
+                                  "field":  "financial_account",
+                                  "special":  [
+                                                  "m2o"
+                                              ],
+                                  "interface":  "select-dropdown-m2o",
+                                  "options":  {
+                                                  "template":  "{{provider_availability.provider.provider_name}} {{provider_availability.currency}} {{country.country_code}}"
+                                              },
+                                  "display":  "related-values",
+                                  "display_options":  {
+                                                          "template":  "{{user.username}} {{country.country_name}}{{provider.provider_name}}{{account_title}}"
+                                                      },
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  3,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_request_accounts",
+                     "field":  "side",
+                     "type":  "string",
+                     "schema":  {
+                                    "name":  "side",
+                                    "table":  "access_request_accounts",
+                                    "data_type":  "character varying",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  255,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  84,
+                                  "collection":  "access_request_accounts",
+                                  "field":  "side",
+                                  "special":  null,
+                                  "interface":  "select-dropdown",
+                                  "options":  {
+                                                  "choices":  [
+                                                                  {
+                                                                      "text":  "Requester",
+                                                                      "value":  "requester"
+                                                                  },
+                                                                  {
+                                                                      "text":  "Receiver",
+                                                                      "value":  "receiver"
+                                                                  }
+                                                              ]
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  4,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 }
+             ]
+}

@@ -1,0 +1,511 @@
+{
+    "data":  [
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "id",
+                     "type":  "uuid",
+                     "schema":  {
+                                    "name":  "id",
+                                    "table":  "directus_policies",
+                                    "data_type":  "uuid",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  true,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  true,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "id",
+                                  "special":  [
+                                                  "uuid"
+                                              ],
+                                  "interface":  null,
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  true,
+                                  "sort":  1,
+                                  "width":  "full",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "name",
+                     "type":  "string",
+                     "schema":  {
+                                    "name":  "name",
+                                    "table":  "directus_policies",
+                                    "data_type":  "character varying",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  100,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "name",
+                                  "special":  null,
+                                  "interface":  null,
+                                  "options":  null,
+                                  "display":  "formatted-value",
+                                  "display_options":  {
+                                                          "translate":  true
+                                                      },
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  2,
+                                  "width":  "half",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  true,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "icon",
+                     "type":  "string",
+                     "schema":  {
+                                    "name":  "icon",
+                                    "table":  "directus_policies",
+                                    "data_type":  "character varying",
+                                    "default_value":  "badge",
+                                    "generation_expression":  null,
+                                    "max_length":  64,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "icon",
+                                  "special":  null,
+                                  "interface":  "select-icon",
+                                  "options":  null,
+                                  "display":  "icon",
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  3,
+                                  "width":  "half",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "description",
+                     "type":  "text",
+                     "schema":  {
+                                    "name":  "description",
+                                    "table":  "directus_policies",
+                                    "data_type":  "text",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "description",
+                                  "special":  null,
+                                  "interface":  "input",
+                                  "options":  {
+                                                  "placeholder":  "$t:field_options.directus_policies.description"
+                                              },
+                                  "display":  "formatted-value",
+                                  "display_options":  {
+                                                          "translate":  true
+                                                      },
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  4,
+                                  "width":  "full",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "ip_access",
+                     "type":  "csv",
+                     "schema":  {
+                                    "name":  "ip_access",
+                                    "table":  "directus_policies",
+                                    "data_type":  "text",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "ip_access",
+                                  "special":  [
+                                                  "cast-csv"
+                                              ],
+                                  "interface":  "tags",
+                                  "options":  {
+                                                  "placeholder":  "$t:field_options.directus_policies.ip_access"
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  8,
+                                  "width":  "full",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "enforce_tfa",
+                     "type":  "boolean",
+                     "schema":  {
+                                    "name":  "enforce_tfa",
+                                    "table":  "directus_policies",
+                                    "data_type":  "boolean",
+                                    "default_value":  false,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "enforce_tfa",
+                                  "special":  [
+                                                  "cast-boolean"
+                                              ],
+                                  "interface":  "boolean",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  9,
+                                  "width":  "half",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  "$t:field_options.directus_policies.enforce_tfa",
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "admin_access",
+                     "type":  "boolean",
+                     "schema":  {
+                                    "name":  "admin_access",
+                                    "table":  "directus_policies",
+                                    "data_type":  "boolean",
+                                    "default_value":  false,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "admin_access",
+                                  "special":  [
+                                                  "cast-boolean"
+                                              ],
+                                  "interface":  "boolean",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  7,
+                                  "width":  "half",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "app_access",
+                     "type":  "boolean",
+                     "schema":  {
+                                    "name":  "app_access",
+                                    "table":  "directus_policies",
+                                    "data_type":  "boolean",
+                                    "default_value":  false,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "app_access",
+                                  "special":  [
+                                                  "cast-boolean"
+                                              ],
+                                  "interface":  "boolean",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  6,
+                                  "width":  "half",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "permissions",
+                     "type":  "alias",
+                     "schema":  null,
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "permissions",
+                                  "special":  [
+                                                  "o2m"
+                                              ],
+                                  "interface":  "system-permissions",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  5,
+                                  "width":  "full",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "assigned_to_divider",
+                     "type":  "alias",
+                     "schema":  null,
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "assigned_to_divider",
+                                  "special":  [
+                                                  "alias",
+                                                  "no-data"
+                                              ],
+                                  "interface":  "presentation-divider",
+                                  "options":  {
+                                                  "title":  "$t:field_options.directus_policies.assigned_to"
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  10,
+                                  "width":  "full",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "users",
+                     "type":  "alias",
+                     "schema":  null,
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "users",
+                                  "special":  [
+                                                  "m2m"
+                                              ],
+                                  "interface":  "list-m2m",
+                                  "options":  {
+                                                  "template":  "{{ user.first_name }} {{ user.last_name }}",
+                                                  "junctionFilter":  {
+                                                                         "user":  {
+                                                                                      "_nnull":  true
+                                                                                  }
+                                                                     }
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  11,
+                                  "width":  "full",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "directus_policies",
+                     "field":  "roles",
+                     "type":  "alias",
+                     "schema":  null,
+                     "meta":  {
+                                  "system":  true,
+                                  "collection":  "directus_policies",
+                                  "field":  "roles",
+                                  "special":  [
+                                                  "m2m"
+                                              ],
+                                  "interface":  "list-m2m",
+                                  "options":  {
+                                                  "template":  "{{ role.name }}",
+                                                  "junctionFilter":  {
+                                                                         "role":  {
+                                                                                      "_nnull":  true
+                                                                                  }
+                                                                     }
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  12,
+                                  "width":  "full",
+                                  "group":  null,
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "searchable":  true
+                              }
+                 }
+             ]
+}

@@ -1,0 +1,599 @@
+{
+    "data":  [
+                 {
+                     "collection":  "access_requests",
+                     "field":  "id",
+                     "type":  "integer",
+                     "schema":  {
+                                    "name":  "id",
+                                    "table":  "access_requests",
+                                    "data_type":  "integer",
+                                    "default_value":  "nextval(\u0027access_requests_id_seq\u0027::regclass)",
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  32,
+                                    "numeric_scale":  0,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  true,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  true,
+                                    "has_auto_increment":  true,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  13,
+                                  "collection":  "access_requests",
+                                  "field":  "id",
+                                  "special":  null,
+                                  "interface":  "input",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  true,
+                                  "hidden":  true,
+                                  "sort":  1,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "requester",
+                     "type":  "uuid",
+                     "schema":  {
+                                    "name":  "requester",
+                                    "table":  "access_requests",
+                                    "data_type":  "uuid",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  "public",
+                                    "foreign_key_table":  "directus_users",
+                                    "foreign_key_column":  "id",
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  14,
+                                  "collection":  "access_requests",
+                                  "field":  "requester",
+                                  "special":  [
+                                                  "m2o"
+                                              ],
+                                  "interface":  "select-dropdown-m2o",
+                                  "options":  {
+                                                  "template":  "{{username}}"
+                                              },
+                                  "display":  "related-values",
+                                  "display_options":  {
+                                                          "template":  "{{username}}"
+                                                      },
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  2,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "receiver",
+                     "type":  "uuid",
+                     "schema":  {
+                                    "name":  "receiver",
+                                    "table":  "access_requests",
+                                    "data_type":  "uuid",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  "public",
+                                    "foreign_key_table":  "directus_users",
+                                    "foreign_key_column":  "id",
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  15,
+                                  "collection":  "access_requests",
+                                  "field":  "receiver",
+                                  "special":  [
+                                                  "m2o"
+                                              ],
+                                  "interface":  "select-dropdown-m2o",
+                                  "options":  {
+                                                  "template":  "{{username}}"
+                                              },
+                                  "display":  "related-values",
+                                  "display_options":  {
+                                                          "template":  "{{username}}"
+                                                      },
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  3,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "status",
+                     "type":  "string",
+                     "schema":  {
+                                    "name":  "status",
+                                    "table":  "access_requests",
+                                    "data_type":  "character varying",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  255,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  16,
+                                  "collection":  "access_requests",
+                                  "field":  "status",
+                                  "special":  null,
+                                  "interface":  "select-dropdown",
+                                  "options":  {
+                                                  "choices":  [
+                                                                  {
+                                                                      "text":  "Pending",
+                                                                      "value":  "pending",
+                                                                      "color":  "#FFA439"
+                                                                  },
+                                                                  {
+                                                                      "text":  "Approved",
+                                                                      "value":  "approved",
+                                                                      "color":  "#2ECDA7"
+                                                                  },
+                                                                  {
+                                                                      "text":  "Rejected",
+                                                                      "value":  "rejected",
+                                                                      "color":  "#E35169"
+                                                                  },
+                                                                  {
+                                                                      "text":  "Cancelled",
+                                                                      "value":  "cancelled"
+                                                                  },
+                                                                  {
+                                                                      "text":  "Revoked By Requester",
+                                                                      "value":  "revoked_by_requester"
+                                                                  },
+                                                                  {
+                                                                      "text":  "revokedByReceiver",
+                                                                      "value":  "revoked_by_receiver"
+                                                                  }
+                                                              ]
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  4,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "visible_for_receiver",
+                     "type":  "boolean",
+                     "schema":  {
+                                    "name":  "visible_for_receiver",
+                                    "table":  "access_requests",
+                                    "data_type":  "boolean",
+                                    "default_value":  true,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  28,
+                                  "collection":  "access_requests",
+                                  "field":  "visible_for_receiver",
+                                  "special":  [
+                                                  "cast-boolean"
+                                              ],
+                                  "interface":  "boolean",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  6,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "visible_for_requester",
+                     "type":  "boolean",
+                     "schema":  {
+                                    "name":  "visible_for_requester",
+                                    "table":  "access_requests",
+                                    "data_type":  "boolean",
+                                    "default_value":  true,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  29,
+                                  "collection":  "access_requests",
+                                  "field":  "visible_for_requester",
+                                  "special":  [
+                                                  "cast-boolean"
+                                              ],
+                                  "interface":  "boolean",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  5,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "is_favorite",
+                     "type":  "boolean",
+                     "schema":  {
+                                    "name":  "is_favorite",
+                                    "table":  "access_requests",
+                                    "data_type":  "boolean",
+                                    "default_value":  false,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  39,
+                                  "collection":  "access_requests",
+                                  "field":  "is_favorite",
+                                  "special":  [
+                                                  "cast-boolean"
+                                              ],
+                                  "interface":  "boolean",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  7,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "created_at",
+                     "type":  "timestamp",
+                     "schema":  {
+                                    "name":  "created_at",
+                                    "table":  "access_requests",
+                                    "data_type":  "timestamp with time zone",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  47,
+                                  "collection":  "access_requests",
+                                  "field":  "created_at",
+                                  "special":  [
+                                                  "date-created"
+                                              ],
+                                  "interface":  "datetime",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  10,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "request_access_type",
+                     "type":  "string",
+                     "schema":  {
+                                    "name":  "request_access_type",
+                                    "table":  "access_requests",
+                                    "data_type":  "character varying",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  255,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  77,
+                                  "collection":  "access_requests",
+                                  "field":  "request_access_type",
+                                  "special":  null,
+                                  "interface":  "select-dropdown",
+                                  "options":  {
+                                                  "choices":  [
+                                                                  {
+                                                                      "text":  "Full Access",
+                                                                      "value":  "full",
+                                                                      "color":  "#2ECDA7"
+                                                                  },
+                                                                  {
+                                                                      "text":  "Custom Access",
+                                                                      "value":  "custom",
+                                                                      "color":  "#E35169"
+                                                                  }
+                                                              ]
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  8,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "approved_access_type",
+                     "type":  "string",
+                     "schema":  {
+                                    "name":  "approved_access_type",
+                                    "table":  "access_requests",
+                                    "data_type":  "character varying",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  255,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  78,
+                                  "collection":  "access_requests",
+                                  "field":  "approved_access_type",
+                                  "special":  null,
+                                  "interface":  "select-dropdown",
+                                  "options":  {
+                                                  "choices":  [
+                                                                  {
+                                                                      "text":  "Full Access",
+                                                                      "value":  "full",
+                                                                      "color":  "#2ECDA7"
+                                                                  },
+                                                                  {
+                                                                      "text":  "Custom Access",
+                                                                      "value":  "custom",
+                                                                      "color":  "#E35169"
+                                                                  }
+                                                              ]
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  9,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "access_requests",
+                     "field":  "revoked_by",
+                     "type":  "uuid",
+                     "schema":  {
+                                    "name":  "revoked_by",
+                                    "table":  "access_requests",
+                                    "data_type":  "uuid",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  "public",
+                                    "foreign_key_table":  "directus_users",
+                                    "foreign_key_column":  "id",
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  86,
+                                  "collection":  "access_requests",
+                                  "field":  "revoked_by",
+                                  "special":  [
+                                                  "m2o"
+                                              ],
+                                  "interface":  "select-dropdown-m2o",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  11,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 }
+             ]
+}

@@ -1,0 +1,334 @@
+{
+    "data":  [
+                 {
+                     "collection":  "provider_availability",
+                     "field":  "id",
+                     "type":  "integer",
+                     "schema":  {
+                                    "name":  "id",
+                                    "table":  "provider_availability",
+                                    "data_type":  "integer",
+                                    "default_value":  "nextval(\u0027provider_availability_id_seq\u0027::regclass)",
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  32,
+                                    "numeric_scale":  0,
+                                    "is_generated":  false,
+                                    "is_nullable":  false,
+                                    "is_unique":  true,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  true,
+                                    "has_auto_increment":  true,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  63,
+                                  "collection":  "provider_availability",
+                                  "field":  "id",
+                                  "special":  null,
+                                  "interface":  "input",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  true,
+                                  "hidden":  true,
+                                  "sort":  1,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "provider_availability",
+                     "field":  "provider",
+                     "type":  "integer",
+                     "schema":  {
+                                    "name":  "provider",
+                                    "table":  "provider_availability",
+                                    "data_type":  "integer",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  32,
+                                    "numeric_scale":  0,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  "public",
+                                    "foreign_key_table":  "providers",
+                                    "foreign_key_column":  "id",
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  64,
+                                  "collection":  "provider_availability",
+                                  "field":  "provider",
+                                  "special":  [
+                                                  "m2o"
+                                              ],
+                                  "interface":  "select-dropdown-m2o",
+                                  "options":  {
+                                                  "template":  "{{provider_name}}  {{type}}"
+                                              },
+                                  "display":  "related-values",
+                                  "display_options":  {
+                                                          "template":  "{{provider_name}}"
+                                                      },
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  3,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "provider_availability",
+                     "field":  "country",
+                     "type":  "integer",
+                     "schema":  {
+                                    "name":  "country",
+                                    "table":  "provider_availability",
+                                    "data_type":  "integer",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  32,
+                                    "numeric_scale":  0,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  "public",
+                                    "foreign_key_table":  "countries",
+                                    "foreign_key_column":  "id",
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  65,
+                                  "collection":  "provider_availability",
+                                  "field":  "country",
+                                  "special":  [
+                                                  "m2o"
+                                              ],
+                                  "interface":  "select-dropdown-m2o",
+                                  "options":  {
+                                                  "template":  "{{country_name}} {{country_code}} {{is_active}}"
+                                              },
+                                  "display":  "related-values",
+                                  "display_options":  {
+                                                          "template":  "{{country_name}}"
+                                                      },
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  2,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "provider_availability",
+                     "field":  "account_type",
+                     "type":  "integer",
+                     "schema":  {
+                                    "name":  "account_type",
+                                    "table":  "provider_availability",
+                                    "data_type":  "integer",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  32,
+                                    "numeric_scale":  0,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  "public",
+                                    "foreign_key_table":  "account_types",
+                                    "foreign_key_column":  "id",
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  66,
+                                  "collection":  "provider_availability",
+                                  "field":  "account_type",
+                                  "special":  [
+                                                  "m2o"
+                                              ],
+                                  "interface":  "select-dropdown-m2o",
+                                  "options":  {
+                                                  "template":  "{{type}}"
+                                              },
+                                  "display":  "related-values",
+                                  "display_options":  {
+                                                          "template":  "{{type}}"
+                                                      },
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  4,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "provider_availability",
+                     "field":  "currency",
+                     "type":  "string",
+                     "schema":  {
+                                    "name":  "currency",
+                                    "table":  "provider_availability",
+                                    "data_type":  "character varying",
+                                    "default_value":  null,
+                                    "generation_expression":  null,
+                                    "max_length":  255,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  67,
+                                  "collection":  "provider_availability",
+                                  "field":  "currency",
+                                  "special":  null,
+                                  "interface":  "select-dropdown",
+                                  "options":  {
+                                                  "choices":  [
+                                                                  {
+                                                                      "text":  "EGP",
+                                                                      "value":  "EGP",
+                                                                      "color":  "#6644FF"
+                                                                  },
+                                                                  {
+                                                                      "text":  "SAR",
+                                                                      "value":  "SAR",
+                                                                      "color":  "#3399FF"
+                                                                  },
+                                                                  {
+                                                                      "text":  "AED",
+                                                                      "value":  "AED",
+                                                                      "color":  "#2ECDA7"
+                                                                  },
+                                                                  {
+                                                                      "text":  "USD",
+                                                                      "value":  "USD",
+                                                                      "color":  "#FFC23B"
+                                                                  },
+                                                                  {
+                                                                      "text":  "EUR",
+                                                                      "value":  "EUR",
+                                                                      "color":  "#18222F"
+                                                                  }
+                                                              ]
+                                              },
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  5,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 },
+                 {
+                     "collection":  "provider_availability",
+                     "field":  "is_active",
+                     "type":  "boolean",
+                     "schema":  {
+                                    "name":  "is_active",
+                                    "table":  "provider_availability",
+                                    "data_type":  "boolean",
+                                    "default_value":  true,
+                                    "generation_expression":  null,
+                                    "max_length":  null,
+                                    "numeric_precision":  null,
+                                    "numeric_scale":  null,
+                                    "is_generated":  false,
+                                    "is_nullable":  true,
+                                    "is_unique":  false,
+                                    "is_indexed":  false,
+                                    "is_primary_key":  false,
+                                    "has_auto_increment":  false,
+                                    "foreign_key_schema":  null,
+                                    "foreign_key_table":  null,
+                                    "foreign_key_column":  null,
+                                    "comment":  null
+                                },
+                     "meta":  {
+                                  "id":  68,
+                                  "collection":  "provider_availability",
+                                  "field":  "is_active",
+                                  "special":  [
+                                                  "cast-boolean"
+                                              ],
+                                  "interface":  "boolean",
+                                  "options":  null,
+                                  "display":  null,
+                                  "display_options":  null,
+                                  "readonly":  false,
+                                  "hidden":  false,
+                                  "sort":  6,
+                                  "width":  "full",
+                                  "translations":  null,
+                                  "note":  null,
+                                  "conditions":  null,
+                                  "required":  false,
+                                  "group":  null,
+                                  "validation":  null,
+                                  "validation_message":  null,
+                                  "searchable":  true
+                              }
+                 }
+             ]
+}
