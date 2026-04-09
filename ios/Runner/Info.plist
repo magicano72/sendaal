@@ -46,10 +46,14 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSContactsUsageDescription</key>
-	<string>Sendaal needs access to your contacts to help you find friends and send access requests.</string>
+	<string>Sendaal needs access to your contacts to help you find and connect with people you know.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Sendaal needs access to your photos so you can choose a profile picture.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.sendaal.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>sendaal</string>

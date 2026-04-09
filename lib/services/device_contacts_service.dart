@@ -1,8 +1,14 @@
 import 'package:flutter_contacts/flutter_contacts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// Permission state for device contacts.
-enum ContactsPermissionStatus { unknown, granted, denied }
+enum ContactsPermissionStatus {
+  unknown,
+  granted,
+  denied,
+  permanentlyDenied,
+  restricted,
+}
 
 /// Lightweight representation of a device contact (one primary phone per entry).
 class DeviceContact {
@@ -19,37 +25,27 @@ class DeviceContact {
 
 /// Handles permission requests and contact retrieval from the device.
 class DeviceContactsService {
-  static const _prefAskedKey = 'contacts_permission_requested_v1';
-
-  /// Ask for contacts permission on first launch and remember the prompt state.
+  /// Check current permission state without prompting the user.
   Future<ContactsPermissionStatus> bootstrapPermission() async {
-    final prefs = await SharedPreferences.getInstance();
-    final alreadyAsked = prefs.getBool(_prefAskedKey) ?? false;
+    return checkPermission();
+  }
 
-    if (!alreadyAsked) {
-      await prefs.setBool(_prefAskedKey, true);
-      return requestPermission();
-    }
-
-    // If we already asked before, just check current status without forcing UI
-    final granted = await FlutterContacts.requestPermission(readonly: true);
-    return granted
-        ? ContactsPermissionStatus.granted
-        : ContactsPermissionStatus.denied;
+  /// Check current status without showing a system dialog.
+  Future<ContactsPermissionStatus> checkPermission() async {
+    final status = await Permission.contacts.status;
+    return _mapStatus(status);
   }
 
   /// Prompt the user for contacts access.
   Future<ContactsPermissionStatus> requestPermission() async {
-    final granted = await FlutterContacts.requestPermission(readonly: true);
-    return granted
-        ? ContactsPermissionStatus.granted
-        : ContactsPermissionStatus.denied;
+    final status = await Permission.contacts.request();
+    return _mapStatus(status);
   }
 
   /// Fetch device contacts (single primary phone per contact).
   Future<List<DeviceContact>> getDeviceContacts() async {
-    final granted = await FlutterContacts.requestPermission(readonly: true);
-    if (!granted) return [];
+    final status = await checkPermission();
+    if (status != ContactsPermissionStatus.granted) return [];
 
     final contacts = await FlutterContacts.getContacts(
       withProperties: true,
@@ -77,6 +73,19 @@ class DeviceContactsService {
     }
 
     return result;
+  }
+
+  ContactsPermissionStatus _mapStatus(PermissionStatus status) {
+    if (status.isGranted || status.isLimited) {
+      return ContactsPermissionStatus.granted;
+    }
+    if (status.isPermanentlyDenied) {
+      return ContactsPermissionStatus.permanentlyDenied;
+    }
+    if (status.isRestricted) {
+      return ContactsPermissionStatus.restricted;
+    }
+    return ContactsPermissionStatus.denied;
   }
 
   String _normalizePhone(String raw) {

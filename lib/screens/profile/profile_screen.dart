@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:Sendaal/widgets/account_card.dart';
 import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
@@ -153,6 +156,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // Don't allow picking while already uploading
     if (_isUploading) return;
 
+    final allowed = await _ensurePhotoPermission();
+    if (!allowed) return;
+
     try {
       final picker = ImagePicker();
       final image = await picker.pickImage(source: ImageSource.gallery);
@@ -166,6 +172,77 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         AppSnackBar.error(context, 'Failed to pick photo.');
       }
     }
+  }
+
+  Future<bool> _ensurePhotoPermission() async {
+    if (!Platform.isIOS && !Platform.isAndroid) return true;
+
+    var status = await Permission.photos.status;
+    if (status.isGranted || status.isLimited) return true;
+
+    if (status.isPermanentlyDenied || status.isRestricted) {
+      final goSettings = await _showPhotoSettingsDialog();
+      if (goSettings) await openAppSettings();
+      return false;
+    }
+
+    final proceed = await _showPhotoRationaleDialog();
+    if (!proceed) return false;
+
+    status = await Permission.photos.request();
+    if (status.isGranted || status.isLimited) return true;
+
+    if (status.isPermanentlyDenied || status.isRestricted) {
+      final goSettings = await _showPhotoSettingsDialog();
+      if (goSettings) await openAppSettings();
+    }
+    return false;
+  }
+
+  Future<bool> _showPhotoRationaleDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Allow photo access'),
+        content: const Text(
+          'Sendaal needs access to your photos so you can choose a profile picture.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<bool> _showPhotoSettingsDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enable photos in Settings'),
+        content: const Text(
+          'Photo access is disabled. Open Settings to enable photos for Sendaal.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   Future<void> _uploadPhoto(String filePath) async {

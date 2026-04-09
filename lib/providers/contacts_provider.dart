@@ -55,20 +55,28 @@ class DeviceContactsNotifier extends StateNotifier<DeviceContactsState> {
   DeviceContactsNotifier(this._service, this._userService)
       : super(const DeviceContactsState());
 
-  Future<void> bootstrap() async {
+  Future<ContactsPermissionStatus> bootstrap() async {
     final status = await _service.bootstrapPermission();
     state = state.copyWith(permission: status);
     if (status == ContactsPermissionStatus.granted) {
       await loadContacts();
     }
+    return status;
   }
 
-  Future<void> requestPermission() async {
+  Future<ContactsPermissionStatus> refreshPermission() async {
+    final status = await _service.checkPermission();
+    state = state.copyWith(permission: status);
+    return status;
+  }
+
+  Future<ContactsPermissionStatus> requestPermission() async {
     final status = await _service.requestPermission();
     state = state.copyWith(permission: status);
     if (status == ContactsPermissionStatus.granted) {
       await loadContacts();
     }
+    return status;
   }
 
   Future<void> loadContacts() async {

@@ -3,6 +3,7 @@ import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/models/user_model.dart';
@@ -28,8 +29,12 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(deviceContactsProvider.notifier).loadContacts();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final notifier = ref.read(deviceContactsProvider.notifier);
+      final status = await notifier.refreshPermission();
+      if (status == ContactsPermissionStatus.granted) {
+        await notifier.loadContacts();
+      }
     });
     _searchController.addListener(() {
       setState(
@@ -52,8 +57,97 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
       final username = c.matchedUser?.username.toLowerCase() ?? '';
       return name.contains(_searchQuery) ||
           phone.contains(_searchQuery) ||
-          username.contains(_searchQuery);
+      username.contains(_searchQuery);
     }).toList();
+  }
+
+  Future<void> _handleContactsPermission() async {
+    final notifier = ref.read(deviceContactsProvider.notifier);
+    final current = ref.read(deviceContactsProvider).permission;
+
+    if (current == ContactsPermissionStatus.permanentlyDenied ||
+        current == ContactsPermissionStatus.restricted) {
+      final goSettings = await _showSettingsDialog(
+        title: 'Enable contacts in Settings',
+        message:
+            'Please enable contacts access in Settings > Privacy > Contacts to import your phonebook.',
+      );
+      if (goSettings) await openAppSettings();
+      return;
+    }
+
+    final proceed = await _showRationaleDialog(
+      title: 'Allow contacts access',
+      message:
+          'Sendaal uses your contacts to help you find and connect with people you know. Continue?',
+    );
+    if (!proceed) return;
+
+    final result = await notifier.requestPermission();
+    if (result == ContactsPermissionStatus.granted) {
+      await notifier.loadContacts();
+      return;
+    }
+
+    if (result == ContactsPermissionStatus.permanentlyDenied ||
+        result == ContactsPermissionStatus.restricted) {
+      final goSettings = await _showSettingsDialog(
+        title: 'Enable contacts in Settings',
+        message:
+            'Contacts access is blocked. Open Settings to allow contacts for Sendaal.',
+      );
+      if (goSettings) await openAppSettings();
+    }
+  }
+
+  Future<bool> _showRationaleDialog({
+    required String title,
+    required String message,
+    String confirmLabel = 'Continue',
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<bool> _showSettingsDialog({
+    required String title,
+    required String message,
+    String primaryLabel = 'Open Settings',
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(primaryLabel),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   @override
@@ -65,8 +159,9 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
         .map((c) => c.user.id)
         .toSet();
 
-    final permissionDenied =
-        deviceState.permission == ContactsPermissionStatus.denied;
+    final permissionState = deviceState.permission;
+    final needsPermissionCard =
+        permissionState != ContactsPermissionStatus.granted;
 
     final filteredContacts = _filterContacts(deviceState.contacts);
 
@@ -93,10 +188,11 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
               sliver: SliverToBoxAdapter(child: _buildSearchBar()),
             ),
 
-            if (permissionDenied)
+            if (needsPermissionCard)
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
-                sliver: SliverToBoxAdapter(child: _buildPermissionCard()),
+                sliver:
+                    SliverToBoxAdapter(child: _buildPermissionCard(permissionState)),
               ),
 
             if (deviceState.isLoading)
@@ -112,7 +208,9 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
                 hasScrollBody: false,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
-                  child: _buildEmptyCard(permissionDenied),
+                  child: _buildEmptyCard(
+                    permissionState != ContactsPermissionStatus.granted,
+                  ),
                 ),
               )
             else ...[
@@ -154,7 +252,6 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
                       return _buildContactTile(
                         contact,
                         approvedIds,
-                        permissionDenied,
                       );
                     }, childCount: filteredContacts.length),
                   ),
@@ -197,7 +294,16 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
     );
   }
 
-  Widget _buildPermissionCard() {
+  Widget _buildPermissionCard(ContactsPermissionStatus status) {
+    final isBlocked = status == ContactsPermissionStatus.permanentlyDenied ||
+        status == ContactsPermissionStatus.restricted;
+    final title =
+        isBlocked ? 'Enable contacts in Settings' : 'Allow contacts access';
+    final subtitle = isBlocked
+        ? 'Contacts access is blocked. Enable it in Settings to import your phonebook.'
+        : 'We use your phone contacts to find friends already on Sendaal.';
+    final buttonLabel = isBlocked ? 'Open Settings' : 'Allow Contacts';
+
     return Card(
       margin: EdgeInsets.only(bottom: 14.h),
       child: Padding(
@@ -206,19 +312,18 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Allow contacts access',
+              title,
               style: TextStyles.bodySmallBold.copyWith(fontSize: 15.sp),
             ),
             SizedBox(height: 6.h),
             Text(
-              'We use your phone contacts to find friends already on Sendaal.',
+              subtitle,
               style: TextStyles.label.copyWith(color: Colors.grey[700]),
             ),
             SizedBox(height: 10.h),
             FilledButton(
-              onPressed: () =>
-                  ref.read(deviceContactsProvider.notifier).requestPermission(),
-              child: const Text('Allow Contacts'),
+              onPressed: _handleContactsPermission,
+              child: Text(buttonLabel),
             ),
           ],
         ),
@@ -226,7 +331,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
     );
   }
 
-  Widget _buildEmptyCard(bool permissionDenied) {
+  Widget _buildEmptyCard(bool permissionMissing) {
     return Card(
       margin: EdgeInsets.only(bottom: 14.h),
       child: Padding(
@@ -235,12 +340,12 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              permissionDenied ? 'No permission' : 'No contacts found',
+              permissionMissing ? 'No permission' : 'No contacts found',
               style: TextStyles.bodySmallBold.copyWith(fontSize: 15.sp),
             ),
             SizedBox(height: 6.h),
             Text(
-              permissionDenied
+              permissionMissing
                   ? 'Grant permission to list your device contacts.'
                   : 'We could not find contacts with phone numbers.',
               style: TextStyles.label.copyWith(color: Colors.grey[700]),
@@ -254,7 +359,6 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
   Widget _buildContactTile(
     DeviceContactView contact,
     Set<String> approvedIds,
-    bool permissionDenied,
   ) {
     final matchedUser = contact.matchedUser;
     final alreadyApproved =

@@ -7,6 +7,7 @@ import 'package:Sendaal/widgets/shimmer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';
@@ -83,6 +84,84 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
     Navigator.pushNamed(context, AppRoutes.recipient, arguments: user);
+  }
+
+  Future<void> _requestContactsPermission() async {
+    final notifier = ref.read(deviceContactsProvider.notifier);
+    final currentStatus = await notifier.refreshPermission();
+
+    if (currentStatus == ContactsPermissionStatus.granted) {
+      await notifier.loadContacts();
+      return;
+    }
+
+    if (currentStatus == ContactsPermissionStatus.permanentlyDenied ||
+        currentStatus == ContactsPermissionStatus.restricted) {
+      final goSettings = await _showContactsSettingsDialog();
+      if (goSettings) await openAppSettings();
+      return;
+    }
+
+    final proceed = await _showContactsRationaleDialog();
+    if (!proceed) return;
+
+    final result = await notifier.requestPermission();
+    if (result == ContactsPermissionStatus.granted) {
+      await notifier.loadContacts();
+      return;
+    }
+
+    if (result == ContactsPermissionStatus.permanentlyDenied ||
+        result == ContactsPermissionStatus.restricted) {
+      final goSettings = await _showContactsSettingsDialog();
+      if (goSettings) await openAppSettings();
+    }
+  }
+
+  Future<bool> _showContactsRationaleDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Allow contacts access'),
+        content: const Text(
+          'Sendaal needs access to your contacts to help you find people you know.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<bool> _showContactsSettingsDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enable contacts in Settings'),
+        content: const Text(
+          'Contacts access is blocked. Open Settings to enable contacts for Sendaal.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   Future<void> _refreshHome() async {
@@ -574,7 +653,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
 
-    final denied = deviceState.permission == ContactsPermissionStatus.denied;
+    final permissionState = deviceState.permission;
+    final permissionMissing = permissionState != ContactsPermissionStatus.granted;
+    final blocked = permissionState == ContactsPermissionStatus.permanentlyDenied ||
+        permissionState == ContactsPermissionStatus.restricted;
+    final title =
+        permissionMissing ? 'Allow contacts to sync' : 'No contacts yet';
+    final subtitle = blocked
+        ? 'Enable contacts in Settings to find friends from your phone book.'
+        : permissionMissing
+            ? 'Grant access to find friends from your phone book.'
+            : 'Approved contacts will appear here automatically.';
+    final ctaLabel = blocked
+        ? 'Open Settings'
+        : permissionMissing
+            ? 'Allow'
+            : 'Import';
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
@@ -602,16 +696,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    denied ? 'Allow contacts to sync' : 'No contacts yet',
+                    title,
                     style: TextStyles.bodySmallBold.copyWith(
                       color: AppTheme.textPrimaryColor,
                     ),
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    denied
-                        ? 'Grant access to find friends from your phone book.'
-                        : 'Approved contacts will appear here automatically.',
+                    subtitle,
                     style: TextStyles.captionRegular.copyWith(
                       color: AppTheme.textSecondaryColor,
                     ),
@@ -621,12 +713,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             SizedBox(width: 8.w),
             TextButton(
-              onPressed: denied
-                  ? () => ref
-                        .read(deviceContactsProvider.notifier)
-                        .requestPermission()
-                  : _openDeviceContacts,
-              child: Text(denied ? 'Allow' : 'Import'),
+              onPressed:
+                  permissionMissing ? _requestContactsPermission : _openDeviceContacts,
+              child: Text(ctaLabel),
             ),
           ],
         ),
