@@ -34,6 +34,7 @@ migrate_working_dir/
 .env
 /build/
 reset-password/
+directus_audit/
 # Symbolication related
 app.*.symbols
 
