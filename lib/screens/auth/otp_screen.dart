@@ -7,7 +7,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/error/exceptions.dart';
 import '../../core/router/app_router.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/theme/text_style.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/phone_verification_service.dart';
@@ -24,6 +23,7 @@ class OtpScreen extends ConsumerStatefulWidget {
 }
 
 class _OtpScreenState extends ConsumerState<OtpScreen> {
+  static const int _resendCooldownSeconds = 600; // 10 minutes
   late final List<TextEditingController> _digitCtrls;
   late final List<FocusNode> _digitNodes;
   final _verificationService = PhoneVerificationService();
@@ -45,7 +45,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     _digitNodes = List.generate(4, (_) => FocusNode());
     _session = widget.args.session;
     _remainingSeconds = _session.expiresIn;
-    _resendSeconds = _session.canResendAfter;
+    _resendSeconds = _resendCooldownSeconds;
     _startTimers();
   }
 
@@ -84,8 +84,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     });
   }
 
-  String _collectOtp() =>
-      _digitCtrls.map((c) => c.text.trim()).join();
+  String _collectOtp() => _digitCtrls.map((c) => c.text.trim()).join();
 
   void _handleDigitChange(int index, String value) {
     if (value.length > 1) {
@@ -138,7 +137,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       );
 
       final payload = widget.args.registerPayload;
-      final success = await ref.read(authProvider.notifier).register(
+      final success = await ref
+          .read(authProvider.notifier)
+          .register(
             email: payload.email,
             password: payload.password,
             username: payload.username,
@@ -162,7 +163,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           (route) => false,
         );
       } else {
-        final authError = ref.read(authProvider).error ??
+        final authError =
+            ref.read(authProvider).error ??
             'Registration failed after verification.';
         setState(() => _error = authError);
         AppSnackBar.error(context, authError);
@@ -174,10 +176,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     } catch (e) {
       setState(() => _error = 'Something went wrong. Please try again.');
       if (mounted) {
-        AppSnackBar.error(
-          context,
-          'Something went wrong. Please try again.',
-        );
+        AppSnackBar.error(context, 'Something went wrong. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _isVerifying = false);
@@ -198,7 +197,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       setState(() {
         _session = session;
         _remainingSeconds = session.expiresIn;
-        _resendSeconds = session.canResendAfter;
+        _resendSeconds = _resendCooldownSeconds;
       });
       _startTimers();
       if (mounted) {
@@ -252,10 +251,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             gradient: RadialGradient(
               center: Alignment(-0.3, -0.4),
               radius: 1.2,
-              colors: [
-                Color(0xFFEFF4FB),
-                Color(0xFFF6F9FD),
-              ],
+              colors: [Color(0xFFEFF4FB), Color(0xFFF6F9FD)],
               stops: [0.2, 1],
             ),
           ),
@@ -263,8 +259,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
               child: Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(26.r),
@@ -350,10 +345,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            onChanged: (val) => _handleDigitChange(
-                              index,
-                              val,
-                            ),
+                            onChanged: (val) => _handleDigitChange(index, val),
                           ),
                         );
                       }),
@@ -375,8 +367,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                         onPressed: _isVerifying ? null : _verify,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0B63CE),
-                          disabledBackgroundColor:
-                              const Color(0xFF0B63CE).withOpacity(0.6),
+                          disabledBackgroundColor: const Color(
+                            0xFF0B63CE,
+                          ).withOpacity(0.6),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18.r),
                           ),
@@ -412,8 +405,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           ),
                         ),
                         TextButton(
-                          onPressed:
-                              (_resendSeconds > 0 || _isResending) ? null : _resend,
+                          onPressed: (_resendSeconds > 0 || _isResending)
+                              ? null
+                              : _resend,
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: Size.zero,
@@ -429,7 +423,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                                 )
                               : Text(
                                   _resendSeconds > 0
-                                      ? 'Resend in ${_resendSeconds}s'
+                                      ? 'Resend in ${_formatSeconds(_resendSeconds)}'
                                       : 'Resend Code',
                                   style: TextStyles.bodyBold.copyWith(
                                     color: const Color(0xFF0B63CE),

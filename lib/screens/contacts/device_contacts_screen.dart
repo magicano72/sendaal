@@ -57,7 +57,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
       final username = c.matchedUser?.username.toLowerCase() ?? '';
       return name.contains(_searchQuery) ||
           phone.contains(_searchQuery) ||
-      username.contains(_searchQuery);
+          username.contains(_searchQuery);
     }).toList();
   }
 
@@ -191,8 +191,9 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
             if (needsPermissionCard)
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
-                sliver:
-                    SliverToBoxAdapter(child: _buildPermissionCard(permissionState)),
+                sliver: SliverToBoxAdapter(
+                  child: _buildPermissionCard(permissionState),
+                ),
               ),
 
             if (deviceState.isLoading)
@@ -249,10 +250,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final contact = filteredContacts[index];
-                      return _buildContactTile(
-                        contact,
-                        approvedIds,
-                      );
+                      return _buildContactTile(contact, approvedIds);
                     }, childCount: filteredContacts.length),
                   ),
                 ),
@@ -295,10 +293,12 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
   }
 
   Widget _buildPermissionCard(ContactsPermissionStatus status) {
-    final isBlocked = status == ContactsPermissionStatus.permanentlyDenied ||
+    final isBlocked =
+        status == ContactsPermissionStatus.permanentlyDenied ||
         status == ContactsPermissionStatus.restricted;
-    final title =
-        isBlocked ? 'Enable contacts in Settings' : 'Allow contacts access';
+    final title = isBlocked
+        ? 'Enable contacts in Settings'
+        : 'Allow contacts access';
     final subtitle = isBlocked
         ? 'Contacts access is blocked. Enable it in Settings to import your phonebook.'
         : 'We use your phone contacts to find friends already on Sendaal.';
@@ -356,10 +356,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
     );
   }
 
-  Widget _buildContactTile(
-    DeviceContactView contact,
-    Set<String> approvedIds,
-  ) {
+  Widget _buildContactTile(DeviceContactView contact, Set<String> approvedIds) {
     final matchedUser = contact.matchedUser;
     final alreadyApproved =
         matchedUser != null && approvedIds.contains(matchedUser.id);
