@@ -95,17 +95,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Row(
                         children: [
                           Container(
-                            width: 40.r,
-                            height: 40.r,
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
+                            width: 37.r,
+                            height: 37.r,
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(
-                              Icons.account_balance_wallet_outlined,
-                              color: Colors.white,
-                              size: 22,
+                              image: DecorationImage(
+                                image: const AssetImage(
+                                  'assets/images/app-logo.png',
+                                ),
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                           SizedBox(width: 10.w),
