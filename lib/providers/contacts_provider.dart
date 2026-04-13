@@ -38,14 +38,13 @@ class DeviceContactsState {
     List<DeviceContactView>? contacts,
     String? error,
     bool clearError = false,
-  }) =>
-      DeviceContactsState(
-        permission: permission ?? this.permission,
-        isLoading: isLoading ?? this.isLoading,
-        isMatching: isMatching ?? this.isMatching,
-        contacts: contacts ?? this.contacts,
-        error: clearError ? null : error ?? this.error,
-      );
+  }) => DeviceContactsState(
+    permission: permission ?? this.permission,
+    isLoading: isLoading ?? this.isLoading,
+    isMatching: isMatching ?? this.isMatching,
+    contacts: contacts ?? this.contacts,
+    error: clearError ? null : error ?? this.error,
+  );
 }
 
 class DeviceContactsNotifier extends StateNotifier<DeviceContactsState> {
@@ -53,7 +52,7 @@ class DeviceContactsNotifier extends StateNotifier<DeviceContactsState> {
   final UserService _userService;
 
   DeviceContactsNotifier(this._service, this._userService)
-      : super(const DeviceContactsState());
+    : super(const DeviceContactsState());
 
   Future<ContactsPermissionStatus> bootstrap() async {
     final status = await _service.bootstrapPermission();
@@ -106,7 +105,7 @@ class DeviceContactsNotifier extends StateNotifier<DeviceContactsState> {
           .map(
             (c) => DeviceContactView(
               contact: c,
-              matchedUser: phoneMap[c.phone],
+              matchedUser: phoneMap[UserService.normalizePhone(c.phone)],
             ),
           )
           .toList();
@@ -123,11 +122,8 @@ class DeviceContactsNotifier extends StateNotifier<DeviceContactsState> {
 
 final deviceContactsProvider =
     StateNotifierProvider<DeviceContactsNotifier, DeviceContactsState>(
-  (ref) => DeviceContactsNotifier(
-    DeviceContactsService(),
-    UserService(),
-  ),
-);
+      (ref) => DeviceContactsNotifier(DeviceContactsService(), UserService()),
+    );
 
 class ApprovedContact {
   final User user;
@@ -154,12 +150,11 @@ class ContactsState {
     List<ApprovedContact>? contacts,
     String? error,
     bool clearError = false,
-  }) =>
-      ContactsState(
-        isLoading: isLoading ?? this.isLoading,
-        contacts: contacts ?? this.contacts,
-        error: clearError ? null : error ?? this.error,
-      );
+  }) => ContactsState(
+    isLoading: isLoading ?? this.isLoading,
+    contacts: contacts ?? this.contacts,
+    error: clearError ? null : error ?? this.error,
+  );
 }
 
 class ContactsNotifier extends StateNotifier<ContactsState> {
@@ -167,7 +162,7 @@ class ContactsNotifier extends StateNotifier<ContactsState> {
   final Ref _ref;
 
   ContactsNotifier(this._accessService, this._ref)
-      : super(const ContactsState());
+    : super(const ContactsState());
 
   Future<void> load() async {
     final currentUser = _ref.read(authProvider).user;
@@ -184,8 +179,9 @@ class ContactsNotifier extends StateNotifier<ContactsState> {
         final receiverJson = item['receiver'];
         if (requesterJson is! Map || receiverJson is! Map) continue;
 
-        final requester =
-            User.fromJson(Map<String, dynamic>.from(requesterJson));
+        final requester = User.fromJson(
+          Map<String, dynamic>.from(requesterJson),
+        );
         final receiver = User.fromJson(Map<String, dynamic>.from(receiverJson));
         final otherUser = request.requesterId == currentUser.id
             ? receiver
@@ -222,7 +218,8 @@ class ContactsNotifier extends StateNotifier<ContactsState> {
   }
 }
 
-final contactsProvider =
-    StateNotifierProvider<ContactsNotifier, ContactsState>((ref) {
-      return ContactsNotifier(AccessService(), ref);
-    });
+final contactsProvider = StateNotifierProvider<ContactsNotifier, ContactsState>(
+  (ref) {
+    return ContactsNotifier(AccessService(), ref);
+  },
+);

@@ -1,3 +1,4 @@
+import 'package:Sendaal/models/access_request_model.dart';
 import 'package:Sendaal/services/device_contacts_service.dart';
 import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,8 @@ class DeviceContactsScreen extends ConsumerStatefulWidget {
 
 class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
   final Map<String, bool> _requesting = {};
+  final Map<String, bool> _pending = {};
+  final Map<String, bool> _cancelling = {};
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -362,6 +365,25 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
         matchedUser != null && approvedIds.contains(matchedUser.id);
     final isSending =
         matchedUser != null && (_requesting[matchedUser.id] ?? false);
+    final isCancelling =
+        matchedUser != null && (_cancelling[matchedUser.id] ?? false);
+    final currentUser = ref.read(authProvider).user;
+    final latestRequest = (currentUser != null && matchedUser != null)
+        ? ref.watch(
+            latestRequestBetweenProvider((currentUser.id, matchedUser.id)),
+          )
+        : const AsyncValue<AccessRequest?>.data(null);
+
+    final bool remotePending = latestRequest.maybeWhen(
+      data: (req) =>
+          req != null &&
+          req.status == AccessStatus.pending &&
+          req.requesterId == currentUser?.id,
+      orElse: () => false,
+    );
+    final bool isPending =
+        matchedUser != null &&
+        ((_pending[matchedUser.id] ?? false) || remotePending);
 
     final String name;
     final String? phone;
@@ -379,18 +401,28 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
       onTap = () => _invite(contact.contact);
     } else {
       final user = matchedUser!;
-      name = user.displayName ?? user.username;
-      phone = user.phoneNumber?.isNotEmpty == true
-          ? user.phoneNumber
-          : '@${user.username}';
+      name = contact.contact.name.isNotEmpty
+          ? contact.contact.name
+          : (user.displayName ?? user.username);
+      phone = contact.contact.phone.isNotEmpty
+          ? contact.contact.phone
+          : (user.phoneNumber?.isNotEmpty == true
+                ? user.phoneNumber
+                : '@${user.username}');
       avatarUrl = user.avatar;
-      actionLabel = alreadyApproved ? 'View' : 'Request';
-      onAction = alreadyApproved
-          ? () => _openContactDetails(user)
-          : () => _requestAccess(user);
-      onTap = alreadyApproved
-          ? () => _openContactDetails(user)
-          : () => _requestAccess(user);
+      if (alreadyApproved) {
+        actionLabel = 'View';
+        onAction = () => _openContactDetails(user);
+        onTap = onAction;
+      } else if (isPending) {
+        actionLabel = isCancelling ? 'Cancel...' : 'Cancel';
+        onAction = () => _cancelRequest(user);
+        onTap = onAction;
+      } else {
+        actionLabel = 'Request';
+        onAction = () => _requestAccess(user);
+        onTap = onAction;
+      }
     }
 
     final initials = name.isNotEmpty
@@ -470,7 +502,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
           ],
         ),
       ),
-    ).wrapWithLoader(isSending);
+    ).wrapWithLoader(isSending || isCancelling);
 
     return Column(
       children: [
@@ -497,13 +529,36 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
     setState(() => _requesting[user.id] = false);
 
     if (success) {
+      setState(() => _pending[user.id] = true);
       AppSnackBar.success(
         context,
         'Access request sent to ${user.displayName}',
       );
+      ref.invalidate(latestRequestBetweenProvider((currentUser.id, user.id)));
       await ref.read(contactsProvider.notifier).load();
     } else {
       AppSnackBar.error(context, error ?? 'Unable to send request');
+    }
+  }
+
+  Future<void> _cancelRequest(User user) async {
+    final currentUser = ref.read(authProvider).user;
+    if (currentUser == null) return;
+
+    setState(() => _cancelling[user.id] = true);
+    final success = await ref
+        .read(accessRequestProvider.notifier)
+        .cancelRequest(requesterId: currentUser.id, receiverId: user.id);
+
+    if (!mounted) return;
+    setState(() => _cancelling[user.id] = false);
+
+    if (success) {
+      setState(() => _pending[user.id] = false);
+      AppSnackBar.success(context, 'Request cancelled');
+      ref.invalidate(latestRequestBetweenProvider((currentUser.id, user.id)));
+    } else {
+      AppSnackBar.error(context, 'Failed to cancel request');
     }
   }
 

@@ -10,6 +10,21 @@ class UserService {
 
   UserService({ApiClient? apiClient}) : _api = apiClient ?? ApiClient.instance;
 
+  /// Normalize phone numbers to E.164-ish format with a default country code.
+  /// - strips spaces/dashes/parentheses/other symbols
+  /// - if already starts with '+' -> returned as-is (after cleanup)
+  /// - if starts with '0' -> replace leading 0 with [defaultCountryCode]
+  /// - else -> prepend [defaultCountryCode]
+  static String normalizePhone(String phone, {String defaultCountryCode = '+20'}) {
+    var cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleaned.isEmpty) return '';
+    if (cleaned.startsWith('+')) return cleaned;
+    if (cleaned.startsWith('0')) {
+      return '$defaultCountryCode${cleaned.substring(1)}';
+    }
+    return '$defaultCountryCode$cleaned';
+  }
+
   /// Get a user's profile by ID
   Future<User> getUserById(String id) async {
     final response = await _api.get(Endpoints.userById(id));
@@ -29,9 +44,12 @@ class UserService {
 
   /// Search users by phone number
   Future<List<User>> searchByPhoneNumber(String phoneNumber) async {
+    final normalized = normalizePhone(phoneNumber);
     final response = await _api.get(
       Endpoints.users,
-      queryParams: {'filter[phone_number][_contains]': phoneNumber},
+      queryParams: {
+        'filter[phone_number][_eq]': normalized,
+      },
     );
     final list = response['data'] as List<dynamic>? ?? [];
     return list.map((e) => User.fromJson(e as Map<String, dynamic>)).toList();
@@ -39,7 +57,7 @@ class UserService {
 
   /// Find a user by an exact phone match.
   Future<User?> findByPhoneNumber(String phoneNumber) async {
-    final normalized = _normalizePhone(phoneNumber);
+    final normalized = normalizePhone(phoneNumber);
     final response = await _api.get(
       Endpoints.users,
       queryParams: {'filter[phone_number][_eq]': normalized, 'limit': '1'},
@@ -55,7 +73,7 @@ class UserService {
   ) async {
     if (phoneNumbers.isEmpty) return {};
     final normalized = phoneNumbers
-        .map(_normalizePhone)
+        .map(normalizePhone)
         .where((p) => p.isNotEmpty)
         .toSet()
         .toList();
@@ -73,7 +91,7 @@ class UserService {
     for (final item in list) {
       if (item is! Map<String, dynamic>) continue;
       final user = User.fromJson(item);
-      final phone = _normalizePhone(user.phoneNumber ?? '');
+      final phone = normalizePhone(user.phoneNumber ?? '');
       if (phone.isNotEmpty) map[phone] = user;
     }
     return map;
@@ -85,7 +103,7 @@ class UserService {
     required String username,
     required String phoneNumber,
   }) async {
-    final normalizedPhone = _normalizePhone(phoneNumber);
+    final normalizedPhone = normalizePhone(phoneNumber);
     final response = await _api.getPublic(
       Endpoints.users,
       queryParams: {
@@ -106,7 +124,7 @@ class UserService {
       if (item is! Map<String, dynamic>) continue;
       final user = item;
       final uEmail = (user['email'] ?? '').toString().toLowerCase();
-      final uPhone = _normalizePhone(user['phone_number']?.toString() ?? '');
+      final uPhone = normalizePhone(user['phone_number']?.toString() ?? '');
       final uUsername = (user['username'] ?? '').toString();
 
       if (uEmail == email.trim().toLowerCase()) emailTaken = true;
@@ -180,7 +198,7 @@ class UserService {
   }
 
   String _normalizePhone(String raw) =>
-      raw.replaceAll(RegExp(r'[^0-9+]'), '');
+      normalizePhone(raw);
 }
 
 class UserAvailability {
