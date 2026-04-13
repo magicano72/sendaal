@@ -83,7 +83,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
       return;
     }
-    Navigator.pushNamed(context, AppRoutes.recipient, arguments: user);
+
+    // Check for approved access request between current user and selected user
+    if (currentUser != null) {
+      _checkAndNavigateToApprovedRequest(currentUser, user);
+    } else {
+      Navigator.pushNamed(context, AppRoutes.recipient, arguments: user);
+    }
+  }
+
+  Future<void> _checkAndNavigateToApprovedRequest(
+    User currentUser,
+    User user,
+  ) async {
+    final service = ref.read(accessServiceProvider);
+    try {
+      final latestRequest = await service.getLatestRequestBetween(
+        userA: currentUser.id,
+        userB: user.id,
+      );
+
+      if (!mounted) return;
+
+      if (latestRequest != null &&
+          latestRequest.status == AccessStatus.approved) {
+        // Navigate to requester details screen
+        Navigator.pushNamed(
+          context,
+          AppRoutes.requesterDetails,
+          arguments: latestRequest,
+        );
+      } else {
+        // Navigate to recipient screen
+        Navigator.pushNamed(context, AppRoutes.recipient, arguments: user);
+      }
+    } catch (e) {
+      // On error, just go to recipient screen
+      if (mounted) {
+        Navigator.pushNamed(context, AppRoutes.recipient, arguments: user);
+      }
+    }
   }
 
   Future<void> _requestContactsPermission() async {

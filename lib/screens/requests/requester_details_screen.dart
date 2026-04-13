@@ -1,3 +1,4 @@
+import 'package:Sendaal/core/router/app_router.dart';
 import 'package:Sendaal/screens/requests/status_banar.dart';
 import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
@@ -224,6 +225,8 @@ class _RequesterDetailsScreenState
         if (_request.status == AccessStatus.approved) ...[
           SizedBox(height: 8.h),
           _buildSharedSections(otherUserName: _displayName(user)),
+          SizedBox(height: 16.h),
+          _buildApprovedActions(),
         ],
         if (_request.status == AccessStatus.rejected) ...[
           SizedBox(height: 8.h),
@@ -938,6 +941,47 @@ class _RequesterDetailsScreenState
     );
   }
 
+  Widget _buildApprovedActions() {
+    final currentUser = ref.read(authProvider).user;
+    final isRequester = currentUser?.id == _request.requesterId;
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _isProcessing ? null : _showManageMenu,
+            icon: Icon(Icons.tune, size: 18.r),
+            label: const Text('Manage'),
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+            ),
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: _isProcessing ? null : _navigateToTransfer,
+            icon: _isProcessing
+                ? SizedBox(
+                    height: 18.r,
+                    width: 18.r,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  )
+                : Icon(Icons.send, size: 18.r),
+            label: const Text('Transfer'),
+            style: FilledButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+              backgroundColor: AppTheme.primary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _sharedAccountTile(FinancialAccount account) {
     final title = account.accountTitle.isNotEmpty
         ? account.accountTitle
@@ -1149,6 +1193,438 @@ class _RequesterDetailsScreenState
         _receiverSelectedAccounts.add(accountId);
       }
     });
+  }
+
+  Future<void> _navigateToTransfer() async {
+    final userAsync = ref.read(userProvider(_request.requesterId));
+    await userAsync.when(
+      data: (user) {
+        Navigator.pushNamed(context, AppRoutes.recipient, arguments: user);
+      },
+      error: (_, __) {
+        AppSnackBar.error(context, 'Failed to load user information');
+      },
+      loading: () {
+        AppSnackBar.info(context, 'Loading...');
+      },
+    );
+  }
+
+  Future<void> _showManageMenu() async {
+    final currentUser = ref.read(authProvider).user;
+    if (currentUser == null) return;
+
+    final isRequesterSide = currentUser.id == _request.requesterId;
+    await _openManageSheet(isRequesterSide);
+  }
+
+  Future<void> _openManageSheet(bool isRequesterSide) async {
+    final currentUser = ref.read(authProvider).user;
+    if (currentUser == null) {
+      AppSnackBar.error(context, 'User not authenticated');
+      return;
+    }
+
+    // Load current user accounts
+    await ref.read(accountsProvider.notifier).loadAccounts(currentUser.id);
+    final accountsState = ref.read(accountsProvider);
+
+    // Get existing shared accounts
+    final side = isRequesterSide ? 'requester' : 'receiver';
+    final existingLinks = await ref
+        .read(accessRequestProvider.notifier)
+        .getRequestAccounts(requestId: _request.id, side: side);
+
+    final selectedIds = existingLinks
+        .map((a) => a.financialAccount.id)
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    String accessType = isRequesterSide
+        ? _request.requestAccessType
+        : (_request.approvedAccessType ?? 'full');
+    String? errorText;
+    bool isSaving = false;
+
+    await showModalBottomSheet(
+      backgroundColor: Colors.white,
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setState) {
+            final isCustom = accessType == 'custom';
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20.w,
+                right: 20.w,
+                top: 20.h,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20.h,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Manage shared access',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      'Access Type',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    _accessTypeSelector(
+                      accessType: accessType,
+                      onChanged: (newType) {
+                        setState(() {
+                          accessType = newType;
+                          if (newType == 'full') {
+                            selectedIds.clear();
+                          }
+                          errorText = null;
+                        });
+                      },
+                    ),
+                    if (isCustom) ...[
+                      SizedBox(height: 20.h),
+                      Text(
+                        'Select accounts to share',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                      _accountChecklist(accountsState, selectedIds, setState),
+                    ],
+                    if (errorText != null) ...[
+                      SizedBox(height: 12.h),
+                      Text(
+                        errorText!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                    SizedBox(height: 20.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: isSaving
+                            ? null
+                            : () async {
+                                if (isCustom && selectedIds.isEmpty) {
+                                  setState(() {
+                                    errorText =
+                                        'Please select at least one account';
+                                  });
+                                  return;
+                                }
+
+                                setState(() => isSaving = true);
+
+                                try {
+                                  final notifier = ref.read(
+                                    accessRequestProvider.notifier,
+                                  );
+
+                                  // Update access type and accounts
+                                  final updated = await notifier
+                                      .updateAccessType(
+                                        request: _request,
+                                        isRequesterSide: isRequesterSide,
+                                        accessType: accessType,
+                                        selectedAccountIds: selectedIds
+                                            .toList(),
+                                      );
+
+                                  if (context.mounted) {
+                                    Navigator.pop(sheetContext);
+                                    if (updated != null) {
+                                      setState(() {
+                                        _receiverAccessType = accessType;
+                                        _accountsLoading = false;
+                                      });
+                                      await _fetchRequestAccounts();
+                                      AppSnackBar.success(
+                                        context,
+                                        'Access updated successfully.',
+                                      );
+                                    } else {
+                                      AppSnackBar.error(
+                                        context,
+                                        ref.read(accessRequestProvider).error ??
+                                            'Failed to update access',
+                                      );
+                                    }
+                                  }
+                                } finally {
+                                  if (context.mounted) {
+                                    setState(() => isSaving = false);
+                                  }
+                                }
+                              },
+                        icon: isSaving
+                            ? SizedBox(
+                                height: 18.r,
+                                width: 18.r,
+                                child: const CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Icon(Icons.check, size: 18.r),
+                        label: const Text('Save'),
+                        style: FilledButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          Navigator.pop(sheetContext);
+                          await _showRevocationConfirmation();
+                        },
+                        icon: Icon(
+                          Icons.block_outlined,
+                          size: 18.r,
+                          color: Colors.red,
+                        ),
+                        label: Text(
+                          'Revoke Access',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red),
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _accessTypeSelector({
+    required String accessType,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => onChanged('full'),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: accessType == 'full'
+                  ? AppTheme.primary
+                  : Colors.transparent,
+              side: BorderSide(
+                color: accessType == 'full'
+                    ? AppTheme.primary
+                    : Colors.grey.shade300,
+              ),
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+            ),
+            child: Text(
+              'Full Access',
+              style: TextStyle(
+                color: accessType == 'full'
+                    ? Colors.white
+                    : AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => onChanged('custom'),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: accessType == 'custom'
+                  ? AppTheme.primary
+                  : Colors.transparent,
+              side: BorderSide(
+                color: accessType == 'custom'
+                    ? AppTheme.primary
+                    : Colors.grey.shade300,
+              ),
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+            ),
+            child: Text(
+              'Custom',
+              style: TextStyle(
+                color: accessType == 'custom'
+                    ? Colors.white
+                    : AppTheme.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _accountChecklist(
+    AccountsState accountsState,
+    Set<String> selectedIds,
+    void Function(void Function()) setState,
+  ) {
+    if (accountsState.isLoading) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.h),
+        child: const CircularProgressIndicator(),
+      );
+    }
+
+    if (accountsState.error != null) {
+      return Text(
+        accountsState.error!,
+        style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+      );
+    }
+
+    if (accountsState.accounts.isEmpty) {
+      return Text(
+        'No accounts available to share.',
+        style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+      );
+    }
+
+    return Column(
+      children: accountsState.accounts.map((account) {
+        final selected = selectedIds.contains(account.id);
+        return CheckboxListTile(
+          value: selected,
+          contentPadding: EdgeInsets.zero,
+          onChanged: (_) {
+            setState(() {
+              if (selected) {
+                selectedIds.remove(account.id);
+              } else {
+                selectedIds.add(account.id);
+              }
+            });
+          },
+          title: Text(
+            account.accountTitle.isNotEmpty
+                ? account.accountTitle
+                : account.providerName,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            account.accountIdentifier.isNotEmpty
+                ? account.accountIdentifier
+                : account.accountTypeName,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Future<void> _showRevocationConfirmation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Revoke Access?'),
+        content: const Text(
+          'Are you sure you want to revoke access? '
+          'The other user will no longer be able to see your accounts.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Revoke', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _handleRevoke();
+    }
+  }
+
+  Future<void> _handleRevoke() async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+
+    try {
+      final currentUser = ref.read(authProvider).user;
+      if (currentUser == null) {
+        AppSnackBar.error(context, 'User not authenticated');
+        return;
+      }
+
+      final isRequesterSide = currentUser.id == _request.requesterId;
+      final notifier = ref.read(accessRequestProvider.notifier);
+      final updated = await notifier.revokeAccess(
+        request: _request,
+        isRequesterSide: isRequesterSide,
+        currentUserId: currentUser.id,
+      );
+
+      if (!mounted) return;
+
+      if (updated != null) {
+        setState(() {
+          _localStatus = updated.status;
+          _isProcessing = false;
+        });
+
+        AppSnackBar.success(context, 'Access revoked successfully.');
+        ref.invalidate(
+          latestRequestBetweenProvider((
+            _request.requesterId,
+            _request.receiverId,
+          )),
+        );
+
+        // Pop back after a short delay
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } else {
+        AppSnackBar.error(
+          context,
+          ref.read(accessRequestProvider).error ?? 'Failed to revoke access',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
   }
 
   String _displayName(User user) {
