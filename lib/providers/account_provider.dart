@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/financial_account_model.dart';
 import '../services/account_service.dart';
-import '../services/access_service.dart';
 import 'access_request_provider.dart';
 import 'auth_provider.dart';
 
@@ -57,9 +56,7 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
       final updated = await _service.updateVisibility(accountId, !current);
       state = state.copyWith(
         accounts: _sorted(
-          state.accounts
-              .map((a) => a.id == accountId ? updated : a)
-              .toList(),
+          state.accounts.map((a) => a.id == accountId ? updated : a).toList(),
         ),
       );
     } catch (e) {
@@ -95,9 +92,7 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
 
       state = state.copyWith(
         accounts: _sorted(
-          state.accounts
-              .map((a) => a.id == accountId ? updated : a)
-              .toList(),
+          state.accounts.map((a) => a.id == accountId ? updated : a).toList(),
         ),
       );
 
@@ -126,14 +121,15 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
     }
   }
 
-  Future<void> updatePriority(String accountId, AccountPriority priority) async {
+  Future<void> updatePriority(
+    String accountId,
+    AccountPriority priority,
+  ) async {
     try {
       final updated = await _service.updatePriority(accountId, priority);
       state = state.copyWith(
         accounts: _sorted(
-          state.accounts
-              .map((a) => a.id == accountId ? updated : a)
-              .toList(),
+          state.accounts.map((a) => a.id == accountId ? updated : a).toList(),
         ),
       );
     } catch (e) {
@@ -145,11 +141,7 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
     final previous = state.accounts;
     final optimistic = _sorted(
       previous
-          .map(
-            (a) => a.id == accountId
-                ? a.copyWith(isFavourite: !current)
-                : a,
-          )
+          .map((a) => a.id == accountId ? a.copyWith(isFavourite: !current) : a)
           .toList(),
     );
     state = state.copyWith(accounts: optimistic);
@@ -158,9 +150,7 @@ class AccountsNotifier extends StateNotifier<AccountsState> {
       final updated = await _service.updateFavourite(accountId, !current);
       state = state.copyWith(
         accounts: _sorted(
-          state.accounts
-              .map((a) => a.id == accountId ? updated : a)
-              .toList(),
+          state.accounts.map((a) => a.id == accountId ? updated : a).toList(),
         ),
       );
     } catch (e) {
@@ -203,32 +193,54 @@ final recipientAccountsProvider =
 
 /// Fetch accounts for a user only when there is an approved access request
 /// involving the current user (either requester or receiver).
-final approvedAccountsProvider = FutureProvider.family<
-    ({bool hasAccess, List<FinancialAccount> accounts}),
-    String>((ref, userId) async {
-  final currentUser = ref.watch(authProvider).user;
-  if (currentUser == null) {
-    return (hasAccess: false, accounts: <FinancialAccount>[]);
-  }
+final approvedAccountsProvider =
+    FutureProvider.family<
+      ({bool hasAccess, List<FinancialAccount> accounts}),
+      String
+    >((ref, userId) async {
+      final currentUser = ref.watch(authProvider).user;
+      if (currentUser == null) {
+        return (hasAccess: false, accounts: <FinancialAccount>[]);
+      }
 
-  final accessService = ref.read(accessServiceProvider);
+      final accessService = ref.read(accessServiceProvider);
+      final accountService = ref.read(accountServiceProvider);
 
-  final approvedRequest = await accessService.getApprovedRequestBetween(
-    userA: currentUser.id,
-    userB: userId,
-  );
+      final approvedRequest = await accessService.getApprovedRequestBetween(
+        userA: currentUser.id,
+        userB: userId,
+      );
 
-  if (approvedRequest == null) {
-    return (hasAccess: false, accounts: <FinancialAccount>[]);
-  }
+      if (approvedRequest == null) {
+        return (hasAccess: false, accounts: <FinancialAccount>[]);
+      }
 
-  final isRequester = approvedRequest.requesterId == currentUser.id;
-  final side = isRequester ? 'receiver' : 'requester';
-  final shared = await accessService.getRequestAccounts(
-    accessRequestId: approvedRequest.id,
-    side: side,
-  );
-  final accounts =
-      shared.map((a) => a.financialAccount).whereType<FinancialAccount>().toList();
-  return (hasAccess: true, accounts: accounts);
-});
+      final isRequester = approvedRequest.requesterId == currentUser.id;
+      final targetUserId = isRequester
+          ? approvedRequest.receiverId
+          : approvedRequest.requesterId;
+
+      // If access type is "full", return all accounts for the target user.
+      final accessType = isRequester
+          ? (approvedRequest.approvedAccessType ?? 'full')
+          : (approvedRequest.requestAccessType.isNotEmpty
+                ? approvedRequest.requestAccessType
+                : 'full');
+
+      if (accessType == 'full') {
+        final accounts = await accountService.getAccountsForUser(targetUserId);
+        return (hasAccess: true, accounts: accounts);
+      }
+
+      // Custom access: return only linked accounts for the relevant side.
+      final side = isRequester ? 'receiver' : 'requester';
+      final shared = await accessService.getRequestAccounts(
+        accessRequestId: approvedRequest.id,
+        side: side,
+      );
+      final accounts = shared
+          .map((a) => a.financialAccount)
+          .whereType<FinancialAccount>()
+          .toList();
+      return (hasAccess: true, accounts: accounts);
+    });

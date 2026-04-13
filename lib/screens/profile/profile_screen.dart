@@ -57,12 +57,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         leading: const SizedBox(),
         title: const Text('My Profile'),
         centerTitle: true,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: Icon(Icons.settings_outlined),
-          ),
-        ],
+        // actions: const [
+        //   Padding(
+        //     padding: EdgeInsets.only(right: 12),
+        //     child: Icon(Icons.settings_outlined),
+        //   ),
+        // ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
