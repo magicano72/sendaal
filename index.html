@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset your Sendaal password</title>
+  <style>
+    :root {
+      --primary: #1773cf;
+      --surface: #ffffff;
+      --bg: #f4f6f8;
+      --text: #111827;
+      --muted: #6b7280;
+      --error: #e11d48;
+      --success: #0f9d58;
+      --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 10% 20%, #e8f2ff 0, #f4f6f8 25%, #f4f6f8 100%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 32px 16px 64px;
+    }
+    .card {
+      width: min(480px, 100%);
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+    }
+    h1 { margin: 0 0 12px; font-size: 26px; }
+    p { margin: 0 0 12px; color: var(--muted); line-height: 1.55; }
+    .field { margin: 16px 0; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(23, 115, 207, 0.15); }
+    .hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .error { color: var(--error); font-size: 14px; margin-top: 6px; }
+    .success { color: var(--success); font-size: 14px; margin-top: 6px; }
+    .banner {
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    .banner.error { background: #fee2e2; color: #b91c1c; border: 1px solid #fecdd3; }
+    .banner.success { background: #ecfdf3; color: #166534; border: 1px solid #bbf7d0; }
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      box-shadow: 0 10px 30px rgba(23, 115, 207, 0.3);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    button:not(:disabled):active { transform: translateY(1px); }
+    .footer { margin-top: 18px; text-align: center; color: var(--muted); font-size: 13px; }
+    .link-btn {
+      margin-top: 10px;
+      background: #0f9d58;
+      box-shadow: 0 10px 30px rgba(15, 157, 88, 0.25);
+    }
+    code { background: #f3f4f6; padding: 2px 5px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Reset your Sendaal password</h1>
+    <p id="intro">
+      Choose a new password below. Your reset link is valid for a limited time.
+    </p>
+
+    <div id="status"></div>
+
+    <form id="form" novalidate>
+      <div class="field">
+        <label for="password">New password</label>
+        <input type="password" id="password" autocomplete="new-password" required />
+        <div class="hint">Min 8 characters, with at least one uppercase letter and one number.</div>
+        <div class="error" id="passwordError"></div>
+      </div>
+
+      <div class="field">
+        <label for="confirm">Confirm password</label>
+        <input type="password" id="confirm" autocomplete="new-password" required />
+        <div class="error" id="confirmError"></div>
+      </div>
+
+      <button type="submit" id="submitBtn">Update password</button>
+    </form>
+
+    <button id="openAppBtn" class="link-btn" style="display:none;">
+      Back to the Sendaal app
+    </button>
+
+    <div class="footer">
+      If you didn’t request this, you can ignore this page.
+    </div>
+  </main>
+
+  <script>
+    const apiBase = 'https://sendaal-directus.csiwm3.easypanel.host';
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token') || '';
+
+    const form = document.getElementById('form');
+    const password = document.getElementById('password');
+    const confirmPwd = document.getElementById('confirm');
+    const statusBox = document.getElementById('status');
+    const passwordError = document.getElementById('passwordError');
+    const confirmError = document.getElementById('confirmError');
+    const submitBtn = document.getElementById('submitBtn');
+    const openAppBtn = document.getElementById('openAppBtn');
+
+    function showBanner(message, type) {
+      statusBox.innerHTML = '';
+      if (!message) return;
+      const div = document.createElement('div');
+      div.className = `banner ${type}`;
+      div.textContent = message;
+      statusBox.appendChild(div);
+    }
+
+    function validatePassword(value) {
+      if (!value || value.length < 8) {
+        return 'Password must be at least 8 characters.';
+      }
+      if (!/[A-Z]/.test(value)) return 'Add at least one uppercase letter.';
+      if (!/[0-9]/.test(value)) return 'Add at least one number.';
+      return '';
+    }
+
+    function validateConfirm(value) {
+      if (value !== password.value) return 'Passwords do not match.';
+      return '';
+    }
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      submitBtn.textContent = isLoading ? 'Updating…' : 'Update password';
+    }
+
+    function disableForm() {
+      password.disabled = true;
+      confirmPwd.disabled = true;
+      submitBtn.disabled = true;
+      form.style.opacity = 0.65;
+    }
+
+    function handleTokenMissing() {
+      form.style.display = 'none';
+      showBanner('Invalid or missing reset link. Request a new one from the app.', 'error');
+    }
+
+    if (!token) {
+      handleTokenMissing();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      passwordError.textContent = '';
+      confirmError.textContent = '';
+      showBanner('', '');
+
+      const pwdErr = validatePassword(password.value);
+      const confirmErr = validateConfirm(confirmPwd.value);
+
+      if (pwdErr || confirmErr) {
+        passwordError.textContent = pwdErr;
+        confirmError.textContent = confirmErr;
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await fetch(apiBase + '/auth/password/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ token, password: password.value })
+        });
+
+        if (res.status === 204) {
+          disableForm();
+          showBanner('Password reset successfully. You can now log in with your new password.', 'success');
+          openAppBtn.style.display = 'block';
+          return;
+        }
+
+        if (res.status === 401 || res.status === 404) {
+          showBanner('This reset link is invalid or has expired. Please request a new one.', 'error');
+          return;
+        }
+
+        const text = await res.text();
+        console.error('Unexpected response', res.status, text);
+        showBanner('Something went wrong. Please try again.', 'error');
+      } catch (err) {
+        console.error(err);
+        showBanner('Network issue. Please check your connection and retry.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    openAppBtn.addEventListener('click', () => {
+      window.location.href = `sendaal://reset-password?token=${encodeURIComponent(token)}`;
+    });
+  </script>
+</body>
+</html>

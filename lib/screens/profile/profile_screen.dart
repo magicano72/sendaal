@@ -45,10 +45,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final auth = ref.watch(authProvider);
     final accountsState = ref.watch(accountsProvider);
     final user = auth.user;
-    final allVisibleAccounts =
-        accountsState.accounts.where((a) => a.isVisible).toList();
-    final favoriteAccounts =
-        allVisibleAccounts.where((a) => a.isFavourite).toList();
+    final allVisibleAccounts = accountsState.accounts
+        .where((a) => a.isVisible)
+        .toList();
+    final favoriteAccounts = allVisibleAccounts
+        .where((a) => a.isFavourite)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -177,7 +179,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<bool> _ensurePhotoPermission() async {
     if (!Platform.isIOS && !Platform.isAndroid) return true;
 
-    var status = await Permission.photos.status;
+    final primaryPermission = Permission.photos;
+    final fallbackPermission = Platform.isAndroid ? Permission.storage : null;
+
+    var status = await primaryPermission.status;
     if (status.isGranted || status.isLimited) return true;
 
     if (status.isPermanentlyDenied || status.isRestricted) {
@@ -189,8 +194,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final proceed = await _showPhotoRationaleDialog();
     if (!proceed) return false;
 
-    status = await Permission.photos.request();
+    status = await primaryPermission.request();
     if (status.isGranted || status.isLimited) return true;
+
+    if (fallbackPermission != null) {
+      final fallbackStatus = await fallbackPermission.request();
+      if (fallbackStatus.isGranted || fallbackStatus.isLimited) return true;
+      status = fallbackStatus;
+    }
 
     if (status.isPermanentlyDenied || status.isRestricted) {
       final goSettings = await _showPhotoSettingsDialog();
