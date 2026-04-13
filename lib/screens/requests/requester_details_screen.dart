@@ -40,6 +40,8 @@ class _RequesterDetailsScreenState
   final Set<String> _receiverSelectedAccounts = {};
   List<AccessRequestAccount> _requesterSharedAccounts = [];
   List<AccessRequestAccount> _receiverSharedAccounts = [];
+  List<FinancialAccount> _currentUserAllAccounts = [];
+  List<FinancialAccount> _otherUserAllAccounts = [];
   bool _accountsLoading = false;
   String? _accountsError;
 
@@ -74,6 +76,9 @@ class _RequesterDetailsScreenState
 
     try {
       final notifier = ref.read(accessRequestProvider.notifier);
+      final currentUser = ref.read(authProvider).user;
+
+      // For custom access, fetch selected accounts from the request
       if (_request.requestAccessType == 'custom') {
         _requesterSharedAccounts = await notifier.getRequestAccounts(
           requestId: _request.id,
@@ -83,14 +88,41 @@ class _RequesterDetailsScreenState
         _requesterSharedAccounts = [];
       }
 
-      if (_request.status == AccessStatus.approved &&
-          _request.approvedAccessType == 'custom') {
-        _receiverSharedAccounts = await notifier.getRequestAccounts(
-          requestId: _request.id,
-          side: 'receiver',
-        );
+      // If approved, fetch receiver's side accounts
+      if (_request.status == AccessStatus.approved) {
+        if (_request.approvedAccessType == 'custom') {
+          _receiverSharedAccounts = await notifier.getRequestAccounts(
+            requestId: _request.id,
+            side: 'receiver',
+          );
+        } else if (_request.approvedAccessType == 'full') {
+          // For full access, fetch all accounts for both users
+          _receiverSharedAccounts = [];
+
+          try {
+            // Access account service via provider
+            final accountService = ref.read(accountServiceProvider);
+
+            // Fetch all accounts for the requester (other user)
+            _otherUserAllAccounts = await accountService.getAccountsForUser(
+              _request.requesterId,
+            );
+
+            // Fetch all accounts for current user (receiver)
+            if (currentUser != null) {
+              _currentUserAllAccounts = await accountService.getAccountsForUser(
+                currentUser.id,
+              );
+            }
+          } catch (e) {
+            print('[RequesterDetailsScreen] Error fetching full accounts: $e');
+            _accountsError = 'Unable to load account details';
+          }
+        }
       } else {
         _receiverSharedAccounts = [];
+        _otherUserAllAccounts = [];
+        _currentUserAllAccounts = [];
       }
     } catch (e) {
       _accountsError = 'Unable to load shared accounts';
@@ -245,8 +277,8 @@ class _RequesterDetailsScreenState
                       ? 'You revoked access for this user. Cancel revoke to restore full visibility.'
                       : 'This connection has been revoked. You cannot view any data for this user.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -800,6 +832,35 @@ class _RequesterDetailsScreenState
     final receiverTitle = isRequester
         ? 'Shared by $otherUserName'
         : 'Shared by you';
+
+    // Determine which accounts to display for requester's side
+    final requesterAccounts = _request.requestAccessType == 'full'
+        ? _otherUserAllAccounts
+              .map(
+                (account) => AccessRequestAccount(
+                  id: '',
+                  accessRequestId: _request.id,
+                  financialAccount: account,
+                  side: 'requester',
+                ),
+              )
+              .toList()
+        : _requesterSharedAccounts;
+
+    // Determine which accounts to display for receiver's side
+    final receiverAccounts = receiverAccessType == 'full'
+        ? _currentUserAllAccounts
+              .map(
+                (account) => AccessRequestAccount(
+                  id: '',
+                  accessRequestId: _request.id,
+                  financialAccount: account,
+                  side: 'receiver',
+                ),
+              )
+              .toList()
+        : _receiverSharedAccounts;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -813,19 +874,15 @@ class _RequesterDetailsScreenState
         _buildSharedSection(
           title: requesterTitle,
           accessType: _request.requestAccessType,
-          accounts: _request.requestAccessType == 'custom'
-              ? _requesterSharedAccounts
-              : const [],
-          loading: _accountsLoading && _request.requestAccessType == 'custom',
+          accounts: requesterAccounts,
+          loading: _accountsLoading && _request.requestAccessType == 'full',
         ),
         SizedBox(height: 12.h),
         _buildSharedSection(
           title: receiverTitle,
           accessType: receiverAccessType,
-          accounts: receiverAccessType == 'custom'
-              ? _receiverSharedAccounts
-              : const [],
-          loading: _accountsLoading && receiverAccessType == 'custom',
+          accounts: receiverAccounts,
+          loading: _accountsLoading && receiverAccessType == 'full',
         ),
       ],
     );
@@ -864,16 +921,9 @@ class _RequesterDetailsScreenState
             SizedBox(height: 8.h),
             if (loading)
               const Center(child: CircularProgressIndicator())
-            else if (isFull)
-              Text(
-                'Full access to all accounts.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
-              )
             else if (accounts.isEmpty)
               Text(
-                'No accounts shared yet.',
+                isFull ? 'No accounts available.' : 'No accounts shared yet.',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
@@ -998,12 +1048,12 @@ class _RequesterDetailsScreenState
       final currentUser = ref.read(authProvider).user;
       if (currentUser != null) {
         await Future.wait([
-          ref.read(accessRequestProvider.notifier).loadReceivedRequests(
-                currentUser.id,
-              ),
-          ref.read(accessRequestProvider.notifier).loadSentRequests(
-                currentUser.id,
-              ),
+          ref
+              .read(accessRequestProvider.notifier)
+              .loadReceivedRequests(currentUser.id),
+          ref
+              .read(accessRequestProvider.notifier)
+              .loadSentRequests(currentUser.id),
         ]);
       }
 

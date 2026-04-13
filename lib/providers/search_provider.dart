@@ -43,6 +43,18 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
   SearchNotifier(this._service) : super(const SearchState());
 
+  /// Check if a query looks like it could be a phone number
+  /// Returns true if there are phone-like characters (digits, +, -, spaces, parentheses)
+  static bool _couldBePhoneNumber(String query) {
+    // Count digits and phone characters
+    final digits = query.replaceAll(RegExp(r'[^0-9+\-\s().]'), '');
+    final digitCount = query.replaceAll(RegExp(r'[^0-9]'), '').length;
+
+    // If has phone-like characters and at least 3 digits, could be a phone search
+    // This covers patterns like: "123", "+1-234", "(123) 456", etc.
+    return digits.isNotEmpty && digitCount >= 3;
+  }
+
   Future<void> search(String query) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) {
@@ -53,23 +65,24 @@ class SearchNotifier extends StateNotifier<SearchState> {
     state = state.copyWith(isLoading: true, clearError: true, query: query);
 
     try {
-      // Run both username + phone searches and merge unique users by id.
-      final lists = await Future.wait<List<User>>([
-        _service.searchByUsername(trimmed),
-        _service.searchByPhoneNumber(trimmed),
-      ]);
+      // Always search by username
+      final usernameResults = await _service.searchByUsername(trimmed);
 
+      // Only search by phone if query looks like a phone number
+      final phoneResults = _couldBePhoneNumber(trimmed)
+          ? await _service.searchByPhoneNumber(trimmed)
+          : <User>[];
+
+      // Merge results by ID to avoid duplicates
       final merged = <String, User>{};
-      for (final list in lists) {
-        for (final user in list) {
-          merged[user.id] = user;
-        }
+      for (final user in usernameResults) {
+        merged[user.id] = user;
+      }
+      for (final user in phoneResults) {
+        merged[user.id] = user;
       }
 
-      state = state.copyWith(
-        isLoading: false,
-        results: merged.values.toList(),
-      );
+      state = state.copyWith(isLoading: false, results: merged.values.toList());
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

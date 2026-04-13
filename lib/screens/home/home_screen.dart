@@ -272,7 +272,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   _searchCtrl.clear();
                   ref.read(searchProvider.notifier).clear();
                 },
-                hint: 'Search username or phone number',
+                hint: 'Search username or phone',
                 onContactsTap: _openDeviceContacts,
               ),
             ),
@@ -654,21 +654,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     final permissionState = deviceState.permission;
-    final permissionMissing = permissionState != ContactsPermissionStatus.granted;
-    final blocked = permissionState == ContactsPermissionStatus.permanentlyDenied ||
+    final permissionMissing =
+        permissionState != ContactsPermissionStatus.granted;
+    final blocked =
+        permissionState == ContactsPermissionStatus.permanentlyDenied ||
         permissionState == ContactsPermissionStatus.restricted;
-    final title =
-        permissionMissing ? 'Allow contacts to sync' : 'No contacts yet';
+    final title = permissionMissing
+        ? 'Allow contacts to sync'
+        : 'No contacts yet';
     final subtitle = blocked
         ? 'Enable contacts in Settings to find friends from your phone book.'
         : permissionMissing
-            ? 'Grant access to find friends from your phone book.'
-            : 'Approved contacts will appear here automatically.';
+        ? 'Grant access to find friends from your phone book.'
+        : 'Approved contacts will appear here automatically.';
     final ctaLabel = blocked
         ? 'Open Settings'
         : permissionMissing
-            ? 'Allow'
-            : 'Import';
+        ? 'Allow'
+        : 'Import';
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
@@ -713,8 +716,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             SizedBox(width: 8.w),
             TextButton(
-              onPressed:
-                  permissionMissing ? _requestContactsPermission : _openDeviceContacts,
+              onPressed: permissionMissing
+                  ? _requestContactsPermission
+                  : _openDeviceContacts,
               child: Text(ctaLabel),
             ),
           ],
@@ -1139,10 +1143,13 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
-    final displayName =
-        user.displayName.isNotEmpty ? user.displayName : user.username;
+    final displayName = user.displayName.isNotEmpty
+        ? user.displayName
+        : user.username;
     final avatarUrl = user.avatarUrl;
-    final initials = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    final initials = displayName.isNotEmpty
+        ? displayName[0].toUpperCase()
+        : '?';
     final currentUser = ref.watch(authProvider).user;
 
     if (currentUser == null) {
@@ -1180,10 +1187,8 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
       ),
       data: (latest) {
         final isRevoked = latest?.isRevoked == true;
-        final isRevoker =
-            isRevoked && latest?.revokerId == currentUser.id;
-        final subtitle =
-            isRevoked ? 'Access Denied' : '@${user.username}';
+        final isRevoker = isRevoked && latest?.revokerId == currentUser.id;
+        final subtitle = isRevoked ? 'Access Denied' : '@${user.username}';
 
         return _buildCard(
           context,
@@ -1291,8 +1296,9 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
-                      onPressed:
-                          _isCancelling ? null : () => _cancelRevoke(requestId),
+                      onPressed: _isCancelling
+                          ? null
+                          : () => _cancelRevoke(requestId),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 10.h),
                         side: BorderSide(color: AppTheme.primaryColor),
@@ -1304,8 +1310,9 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
                           ? SizedBox(
                               height: 16.r,
                               width: 16.r,
-                              child:
-                                  const CircularProgressIndicator(strokeWidth: 2),
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
                             )
                           : Text(
                               'Cancel Revoke',
@@ -1349,12 +1356,12 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
           latestRequestBetweenProvider((currentUser.id, widget.user.id)),
         );
         await Future.wait([
-          ref.read(accessRequestProvider.notifier).loadSentRequests(
-                currentUser.id,
-              ),
-          ref.read(accessRequestProvider.notifier).loadReceivedRequests(
-                currentUser.id,
-              ),
+          ref
+              .read(accessRequestProvider.notifier)
+              .loadSentRequests(currentUser.id),
+          ref
+              .read(accessRequestProvider.notifier)
+              .loadReceivedRequests(currentUser.id),
         ]);
       }
       AppSnackBar.success(context, 'Access restored');

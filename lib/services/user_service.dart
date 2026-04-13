@@ -15,7 +15,10 @@ class UserService {
   /// - if already starts with '+' -> returned as-is (after cleanup)
   /// - if starts with '0' -> replace leading 0 with [defaultCountryCode]
   /// - else -> prepend [defaultCountryCode]
-  static String normalizePhone(String phone, {String defaultCountryCode = '+20'}) {
+  static String normalizePhone(
+    String phone, {
+    String defaultCountryCode = '+20',
+  }) {
     var cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
     if (cleaned.isEmpty) return '';
     if (cleaned.startsWith('+')) return cleaned;
@@ -34,22 +37,28 @@ class UserService {
 
   /// Search users by username (partial match via Directus filter)
   Future<List<User>> searchByUsername(String query) async {
+    final trimmed = query.trim();
+    // Don't send query if empty
+    if (trimmed.isEmpty) return [];
+
     final response = await _api.get(
       Endpoints.users,
-      queryParams: {'filter[username][_contains]': query},
+      queryParams: {'filter[username][_contains]': trimmed},
     );
     final list = response['data'] as List<dynamic>? ?? [];
     return list.map((e) => User.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  /// Search users by phone number
+  /// Search users by phone number (partial match)
   Future<List<User>> searchByPhoneNumber(String phoneNumber) async {
     final normalized = normalizePhone(phoneNumber);
+    // Don't send query if normalization resulted in empty string
+    if (normalized.isEmpty) return [];
+
+    // Use _contains for partial phone matching instead of exact match
     final response = await _api.get(
       Endpoints.users,
-      queryParams: {
-        'filter[phone_number][_eq]': normalized,
-      },
+      queryParams: {'filter[phone_number][_contains]': normalized},
     );
     final list = response['data'] as List<dynamic>? ?? [];
     return list.map((e) => User.fromJson(e as Map<String, dynamic>)).toList();
@@ -197,8 +206,7 @@ class UserService {
     }
   }
 
-  String _normalizePhone(String raw) =>
-      normalizePhone(raw);
+  String _normalizePhone(String raw) => normalizePhone(raw);
 }
 
 class UserAvailability {
