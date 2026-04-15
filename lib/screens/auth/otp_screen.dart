@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/error/exceptions.dart';
 import '../../core/router/app_router.dart';
+import '../../core/services/validation_service.dart';
 import '../../core/theme/text_style.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/phone_verification_service.dart';
@@ -129,6 +130,17 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     });
 
     try {
+      final payload = widget.args.registerPayload;
+      final emailError = ValidationService.validateEmail(payload.email);
+      if (emailError != null) {
+        final message = '$emailError Please go back and correct your email.';
+        setState(() => _error = message);
+        if (mounted) {
+          AppSnackBar.error(context, message);
+        }
+        return;
+      }
+
       await _verificationService.verifyOtp(
         phoneNumber: _session.phoneNumber.isNotEmpty
             ? _session.phoneNumber
@@ -136,11 +148,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         otp: otp,
       );
 
-      final payload = widget.args.registerPayload;
       final success = await ref
           .read(authProvider.notifier)
           .register(
-            email: payload.email,
+            email: ValidationService.normalizeEmail(payload.email),
             password: payload.password,
             username: payload.username,
             firstName: payload.firstName,

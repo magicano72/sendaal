@@ -51,16 +51,38 @@ class ApiClient {
   String? _refreshToken;
   DateTime? _tokenExpiresAt;
   bool _isRefreshing = false;
+  Future<void> Function({
+    required String accessToken,
+    required String refreshToken,
+    DateTime? expiresAt,
+  })? _sessionPersistenceCallback;
 
-  void setToken(String token, {String? refreshToken, int? expiresIn}) {
+  void setToken(
+    String token, {
+    String? refreshToken,
+    int? expiresInMs,
+    DateTime? expiresAt,
+  }) {
     _authToken = token;
     if (refreshToken != null) {
       _refreshToken = refreshToken;
     }
-    if (expiresIn != null) {
-      _tokenExpiresAt = DateTime.now().add(Duration(seconds: expiresIn));
+    if (expiresAt != null) {
+      _tokenExpiresAt = expiresAt.toLocal();
+    } else if (expiresInMs != null) {
+      _tokenExpiresAt = DateTime.now().add(Duration(milliseconds: expiresInMs));
       print('[ApiClient] Token set, expires at: $_tokenExpiresAt');
     }
+  }
+
+  void configureSessionPersistence(
+    Future<void> Function({
+      required String accessToken,
+      required String refreshToken,
+      DateTime? expiresAt,
+    }) callback,
+  ) {
+    _sessionPersistenceCallback = callback;
   }
 
   void clearToken() {
@@ -72,13 +94,12 @@ class ApiClient {
   bool get hasToken => _authToken != null;
   String? get refreshToken => _refreshToken;
 
-  /// Check if token is expired or about to expire (within 60 seconds)
+  /// Check if token is expired or about to expire (within 5 minutes)
   bool get isTokenExpired {
     if (_tokenExpiresAt == null) return false;
-    final timeUntilExpiry = _tokenExpiresAt!
-        .difference(DateTime.now())
-        .inSeconds;
-    return timeUntilExpiry < 60; // Refresh if less than 60 seconds left
+    return DateTime.now().isAfter(
+      _tokenExpiresAt!.subtract(const Duration(minutes: 5)),
+    );
   }
 
   // ── Default headers ───────────────────────────────────────────────────────
@@ -138,7 +159,10 @@ class ApiClient {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({'refresh_token': _refreshToken}),
+            body: jsonEncode({
+              'refresh_token': _refreshToken,
+              'mode': 'json',
+            }),
           )
           .timeout(_timeout);
 
@@ -155,10 +179,17 @@ class ApiClient {
       setToken(
         data['access_token'].toString(),
         refreshToken: data['refresh_token']?.toString() ?? _refreshToken,
-        expiresIn: data['expires'] is int
+        expiresInMs: data['expires'] is int
             ? data['expires'] as int
             : int.tryParse('${data['expires']}'),
       );
+      if (_authToken != null && _refreshToken != null) {
+        await _sessionPersistenceCallback?.call(
+          accessToken: _authToken!,
+          refreshToken: _refreshToken!,
+          expiresAt: _tokenExpiresAt,
+        );
+      }
       return true;
     } catch (e) {
       clearToken();

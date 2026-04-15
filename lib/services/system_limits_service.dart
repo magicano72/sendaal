@@ -82,9 +82,7 @@ class SystemLimitsService {
 
   Future<List<SystemLimit>> _loadFallbackFromAsset() async {
     try {
-      final jsonStr = await rootBundle.loadString(
-        'assets/config/system_limits_fallback.json',
-      );
+      final jsonStr = await rootBundle.loadString('assets/images/app-logo.png');
       final decoded = jsonDecode(jsonStr);
       final data = decoded is Map ? decoded['data'] : null;
       return _extractSystemLimitsFromData(data);
@@ -111,12 +109,13 @@ class SystemLimitsService {
   Map<String, double> _mapLimits(List<SystemLimit> limits) {
     final map = <String, double>{};
     for (final limit in limits) {
-      final key = (limit.systemName.isNotEmpty
-              ? limit.systemName
-              : limit.accountTypeId ??
-                  limit.providerId ??
-                  limit.id.toString())
-          .toLowerCase();
+      final key =
+          (limit.systemName.isNotEmpty
+                  ? limit.systemName
+                  : limit.accountTypeId ??
+                        limit.providerId ??
+                        limit.id.toString())
+              .toLowerCase();
       map[key] = limit.dailyLimit.toDouble();
     }
     return map;

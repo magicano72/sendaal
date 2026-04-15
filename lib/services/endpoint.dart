@@ -28,6 +28,9 @@ class Endpoints {
   static const String notifications = '/items/notifications';
   static String notificationById(String id) => '/items/notifications/$id';
 
+  // User Devices
+  static const String userDevices = '/items/user_device';
+
   // Phone number verification (Directus extension)
   static const String phoneValidatorBase = '/phone-number-validator';
   static const String requestPhoneVerification =

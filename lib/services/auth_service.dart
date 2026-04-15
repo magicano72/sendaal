@@ -14,12 +14,18 @@ class AuthService {
   }) async {
     final response = await _api.post(
       Endpoints.login,
-      body: {'email': email, 'password': password},
+      body: {'email': email, 'password': password, 'mode': 'json'},
     );
 
     final data = response['data'] as Map<String, dynamic>;
     final token = data['access_token']?.toString() ?? '';
-    _api.setToken(token);
+    _api.setToken(
+      token,
+      refreshToken: data['refresh_token']?.toString(),
+      expiresInMs: data['expires'] is int
+          ? data['expires'] as int
+          : int.tryParse('${data['expires']}'),
+    );
 
     return {'token': token, 'refreshToken': data['refresh_token']};
   }

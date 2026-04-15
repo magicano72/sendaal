@@ -8,7 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'screens/auth/login_screen.dart';
+import 'services/auth_session_service.dart';
 import 'services/local_notification_service.dart';
 import 'services/system_limits_service.dart';
 import 'widgets/connectivity_banner.dart';
@@ -19,14 +19,17 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env');
   await LocalNotificationService.initialize();
   await SystemLimitsService().loadAndCache();
+  final initialRoute = await AuthSessionService.instance.getInitialRoute();
   runApp(
     // ProviderScope wraps the entire app for Riverpod
-    const ProviderScope(child: SendaalApp()),
+    ProviderScope(child: SendaalApp(initialRoute: initialRoute)),
   );
 }
 
 class SendaalApp extends StatefulWidget {
-  const SendaalApp({super.key});
+  final String initialRoute;
+
+  const SendaalApp({super.key, required this.initialRoute});
 
   @override
   State<SendaalApp> createState() => _SendaalAppState();
@@ -94,9 +97,8 @@ class _SendaalAppState extends State<SendaalApp> {
           debugShowCheckedModeBanner: false,
           navigatorKey: LocalNotificationService.navigatorKey,
           theme: AppTheme.lightTheme,
-          home: const LoginScreen(),
           onGenerateRoute: AppRouter.generateRoute,
-          initialRoute: AppRoutes.login,
+          initialRoute: widget.initialRoute,
           builder: (context, child) =>
               ConnectivityBanner(child: child ?? const SizedBox.shrink()),
         );

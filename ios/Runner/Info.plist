@@ -49,6 +49,8 @@
 	<string>Sendaal needs access to your contacts to help you find and connect with people you know.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Sendaal needs access to your photos so you can choose a profile picture.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Sendaal uses Face ID to securely log you in.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

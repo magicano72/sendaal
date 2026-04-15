@@ -3,6 +3,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../core/router/app_router.dart';
+import 'api_client.dart';
+import 'auth_session_service.dart';
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse response) {
@@ -78,9 +80,18 @@ class LocalNotificationService {
   }
 
   static void handleNotificationTap(String? payload) {
-    final navigator = navigatorKey.currentState;
-    if (navigator == null) return;
-    navigator.pushNamed(AppRoutes.notifications);
+    Future<void>.microtask(() async {
+      final navigator = navigatorKey.currentState;
+      if (navigator == null) return;
+
+      if (ApiClient.instance.hasToken) {
+        navigator.pushNamed(AppRoutes.notifications);
+        return;
+      }
+
+      final route = await AuthSessionService.instance.getInitialRoute();
+      navigator.pushNamedAndRemoveUntil(route, (_) => false);
+    });
   }
 
   static Future<bool> _ensureNotificationPermission() async {

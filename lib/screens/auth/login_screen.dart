@@ -9,6 +9,7 @@ import '../../core/services/validation_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/text_style.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/auth_session_service.dart';
 import '../../widgets/app_widgets.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -22,13 +23,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscurePassword = true;
+  bool _checkingSessionGate = true;
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _guardExistingSession();
+  }
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _guardExistingSession() async {
+    final route = await AuthSessionService.instance.getInitialRoute();
+    if (!mounted) {
+      return;
+    }
+
+    if (route == AppRoutes.pinLogin || route == AppRoutes.pinSetup) {
+      Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+      return;
+    }
+
+    setState(() => _checkingSessionGate = false);
   }
 
   Future<void> _login() async {
@@ -53,13 +75,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         .login(_emailCtrl.text.trim(), _passwordCtrl.text);
 
     if (success && mounted) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.pinSetup,
+        (_) => false,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+
+    if (_checkingSessionGate) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,

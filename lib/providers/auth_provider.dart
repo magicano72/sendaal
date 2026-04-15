@@ -7,6 +7,7 @@ import '../core/models/user_model.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/directus_error_parser.dart';
 import '../services/api_client.dart' as api_client;
+import '../services/auth_session_service.dart';
 import '../services/notification_service.dart';
 import '../services/user_service.dart';
 
@@ -54,16 +55,26 @@ final notificationServiceProvider = Provider<NotificationService>(
   (ref) => NotificationService(apiClient: api_client.ApiClient.instance),
 );
 
+final authSessionServiceProvider = Provider<AuthSessionService>(
+  (ref) => AuthSessionService.instance,
+);
+
 /// Provides the UserService singleton
 final userServiceProvider = Provider<UserService>((ref) => UserService());
 
 /// Notifier that manages auth state throughout the app
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
+  final AuthSessionService _sessionService;
   final UserService _userService;
   final NotificationService _notificationService;
 
-  AuthNotifier(this._authService, this._userService, this._notificationService)
+  AuthNotifier(
+    this._authService,
+    this._sessionService,
+    this._userService,
+    this._notificationService,
+  )
     : super(const AuthState());
 
   Future<bool> login(String email, String password) async {
@@ -81,10 +92,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
           );
       print('[AuthNotifier] Login response: $response');
 
+      final data = response['data'] as Map<String, dynamic>? ?? const {};
+      final accessToken = data['access_token']?.toString();
+      final refreshToken = data['refresh_token']?.toString();
+      final expiresMs = data['expires'] is int
+          ? data['expires'] as int
+          : int.tryParse('${data['expires']}');
+
+      if (accessToken == null || refreshToken == null || expiresMs == null) {
+        throw Exception('Login response did not include a valid session.');
+      }
+
+      await _sessionService.storeAuthSession(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        expiresMs: expiresMs,
+      );
+
       // Fetch current user after successful login
       try {
         final user = await _userService.getCurrentUser().timeout(
           const Duration(seconds: 15),
+        );
+        await _sessionService.persistUser(user);
+        unawaited(
+          _sessionService.registerDevice(
+            userId: user.id,
+            accessToken: accessToken,
+          ),
         );
         state = state.copyWith(isLoginLoading: false, user: user);
         print('[AuthNotifier] User fetched successfully: ${user.id}');
@@ -178,23 +213,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> refreshTokenIfNeeded() async {
     print('[AuthNotifier] Checking if token refresh is needed');
     try {
-      // Get the refresh token from ApiClient
-      final apiClient = api_client.ApiClient.instance;
-
-      // Check if token is expired or about to expire
-      if (!apiClient.isTokenExpired) {
-        print('[AuthNotifier] Token is still valid, no refresh needed');
-        return true;
-      }
-
-      // Check if we have a refresh token
-      if (apiClient.refreshToken == null) {
-        print('[AuthNotifier] No refresh token available');
+      final token = await _sessionService.validateOrRefreshToken();
+      if (token == null) {
+        print('[AuthNotifier] No valid session available during refresh check');
         return false;
       }
-
-      print('[AuthNotifier] Token expired or about to expire, refreshing...');
-      await _authService.refreshToken(apiClient.refreshToken!);
       print('[AuthNotifier] Token refresh completed successfully');
       return true;
     } catch (e) {
@@ -208,7 +231,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     print('[AuthNotifier] Starting logout');
     try {
-      await _authService.logout();
+      await _sessionService.logout();
       print('[AuthNotifier] Logout service completed');
       state = const AuthState();
       print('[AuthNotifier] Auth state cleared, logout completed');
@@ -218,7 +241,47 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> forceLogout() async {
+    print('[AuthNotifier] Force logout triggered');
+    await _sessionService.forceLogout();
+    state = const AuthState();
+  }
+
+  Future<bool> bootstrapAuthenticatedUser() async {
+    print('[AuthNotifier] Bootstrapping authenticated user from secure session');
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final accessToken = await _sessionService.validateOrRefreshToken();
+      if (accessToken == null) {
+        await forceLogout();
+        state = state.copyWith(isLoading: false);
+        return false;
+      }
+
+      final user = await _userService.getCurrentUser().timeout(
+        const Duration(seconds: 15),
+      );
+      await _sessionService.persistUser(user);
+      state = state.copyWith(isLoading: false, user: user);
+      return true;
+    } catch (e) {
+      print('[AuthNotifier] Failed to bootstrap secure session: $e');
+      await forceLogout();
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Your session expired. Please log in again.',
+      );
+      return false;
+    }
+  }
+
+  Future<bool> toggleBiometric(bool enable) {
+    return _sessionService.toggleBiometric(enable);
+  }
+
   void setUser(User user) {
+    unawaited(_sessionService.persistUser(user));
     state = state.copyWith(user: user);
   }
 }
@@ -226,6 +289,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
     ref.read(authServiceProvider),
+    ref.read(authSessionServiceProvider),
     ref.read(userServiceProvider),
     ref.read(notificationServiceProvider),
   );

@@ -46,7 +46,7 @@ class AuthService {
     try {
       final response = await apiClient.post(
         '/auth/login',
-        body: {'email': email, 'password': password},
+        body: {'email': email, 'password': password, 'mode': 'json'},
       );
       print('[AuthService] Login successful');
       if (response['data'] != null &&
@@ -55,7 +55,7 @@ class AuthService {
         apiClient.setToken(
           response['data']['access_token'],
           refreshToken: response['data']['refresh_token'],
-          expiresIn: response['data']['expires'],
+          expiresInMs: response['data']['expires'],
         );
       }
       return response;
@@ -71,7 +71,7 @@ class AuthService {
     try {
       final response = await apiClient.post(
         '/auth/refresh',
-        body: {'refresh_token': refreshToken},
+        body: {'refresh_token': refreshToken, 'mode': 'json'},
       );
       print('[AuthService] Token refresh successful');
       if (response['data'] != null &&
@@ -80,7 +80,7 @@ class AuthService {
         apiClient.setToken(
           response['data']['access_token'],
           refreshToken: response['data']['refresh_token'],
-          expiresIn: response['data']['expires'],
+          expiresInMs: response['data']['expires'],
         );
       }
       return response;
@@ -100,7 +100,7 @@ class AuthService {
         if (refreshToken != null) {
           await apiClient.post(
             '/auth/logout',
-            body: {'refresh_token': refreshToken},
+            body: {'refresh_token': refreshToken, 'mode': 'json'},
           );
           print('[AuthService] Logout API call successful');
         } else {

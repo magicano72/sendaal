@@ -5,13 +5,15 @@ import '../../core/models/index.dart' hide AccessRequest;
 import '../../models/access_request_model.dart';
 import '../../screens/accounts/accounts_screen.dart';
 import '../../screens/accounts/edit_account_screen.dart';
+import '../../screens/auth/home_gate_screen.dart';
 import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/pin_login_screen.dart';
+import '../../screens/auth/pin_setup_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/auth/otp_screen.dart';
 import '../../screens/auth/otp_args.dart';
 import '../../screens/contacts/contact_details_screen.dart';
 import '../../screens/contacts/device_contacts_screen.dart';
-import '../../screens/main_shell.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/recipient/recipient_screen.dart';
@@ -25,6 +27,8 @@ import '../../screens/auth/reset_password_screen.dart';
 /// Named route constants — avoids magic strings throughout the app
 class AppRoutes {
   static const String login = '/login';
+  static const String pinSetup = '/pin-setup';
+  static const String pinLogin = '/pin-login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String resetPassword = '/reset-password';
@@ -55,6 +59,10 @@ class AppRouter {
     switch (settings.name) {
       case AppRoutes.login:
         return _fade(const LoginScreen());
+      case AppRoutes.pinSetup:
+        return _fade(const PinSetupScreen());
+      case AppRoutes.pinLogin:
+        return _fade(const PinLoginScreen());
       case AppRoutes.register:
         return _fade(const RegisterScreen());
       case AppRoutes.forgotPassword:
@@ -66,7 +74,7 @@ class AppRouter {
         final args = settings.arguments as OtpFlowArgs;
         return _fade(OtpScreen(args: args));
       case AppRoutes.home:
-        return _fade(const MainShell());
+        return _fade(const HomeGateScreen());
       case AppRoutes.accounts:
         return _fade(const AccountsScreen());
       case AppRoutes.profile:

@@ -1,5 +1,13 @@
 /// Validation service for form fields Register
 class ValidationService {
+  static const List<String> _commonEmailTlds = <String>[
+    'com',
+    'net',
+    'org',
+    'edu',
+    'gov',
+  ];
+
   /// Validate name - not whitespace only, minimum 4 characters for first name
   static String? validateName(String? value, {int minLength = 2}) {
     if (value == null || value.isEmpty) {
@@ -31,16 +39,115 @@ class ValidationService {
     return null;
   }
 
+  static String normalizeEmail(String value) => value.trim().toLowerCase();
+
   /// Validate email using regex
   static String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Email is required';
     }
-    final emailRegex = RegExp(r'^[\w.-]+@[\w.-]+\.\w{2,}$');
-    if (!emailRegex.hasMatch(value)) {
+    final normalized = normalizeEmail(value);
+    final emailRegex = RegExp(
+      r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$",
+    );
+
+    if (!emailRegex.hasMatch(normalized)) {
       return 'Please enter a valid email address';
     }
+
+    final parts = normalized.split('@');
+    if (parts.length != 2) {
+      return 'Please enter a valid email address';
+    }
+
+    final localPart = parts[0];
+    final domainPart = parts[1];
+    final domainLabels = domainPart.split('.');
+
+    if (localPart.startsWith('.') ||
+        localPart.endsWith('.') ||
+        localPart.contains('..') ||
+        domainLabels.any(
+          (label) =>
+              label.isEmpty || label.startsWith('-') || label.endsWith('-'),
+        )) {
+      return 'Please enter a valid email address';
+    }
+
+    final correctedEmail = suggestEmailCorrection(normalized);
+    if (correctedEmail != null) {
+      return 'Please enter a valid email address. Did you mean $correctedEmail?';
+    }
+
     return null;
+  }
+
+  static String? suggestEmailCorrection(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+
+    final normalized = normalizeEmail(value);
+    final parts = normalized.split('@');
+    if (parts.length != 2) {
+      return null;
+    }
+
+    final domainLabels = parts[1].split('.');
+    if (domainLabels.length < 2) {
+      return null;
+    }
+
+    final tld = domainLabels.last;
+    final correctedTld = _suggestTldCorrection(tld);
+    if (correctedTld == null || correctedTld == tld) {
+      return null;
+    }
+
+    domainLabels[domainLabels.length - 1] = correctedTld;
+    return '${parts[0]}@${domainLabels.join('.')}';
+  }
+
+  static String? _suggestTldCorrection(String tld) {
+    for (final commonTld in _commonEmailTlds) {
+      if (_levenshteinDistance(tld, commonTld) == 1) {
+        return commonTld;
+      }
+    }
+    return null;
+  }
+
+  static int _levenshteinDistance(String source, String target) {
+    if (source == target) {
+      return 0;
+    }
+    if (source.isEmpty) {
+      return target.length;
+    }
+    if (target.isEmpty) {
+      return source.length;
+    }
+
+    final previousRow = List<int>.generate(target.length + 1, (i) => i);
+    final currentRow = List<int>.filled(target.length + 1, 0);
+
+    for (var i = 0; i < source.length; i++) {
+      currentRow[0] = i + 1;
+      for (var j = 0; j < target.length; j++) {
+        final substitutionCost = source[i] == target[j] ? 0 : 1;
+        currentRow[j + 1] = [
+          currentRow[j] + 1,
+          previousRow[j + 1] + 1,
+          previousRow[j] + substitutionCost,
+        ].reduce((a, b) => a < b ? a : b);
+      }
+
+      for (var j = 0; j < previousRow.length; j++) {
+        previousRow[j] = currentRow[j];
+      }
+    }
+
+    return previousRow.last;
   }
 
   /// Validate international phone number (expects leading + with country code).

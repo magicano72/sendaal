@@ -100,7 +100,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     // Backend uniqueness check before sending OTP
-    final email = _emailCtrl.text.trim();
+    final email = ValidationService.normalizeEmail(_emailCtrl.text);
     final username = _usernameCtrl.text.trim();
     final phone = _phoneNumber.trim();
 
@@ -131,7 +131,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     final payload = RegisterPayload(
-      email: _emailCtrl.text.trim(),
+      email: email,
       password: _passwordCtrl.text,
       username: _usernameCtrl.text.trim(),
       firstName: _firstNameCtrl.text.trim(),
