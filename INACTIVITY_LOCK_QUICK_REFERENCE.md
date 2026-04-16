@@ -91,7 +91,7 @@ Time difference checked
 ### Change Inactivity Threshold
 Edit `lib/services/session_manager.dart`:
 ```dart
-static const int inactivityThresholdMinutes = 3; // Change to desired value
+static const int inactivityThresholdMinutes = 5; // Change to desired value
 ```
 
 **Examples**:
