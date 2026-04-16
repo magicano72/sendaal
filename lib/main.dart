@@ -11,6 +11,7 @@ import 'core/theme/app_theme.dart';
 import 'services/auth_session_service.dart';
 import 'services/local_notification_service.dart';
 import 'services/system_limits_service.dart';
+import 'widgets/app_lifecycle_observer.dart';
 import 'widgets/connectivity_banner.dart';
 
 /// Entry point — loads .env before running the app
@@ -73,7 +74,8 @@ class _SendaalAppState extends State<SendaalApp> {
   void _handleUri(Uri uri) {
     final isCustomScheme =
         uri.scheme == 'sendaal' && uri.host == 'reset-password';
-    final isHttpsReset = uri.scheme == 'https' &&
+    final isHttpsReset =
+        uri.scheme == 'https' &&
         uri.host == 'sendaal-directus.csiwm3.easypanel.host' &&
         uri.path.startsWith('/reset-password');
     if (!isCustomScheme && !isHttpsReset) return;
@@ -92,15 +94,17 @@ class _SendaalAppState extends State<SendaalApp> {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          title: 'Sendaal',
-          debugShowCheckedModeBanner: false,
-          navigatorKey: LocalNotificationService.navigatorKey,
-          theme: AppTheme.lightTheme,
-          onGenerateRoute: AppRouter.generateRoute,
-          initialRoute: widget.initialRoute,
-          builder: (context, child) =>
-              ConnectivityBanner(child: child ?? const SizedBox.shrink()),
+        return AppLifecycleObserver(
+          child: MaterialApp(
+            title: 'Sendaal',
+            debugShowCheckedModeBanner: false,
+            navigatorKey: LocalNotificationService.navigatorKey,
+            theme: AppTheme.lightTheme,
+            onGenerateRoute: AppRouter.generateRoute,
+            initialRoute: widget.initialRoute,
+            builder: (context, child) =>
+                ConnectivityBanner(child: child ?? const SizedBox.shrink()),
+          ),
         );
       },
     );

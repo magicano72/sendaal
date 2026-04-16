@@ -10,6 +10,7 @@ import '../../core/theme/text_style.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/auth_session_service.dart';
 import '../../services/biometric_service.dart';
+import '../../services/session_manager.dart';
 import '../../widgets/pin_entry_widgets.dart';
 
 class PinLoginScreen extends ConsumerStatefulWidget {
@@ -219,6 +220,9 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
       return;
     }
 
+    // Reset session lock state on successful PIN verification
+    SessionManager.instance.resetLockState();
+
     final readyForHome = await ref
         .read(authProvider.notifier)
         .bootstrapAuthenticatedUser();
@@ -257,6 +261,9 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
 
     // If successful, proceed to bootstrap and navigate
     if (result.success) {
+      // Reset session lock state on successful biometric authentication
+      SessionManager.instance.resetLockState();
+
       final readyForHome = await ref
           .read(authProvider.notifier)
           .bootstrapAuthenticatedUser();
