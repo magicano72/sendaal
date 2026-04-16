@@ -8,7 +8,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'services/auth_session_service.dart';
 import 'services/local_notification_service.dart';
 import 'services/system_limits_service.dart';
 import 'widgets/app_lifecycle_observer.dart';
@@ -20,17 +19,14 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env');
   await LocalNotificationService.initialize();
   await SystemLimitsService().loadAndCache();
-  final initialRoute = await AuthSessionService.instance.getInitialRoute();
   runApp(
     // ProviderScope wraps the entire app for Riverpod
-    ProviderScope(child: SendaalApp(initialRoute: initialRoute)),
+    const ProviderScope(child: SendaalApp()),
   );
 }
 
 class SendaalApp extends StatefulWidget {
-  final String initialRoute;
-
-  const SendaalApp({super.key, required this.initialRoute});
+  const SendaalApp({super.key});
 
   @override
   State<SendaalApp> createState() => _SendaalAppState();
@@ -101,7 +97,7 @@ class _SendaalAppState extends State<SendaalApp> {
             navigatorKey: LocalNotificationService.navigatorKey,
             theme: AppTheme.lightTheme,
             onGenerateRoute: AppRouter.generateRoute,
-            initialRoute: widget.initialRoute,
+            initialRoute: AppRoutes.splash,
             builder: (context, child) =>
                 ConnectivityBanner(child: child ?? const SizedBox.shrink()),
           ),

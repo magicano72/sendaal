@@ -10,6 +10,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/text_style.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/auth_session_service.dart';
+import 'splash_screen.dart';
 import '../../widgets/app_widgets.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -29,7 +30,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _guardExistingSession();
+    final splashResult = ref.read(splashInitializationProvider);
+    if (splashResult?.nextRoute == AppRoutes.login) {
+      _checkingSessionGate = false;
+    } else {
+      _guardExistingSession();
+    }
   }
 
   @override

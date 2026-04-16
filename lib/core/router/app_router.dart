@@ -12,6 +12,7 @@ import '../../screens/auth/pin_setup_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/auth/otp_screen.dart';
 import '../../screens/auth/otp_args.dart';
+import '../../screens/auth/splash_screen.dart';
 import '../../screens/contacts/contact_details_screen.dart';
 import '../../screens/contacts/device_contacts_screen.dart';
 import '../../screens/notifications/notifications_screen.dart';
@@ -26,6 +27,7 @@ import '../../screens/auth/reset_password_screen.dart';
 
 /// Named route constants — avoids magic strings throughout the app
 class AppRoutes {
+  static const String splash = '/';
   static const String login = '/login';
   static const String pinSetup = '/pin-setup';
   static const String pinLogin = '/pin-login';
@@ -57,6 +59,8 @@ class AppRouter {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case AppRoutes.splash:
+        return _fade(const SplashScreen());
       case AppRoutes.login:
         return _fade(const LoginScreen());
       case AppRoutes.pinSetup:

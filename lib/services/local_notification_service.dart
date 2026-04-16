@@ -4,7 +4,6 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../core/router/app_router.dart';
 import 'api_client.dart';
-import 'auth_session_service.dart';
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse response) {
@@ -89,8 +88,7 @@ class LocalNotificationService {
         return;
       }
 
-      final route = await AuthSessionService.instance.getInitialRoute();
-      navigator.pushNamedAndRemoveUntil(route, (_) => false);
+      navigator.pushNamedAndRemoveUntil(AppRoutes.splash, (_) => false);
     });
   }
 

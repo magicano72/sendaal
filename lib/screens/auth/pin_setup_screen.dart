@@ -8,6 +8,7 @@ import '../../core/theme/text_style.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/auth_session_service.dart';
 import '../../services/biometric_service.dart';
+import 'splash_screen.dart';
 import '../../widgets/biometric_enrollment_sheet.dart';
 import '../../widgets/pin_entry_widgets.dart';
 
@@ -48,7 +49,12 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen>
       TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
       TweenSequenceItem(tween: Tween(begin: 8, end: 0), weight: 1),
     ]).animate(_shakeController);
-    _guardRoute();
+    final splashResult = ref.read(splashInitializationProvider);
+    if (splashResult?.nextRoute == AppRoutes.pinSetup) {
+      _isCheckingRoute = false;
+    } else {
+      _guardRoute();
+    }
   }
 
   @override

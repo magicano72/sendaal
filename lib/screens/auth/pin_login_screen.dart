@@ -11,7 +11,9 @@ import '../../providers/auth_provider.dart';
 import '../../services/auth_session_service.dart';
 import '../../services/biometric_service.dart';
 import '../../services/session_manager.dart';
+import 'splash_screen.dart';
 import '../../widgets/pin_entry_widgets.dart';
+import '../../widgets/shimmer_widgets.dart';
 
 class PinLoginScreen extends ConsumerStatefulWidget {
   const PinLoginScreen({super.key});
@@ -31,6 +33,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
   int? _lockRemainingSeconds;
   bool _isLoading = true;
   bool _isVerifying = false;
+  bool _isLoggingOut = false;
   bool _showBiometricButton = false;
   bool _shouldAutoTriggerBiometric = false;
   Timer? _lockTimer;
@@ -38,7 +41,16 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
   @override
   void initState() {
     super.initState();
-    _bootstrap();
+    final splashResult = ref.read(splashInitializationProvider);
+    if (splashResult?.nextRoute == AppRoutes.pinLogin) {
+      _displayName = splashResult?.displayName ?? 'there';
+      _showBiometricButton = splashResult?.showBiometricButton ?? false;
+      _shouldAutoTriggerBiometric = _showBiometricButton;
+      _isLoading = false;
+      _restoreLockState();
+    } else {
+      _bootstrap();
+    }
   }
 
   @override
@@ -163,7 +175,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
   }
 
   Future<void> _handleDigit(String value) async {
-    if (_isVerifying || _lockRemainingSeconds != null) {
+    if (_isVerifying || _isLoggingOut || _lockRemainingSeconds != null) {
       return;
     }
 
@@ -185,7 +197,10 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
   }
 
   void _handleDelete() {
-    if (_isVerifying || _enteredPin.isEmpty || _lockRemainingSeconds != null) {
+    if (_isVerifying ||
+        _isLoggingOut ||
+        _enteredPin.isEmpty ||
+        _lockRemainingSeconds != null) {
       return;
     }
 
@@ -244,7 +259,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
   }
 
   Future<void> _authenticateWithBiometric() async {
-    if (_isVerifying) {
+    if (_isVerifying || _isLoggingOut) {
       return;
     }
 
@@ -322,6 +337,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
       return;
     }
 
+    setState(() => _isLoggingOut = true);
     await ref.read(authProvider.notifier).logout();
     if (!mounted) {
       return;
@@ -334,7 +350,9 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
     return WillPopScope(
       onWillPop: () async => false,
       child: PinScreenScaffold(
-        child: _isLoading
+        child: _isLoggingOut
+            ? const _PinLogoutShimmer()
+            : _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(
                 mainAxisSize: MainAxisSize.min,
@@ -409,6 +427,126 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                 ],
               ),
       ),
+    );
+  }
+}
+
+class _PinLogoutShimmer extends StatelessWidget {
+  const _PinLogoutShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 220.w,
+          child: ShimmerCard(
+            height: 28,
+            margin: EdgeInsets.zero,
+            borderRadius: BorderRadius.circular(10.r),
+          ),
+        ),
+        SizedBox(height: 14.h),
+        SizedBox(
+          width: 260.w,
+          child: ShimmerCard(
+            height: 16,
+            margin: EdgeInsets.zero,
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+        ),
+        SizedBox(height: 30.h),
+        SizedBox(
+          width: 120.w,
+          child: ShimmerCard(
+            height: 18,
+            margin: EdgeInsets.zero,
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+        ),
+        SizedBox(height: 14.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            4,
+            (_) => Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              child: SizedBox(
+                width: 18.r,
+                child: ShimmerCard(
+                  height: 18,
+                  margin: EdgeInsets.zero,
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 18.h),
+        SizedBox(
+          width: 180.w,
+          child: ShimmerCard(
+            height: 16,
+            margin: EdgeInsets.zero,
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+        ),
+        SizedBox(height: 34.h),
+        ...List.generate(
+          3,
+          (_) => Padding(
+            padding: EdgeInsets.only(bottom: 18.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                3,
+                (index) => Padding(
+                  padding: EdgeInsets.only(
+                    right: index == 2 ? 0 : 18.w,
+                  ),
+                  child: SizedBox(
+                    width: 84.w,
+                    child: ShimmerCard(
+                      height: 72,
+                      margin: EdgeInsets.zero,
+                      borderRadius: BorderRadius.circular(22.r),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            3,
+            (index) => Padding(
+              padding: EdgeInsets.only(
+                right: index == 2 ? 0 : 18.w,
+              ),
+              child: SizedBox(
+                width: 84.w,
+                child: ShimmerCard(
+                  height: 72,
+                  margin: EdgeInsets.zero,
+                  borderRadius: BorderRadius.circular(22.r),
+                ),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 20.h),
+        SizedBox(
+          width: 160.w,
+          child: ShimmerCard(
+            height: 18,
+            margin: EdgeInsets.zero,
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+        ),
+      ],
     );
   }
 }
