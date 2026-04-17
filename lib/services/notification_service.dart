@@ -8,18 +8,30 @@ class NotificationService {
   final ApiClient _api;
 
   NotificationService({ApiClient? apiClient})
-      : _api = apiClient ?? ApiClient.instance;
+    : _api = apiClient ?? ApiClient.instance;
 
   /// Fetch all notifications for a user, sorted newest first
   Future<List<Notification>> getNotifications(String userId) async {
-    final response = await _api.get(
-      Endpoints.notifications,
-      queryParams: {'filter[user][_eq]': userId, 'sort': '-created_at'},
-    );
-    final list = response['data'] as List<dynamic>? ?? [];
-    return list
-        .map((e) => Notification.fromJson(e as Map<String, dynamic>))
-        .toList();
+    try {
+      print('[NotificationService] Fetching notifications for userId: $userId');
+      final response = await _api.get(
+        Endpoints.notifications,
+        queryParams: {
+          'filter[user][_eq]': userId,
+          'sort': '-created_at',
+          'limit': '50',
+        },
+      );
+      print('[NotificationService] API Response: $response');
+      final list = response['data'] as List<dynamic>? ?? [];
+      print('[NotificationService] Fetched ${list.length} notifications');
+      return list
+          .map((e) => Notification.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('[NotificationService] Error fetching notifications: $e');
+      rethrow;
+    }
   }
 
   /// Mark a single notification as read
@@ -35,10 +47,18 @@ class NotificationService {
   Future<Notification> createWelcomeNotification(String userId) async {
     final response = await _api.post(
       Endpoints.notifications,
-      body: {'user': userId},
+      body: {
+        'user': userId,
+        'title': 'Welcome to Sendaal',
+        'body':
+            'Your account is ready. Start sharing your financial data securely.',
+        'type': 'system',
+        'is_read': false,
+      },
     );
-    final notification =
-        Notification.fromJson(response['data'] as Map<String, dynamic>);
+    final notification = Notification.fromJson(
+      response['data'] as Map<String, dynamic>,
+    );
 
     // Show local notification
     await LocalNotificationService.showNotification(

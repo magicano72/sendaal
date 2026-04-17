@@ -111,7 +111,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       itemCount:
           accessState.receivedRequests.length +
           notifState.notifications.length +
-          (accessState.receivedRequests.isNotEmpty ? 1 : 0),
+          (accessState.receivedRequests.isNotEmpty ? 1 : 0) +
+          (notifState.notifications.isNotEmpty ? 1 : 0),
       separatorBuilder: (_, __) => SizedBox(height: 8.h),
       itemBuilder: (_, i) {
         // Section header for access requests
@@ -119,7 +120,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 8.h),
             child: Text(
-              'Access Requests',
+              'Requests',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),

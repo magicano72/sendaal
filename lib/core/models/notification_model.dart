@@ -20,13 +20,39 @@ class Notification {
   });
 
   factory Notification.fromJson(Map<String, dynamic> json) {
+    final rawType = json['type']?.toString() ?? 'system';
+    final rawTitle = json['title']?.toString() ?? '';
+    final rawBody = json['body']?.toString() ?? '';
+
+    // Provide sensible defaults based on notification type if title/body are empty
+    String title = rawTitle;
+    String body = rawBody;
+
+    if (title.isEmpty) {
+      switch (rawType) {
+        case 'access_request':
+          title = 'Access Request';
+          break;
+        case 'access_approved':
+          title = 'Access Approved';
+          break;
+        case 'system':
+        default:
+          title = 'Notification';
+          break;
+      }
+    }
+
+    if (body.isEmpty) {
+      body = 'You have a new notification';
+    }
+
     return Notification(
       id: json['id']?.toString() ?? '',
-      userId:
-          json['user']?.toString() ?? json['userId']?.toString() ?? '',
-      title: json['title']?.toString() ?? '',
-      body: json['body']?.toString() ?? '',
-      type: json['type']?.toString() ?? 'system',
+      userId: json['user']?.toString() ?? json['userId']?.toString() ?? '',
+      title: title,
+      body: body,
+      type: rawType,
       isRead: json['is_read'] == true || json['isRead'] == true,
       createdAt:
           json['created_at']?.toString() ?? json['createdAt']?.toString() ?? '',
@@ -36,15 +62,15 @@ class Notification {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'user': userId,
-        'title': title,
-        'body': body,
-        'type': type,
-        'is_read': isRead,
-        'created_at': createdAt,
-        'related_id': relatedId,
-      };
+    'id': id,
+    'user': userId,
+    'title': title,
+    'body': body,
+    'type': type,
+    'is_read': isRead,
+    'created_at': createdAt,
+    'related_id': relatedId,
+  };
 
   Notification copyWith({
     String? id,

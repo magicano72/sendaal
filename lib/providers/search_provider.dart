@@ -139,11 +139,18 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   NotificationsNotifier(this._service) : super(const NotificationsState());
 
   Future<void> loadNotifications(String userId) async {
+    print(
+      '[NotificationsNotifier] Starting loadNotifications for userId: $userId',
+    );
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final list = await _service.getNotifications(userId);
+      print('[NotificationsNotifier] Loaded ${list.length} notifications');
       // Trigger local push for any new unread notifications
       for (final n in list) {
+        print(
+          '[NotificationsNotifier] Notification: id=${n.id}, title=${n.title}, isRead=${n.isRead}',
+        );
         if (n.isRead == false && !_notifiedIds.contains(n.id)) {
           _notifiedIds.add(n.id);
           await LocalNotificationService.showNotification(
@@ -155,7 +162,11 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
         }
       }
       state = state.copyWith(isLoading: false, notifications: list);
+      print(
+        '[NotificationsNotifier] State updated, notifications count: ${state.notifications.length}',
+      );
     } catch (e) {
+      print('[NotificationsNotifier] Error: $e');
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to load notifications: $e',
