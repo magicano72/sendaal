@@ -6,6 +6,8 @@ import 'endpoint.dart';
 /// Handles access request creation and management
 class AccessService {
   final ApiClient _api;
+  static const String _accessRequestFields =
+      '*,requester.id,requester.first_name,requester.username,receiver.id,receiver.first_name,receiver.username';
 
   AccessService({ApiClient? apiClient})
     : _api = apiClient ?? ApiClient.instance;
@@ -82,6 +84,7 @@ class AccessService {
       queryParams: {
         'filter[receiver][_eq]': userId,
         if (!includeHidden) 'filter[visible_for_receiver][_eq]': 'true',
+        'fields': _accessRequestFields,
       },
     );
     final list = response['data'] as List<dynamic>? ?? [];
@@ -100,6 +103,7 @@ class AccessService {
       queryParams: {
         'filter[requester][_eq]': userId,
         if (!includeHidden) 'filter[visible_for_requester][_eq]': 'true',
+        'fields': _accessRequestFields,
       },
     );
     final list = response['data'] as List<dynamic>? ?? [];
@@ -138,6 +142,7 @@ class AccessService {
           'filter[receiver][_eq]': receiverId,
           'sort': '-created_at',
           'limit': '1',
+          'fields': _accessRequestFields,
         },
       );
       final list = response['data'] as List<dynamic>? ?? [];
@@ -161,6 +166,7 @@ class AccessService {
           'filter[receiver][_eq]': receiverId,
           'filter[status][_eq]': 'pending',
           'limit': '1',
+          'fields': _accessRequestFields,
         },
       );
       final list = response['data'] as List<dynamic>? ?? [];
@@ -188,6 +194,7 @@ class AccessService {
         'filter[_or][1][_and][2][status][_eq]': 'approved',
         'limit': '1',
         'sort': '-created_at',
+        'fields': _accessRequestFields,
       },
     );
 
@@ -210,6 +217,7 @@ class AccessService {
         'filter[_or][1][_and][1][receiver][_eq]': userA,
         'sort': '-created_at',
         'limit': '1',
+        'fields': _accessRequestFields,
       },
     );
 
@@ -232,6 +240,7 @@ class AccessService {
           'filter[receiver][_eq]': receiverId,
           'filter[status][_in]': 'pending,approved',
           'limit': '1',
+          'fields': _accessRequestFields,
         },
       );
       final list = response['data'] as List<dynamic>? ?? [];

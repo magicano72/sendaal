@@ -26,6 +26,7 @@ enum AccessStatus {
 class AccessRequest {
   final String id;
   final String requesterId;
+  final String requesterName;
   final String receiverId;
   final AccessStatus status;
   final DateTime createdAt;
@@ -40,6 +41,7 @@ class AccessRequest {
   const AccessRequest({
     required this.id,
     required this.requesterId,
+    this.requesterName = '',
     required this.receiverId,
     required this.status,
     required this.createdAt,
@@ -56,6 +58,12 @@ class AccessRequest {
     id: json['id']?.toString() ?? '',
     requesterId:
         _extractId(json['requester']) ?? json['requesterId']?.toString() ?? '',
+    requesterName: _extractName(
+      json['requester'],
+      explicitName:
+          json['requester_name']?.toString() ??
+          json['requesterName']?.toString(),
+    ),
     receiverId:
         _extractId(json['receiver']) ?? json['receiverId']?.toString() ?? '',
     status: AccessStatus.fromString(json['status']?.toString() ?? 'pending'),
@@ -85,6 +93,7 @@ class AccessRequest {
   Map<String, dynamic> toJson() => {
     'id': id,
     'requester': requesterId,
+    'requester_name': requesterName,
     'receiver': receiverId,
     'status': status.apiValue,
     'created_at': createdAt.toIso8601String().split('T')[0],
@@ -101,6 +110,7 @@ class AccessRequest {
   AccessRequest copyWith({
     String? id,
     String? requesterId,
+    String? requesterName,
     String? receiverId,
     AccessStatus? status,
     DateTime? createdAt,
@@ -114,6 +124,7 @@ class AccessRequest {
   }) => AccessRequest(
     id: id ?? this.id,
     requesterId: requesterId ?? this.requesterId,
+    requesterName: requesterName ?? this.requesterName,
     receiverId: receiverId ?? this.receiverId,
     status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
@@ -146,6 +157,32 @@ class AccessRequest {
     }
     if (value != null) return value.toString();
     return null;
+  }
+
+  static String _extractName(dynamic value, {String? explicitName}) {
+    final trimmedExplicit = explicitName?.trim();
+    if (trimmedExplicit != null && trimmedExplicit.isNotEmpty) {
+      return trimmedExplicit;
+    }
+
+    if (value is Map<String, dynamic>) {
+      final firstName = value['first_name']?.toString().trim();
+      if (firstName != null && firstName.isNotEmpty) {
+        return firstName;
+      }
+
+      final displayName = value['displayName']?.toString().trim();
+      if (displayName != null && displayName.isNotEmpty) {
+        return displayName;
+      }
+
+      final username = value['username']?.toString().trim();
+      if (username != null && username.isNotEmpty) {
+        return username;
+      }
+    }
+
+    return '';
   }
 }
 

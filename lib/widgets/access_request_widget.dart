@@ -77,7 +77,7 @@ class AccessRequestTile extends ConsumerWidget {
                       ),
                       SizedBox(height: 2.h),
                       Text(
-                        'ID: ${request.requesterId.substring(0, 8)}…',
+                        'From ${request.requesterName}',
                         style: TextStyles.label.copyWith(
                           color: AppTheme.textSecondary,
                           fontFamily: 'monospace',
@@ -204,10 +204,8 @@ class AccessRequestTile extends ConsumerWidget {
     AccessStatus.rejected => (color: Colors.red, label: 'Rejected'),
     AccessStatus.cancelled => (color: Colors.grey, label: 'Cancelled'),
     AccessStatus.revoked => (color: Colors.red, label: 'Revoked'),
-    AccessStatus.revokedByRequester =>
-      (color: Colors.red, label: 'Revoked'),
-    AccessStatus.revokedByReceiver =>
-      (color: Colors.red, label: 'Revoked'),
+    AccessStatus.revokedByRequester => (color: Colors.red, label: 'Revoked'),
+    AccessStatus.revokedByReceiver => (color: Colors.red, label: 'Revoked'),
   };
 
   void _openDetails(BuildContext context) => Navigator.pushNamed(
