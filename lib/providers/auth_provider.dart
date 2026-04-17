@@ -185,8 +185,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
               ? registrationResponse['data']['id'].toString()
               : '';
       if (createdId.isNotEmpty) {
-        // Fire-and-forget welcome notification; errors shouldn’t block signup
-        unawaited(_notificationService.createWelcomeNotification(createdId));
+        // Fire-and-forget welcome notification; errors should not block signup.
+        unawaited(_createWelcomeNotificationSafely(createdId));
       }
       print('[AuthNotifier] Registration completed successfully');
       state = state.copyWith(isRegisterLoading: false);
@@ -278,6 +278,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> toggleBiometric(bool enable) {
     return _sessionService.toggleBiometric(enable);
+  }
+
+  Future<void> _createWelcomeNotificationSafely(String userId) async {
+    try {
+      await _notificationService.createWelcomeNotification(userId);
+    } catch (e) {
+      print('[AuthNotifier] Welcome notification skipped: $e');
+    }
   }
 
   void setUser(User user) {

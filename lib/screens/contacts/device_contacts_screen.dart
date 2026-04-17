@@ -13,6 +13,7 @@ import '../../core/theme/text_style.dart';
 import '../../providers/access_request_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/contacts_provider.dart';
+import '../../services/user_service.dart';
 
 class DeviceContactsScreen extends ConsumerStatefulWidget {
   const DeviceContactsScreen({super.key});
@@ -361,14 +362,25 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
 
   Widget _buildContactTile(DeviceContactView contact, Set<String> approvedIds) {
     final matchedUser = contact.matchedUser;
+    final currentUser = ref.read(authProvider).user;
+    final isCurrentUserMatch =
+        currentUser != null &&
+        matchedUser != null &&
+        (matchedUser.id == currentUser.id ||
+            UserService.normalizePhone(matchedUser.phoneNumber ?? '') ==
+                UserService.normalizePhone(currentUser.phoneNumber ?? ''));
     final alreadyApproved =
-        matchedUser != null && approvedIds.contains(matchedUser.id);
+        !isCurrentUserMatch &&
+        matchedUser != null &&
+        approvedIds.contains(matchedUser.id);
     final isSending =
         matchedUser != null && (_requesting[matchedUser.id] ?? false);
     final isCancelling =
         matchedUser != null && (_cancelling[matchedUser.id] ?? false);
-    final currentUser = ref.read(authProvider).user;
-    final latestRequest = (currentUser != null && matchedUser != null)
+    final latestRequest =
+        (currentUser != null &&
+            matchedUser != null &&
+            !isCurrentUserMatch)
         ? ref.watch(
             latestRequestBetweenProvider((currentUser.id, matchedUser.id)),
           )
@@ -410,7 +422,11 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
                 ? user.phoneNumber
                 : '@${user.username}');
       avatarUrl = user.avatar;
-      if (alreadyApproved) {
+      if (isCurrentUserMatch) {
+        actionLabel = 'You';
+        onAction = _showSelfProfileMessage;
+        onTap = onAction;
+      } else if (alreadyApproved) {
         actionLabel = 'View';
         onAction = () => _openContactDetails(user);
         onTap = onAction;
@@ -570,6 +586,13 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
 
   void _openContactDetails(User user) {
     Navigator.pushNamed(context, AppRoutes.contactDetails, arguments: user);
+  }
+
+  void _showSelfProfileMessage() {
+    AppSnackBar.info(
+      context,
+      'This is you! Your profile is in the Profile tab.',
+    );
   }
 }
 

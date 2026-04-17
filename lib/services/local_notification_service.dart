@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -12,6 +13,8 @@ void notificationTapBackground(NotificationResponse response) {
 
 class LocalNotificationService {
   LocalNotificationService._();
+
+  static const String _androidLargeIconAsset = 'assets/images/app-logo.png';
 
   static final navigatorKey = GlobalKey<NavigatorState>();
   static final FlutterLocalNotificationsPlugin _plugin =
@@ -43,7 +46,8 @@ class LocalNotificationService {
     // Android channel setup
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_channel);
   }
 
@@ -55,6 +59,7 @@ class LocalNotificationService {
   }) async {
     final hasPermission = await _ensureNotificationPermission();
     if (!hasPermission) return;
+    final largeIcon = await _loadAndroidLargeIcon();
 
     final androidDetails = AndroidNotificationDetails(
       _channel.id,
@@ -62,7 +67,7 @@ class LocalNotificationService {
       channelDescription: _channel.description,
       importance: Importance.max,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      largeIcon: largeIcon,
     );
     const iosDetails = DarwinNotificationDetails();
     final details = NotificationDetails(
@@ -76,6 +81,15 @@ class LocalNotificationService {
       details,
       payload: payload ?? id,
     );
+  }
+
+  static Future<AndroidBitmap<Object>?> _loadAndroidLargeIcon() async {
+    try {
+      final data = await rootBundle.load(_androidLargeIconAsset);
+      return ByteArrayAndroidBitmap(data.buffer.asUint8List());
+    } catch (_) {
+      return null;
+    }
   }
 
   static void handleNotificationTap(String? payload) {

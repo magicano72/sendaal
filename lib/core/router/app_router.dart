@@ -17,6 +17,8 @@ import '../../screens/contacts/contact_details_screen.dart';
 import '../../screens/contacts/device_contacts_screen.dart';
 import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/profile/profile_screen.dart';
+import '../../screens/profile/profile_details_screen.dart';
+import '../../screens/profile/settings_screen.dart';
 import '../../screens/recipient/recipient_screen.dart';
 import '../../screens/requests/all_requests_screen.dart';
 import '../../screens/requests/requester_details_screen.dart';
@@ -37,6 +39,8 @@ class AppRoutes {
   static const String home = '/home';
   static const String accounts = '/accounts';
   static const String profile = '/profile';
+  static const String settings = '/settings';
+  static const String profileDetails = '/profile-details';
   static const String editAccount = '/edit-account';
   static const String search = '/search';
   static const String recipient = '/recipient';
@@ -83,6 +87,10 @@ class AppRouter {
         return _fade(const AccountsScreen());
       case AppRoutes.profile:
         return _fade(const ProfileScreen());
+      case AppRoutes.settings:
+        return _fade(const SettingsScreen());
+      case AppRoutes.profileDetails:
+        return _fade(const ProfileDetailsScreen());
       case AppRoutes.editAccount:
         final account = settings.arguments as FinancialAccount;
         return _fade(EditAccountScreen(account: account));

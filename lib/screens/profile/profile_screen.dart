@@ -15,8 +15,6 @@ import '../../core/theme/text_style.dart';
 import '../../models/financial_account_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/auth_session_service.dart';
-import '../../services/biometric_service.dart';
 import '../../services/user_service.dart';
 import '../../widgets/app_widgets.dart';
 
@@ -29,14 +27,9 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  final AuthSessionService _sessionService = AuthSessionService.instance;
-  final BiometricService _biometricService = BiometricService();
   final ImagePicker _imagePicker = ImagePicker();
 
   bool _isUploading = false;
-  bool _biometricEnabled = false;
-  bool _biometricAvailable = false;
-  bool _isUpdatingBiometric = false;
 
   @override
   void initState() {
@@ -46,7 +39,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (user != null) {
         ref.read(accountsProvider.notifier).loadAccounts(user.id);
       }
-      _loadBiometricState();
     });
   }
 
@@ -67,12 +59,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         leading: const SizedBox(),
         title: const Text('My Profile'),
         centerTitle: true,
-        // actions: const [
-        //   Padding(
-        //     padding: EdgeInsets.only(right: 12),
-        //     child: Icon(Icons.settings_outlined),
-        //   ),
-        // ],
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.settings),
+            icon: const Icon(Icons.settings_outlined),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -139,14 +131,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ],
             SizedBox(height: 28.h),
-            if (_biometricAvailable) ...[
-              _SecurityCard(
-                enabled: _biometricEnabled,
-                isLoading: _isUpdatingBiometric,
-                onChanged: _toggleBiometric,
-              ),
-              SizedBox(height: 18.h),
-            ],
             _LogoutButton(
               onPressed: () async {
                 await ref.read(authProvider.notifier).logout();
@@ -162,18 +146,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Future<void> _loadBiometricState() async {
-    final available = await _biometricService.isDeviceSupported();
-    final enabled = available && await _biometricService.isEnabled();
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _biometricAvailable = available;
-      _biometricEnabled = enabled;
-    });
-  }
-
   Future<void> _toggleFavorite(FinancialAccount account) async {
     final notifier = ref.read(accountsProvider.notifier);
     await notifier.toggleFavourite(account.id, account.isFavourite);
@@ -181,51 +153,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final user = ref.read(authProvider).user;
     if (user != null) {
       await notifier.loadAccounts(user.id);
-    }
-  }
-
-  Future<void> _toggleBiometric(bool enable) async {
-    if (_isUpdatingBiometric) {
-      return;
-    }
-
-    setState(() => _isUpdatingBiometric = true);
-
-    bool updated = false;
-
-    if (enable) {
-      // Enabling: require biometric confirmation
-      updated = await _biometricService.enableWithConfirmation();
-    } else {
-      // Disabling: just switch it off (no confirmation needed)
-      await _biometricService.disable();
-      updated = true;
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _isUpdatingBiometric = false;
-      if (updated) {
-        _biometricEnabled = enable;
-      }
-    });
-
-    if (updated) {
-      AppSnackBar.success(
-        context,
-        enable ? 'Biometric login enabled' : 'Biometric login disabled',
-      );
-      return;
-    }
-
-    if (enable) {
-      AppSnackBar.error(
-        context,
-        'Biometric verification failed. Biometric login was not enabled.',
-      );
     }
   }
 
@@ -413,49 +340,6 @@ class _LogoutButton extends StatelessWidget {
             side: BorderSide(color: AppTheme.error.withOpacity(0.14)),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SecurityCard extends StatelessWidget {
-  final bool enabled;
-  final bool isLoading;
-  final ValueChanged<bool> onChanged;
-
-  const _SecurityCard({
-    required this.enabled,
-    required this.isLoading,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: SwitchListTile.adaptive(
-        value: enabled,
-        onChanged: isLoading ? null : onChanged,
-        activeColor: AppTheme.primary,
-        title: Text(
-          'Use biometric login',
-          style: TextStyles.bodyBold.copyWith(color: AppTheme.textPrimary),
-        ),
-        subtitle: Text(
-          'Use your device biometrics from the PIN screen.',
-          style: TextStyles.bodySmall.copyWith(color: AppTheme.textSecondary),
-        ),
-        secondary: isLoading
-            ? SizedBox(
-                width: 22.w,
-                height: 22.w,
-                child: const CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.fingerprint_rounded, color: AppTheme.primary),
       ),
     );
   }
