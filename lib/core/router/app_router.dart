@@ -5,27 +5,28 @@ import '../../core/models/index.dart' hide AccessRequest;
 import '../../models/access_request_model.dart';
 import '../../screens/accounts/accounts_screen.dart';
 import '../../screens/accounts/edit_account_screen.dart';
+import '../../screens/auth/forgot_password_screen.dart';
 import '../../screens/auth/home_gate_screen.dart';
 import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/otp_args.dart';
+import '../../screens/auth/otp_screen.dart';
 import '../../screens/auth/pin_login_screen.dart';
 import '../../screens/auth/pin_setup_screen.dart';
 import '../../screens/auth/register_screen.dart';
-import '../../screens/auth/otp_screen.dart';
-import '../../screens/auth/otp_args.dart';
+import '../../screens/auth/reset_password_screen.dart';
 import '../../screens/auth/splash_screen.dart';
 import '../../screens/contacts/contact_details_screen.dart';
 import '../../screens/contacts/device_contacts_screen.dart';
 import '../../screens/notifications/notifications_screen.dart';
-import '../../screens/profile/profile_screen.dart';
+import '../../screens/profile/policy_details_screen.dart';
 import '../../screens/profile/profile_details_screen.dart';
+import '../../screens/profile/profile_screen.dart';
 import '../../screens/profile/settings_screen.dart';
 import '../../screens/recipient/recipient_screen.dart';
 import '../../screens/requests/all_requests_screen.dart';
 import '../../screens/requests/requester_details_screen.dart';
 import '../../screens/transfer/transfer_screen.dart';
 import '../../screens/transfer/transfer_success_screen.dart';
-import '../../screens/auth/forgot_password_screen.dart';
-import '../../screens/auth/reset_password_screen.dart';
 
 /// Named route constants — avoids magic strings throughout the app
 class AppRoutes {
@@ -41,6 +42,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String settings = '/settings';
   static const String profileDetails = '/profile-details';
+  static const String policyDetails = '/policy-details';
   static const String editAccount = '/edit-account';
   static const String search = '/search';
   static const String recipient = '/recipient';
@@ -91,6 +93,9 @@ class AppRouter {
         return _fade(const SettingsScreen());
       case AppRoutes.profileDetails:
         return _fade(const ProfileDetailsScreen());
+      case AppRoutes.policyDetails:
+        final policyType = settings.arguments as String? ?? 'privacy';
+        return _fade(PolicyDetailsScreen(policyType: policyType));
       case AppRoutes.editAccount:
         final account = settings.arguments as FinancialAccount;
         return _fade(EditAccountScreen(account: account));

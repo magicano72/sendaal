@@ -1,5 +1,6 @@
 import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:Sendaal/widgets/app_widgets.dart' show ErrorBanner;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -150,28 +151,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       if (!mounted) return;
 
-      AppSnackBar.success(
-        context,
-        'Verification code sent to $_phoneNumber',
-      );
+      AppSnackBar.success(context, 'Verification code sent to $_phoneNumber');
 
       Navigator.pushNamed(
         context,
         AppRoutes.otp,
-        arguments: OtpFlowArgs(
-          registerPayload: payload,
-          session: session,
-        ),
+        arguments: OtpFlowArgs(registerPayload: payload, session: session),
       );
     } on ApiException catch (e) {
       final apiEx = ApiException(message: e.message, statusCode: e.statusCode);
 
       _usernameError = null;
       _emailError = null;
-      _phoneError = DirectusErrorParser.parseFieldError(
-        apiEx,
-        'phone_number',
-      );
+      _phoneError = DirectusErrorParser.parseFieldError(apiEx, 'phone_number');
 
       if (_phoneError != null) {
         setState(() {});
@@ -184,10 +176,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } catch (e) {
       setState(() => _formError = 'Something went wrong. Please try again.');
       if (mounted) {
-        AppSnackBar.error(
-          context,
-          'Something went wrong. Please try again.',
-        );
+        AppSnackBar.error(context, 'Something went wrong. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _isRequestingOtp = false);
@@ -399,9 +388,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             SizedBox(height: 8.h),
                             IntlPhoneField(
                               initialCountryCode: 'EG',
-                              disableLengthCheck: false, // respect per-country lengths
+                              disableLengthCheck:
+                                  false, // respect per-country lengths
                               inputFormatters: [
-                                LengthLimitingTextInputFormatter(_phoneMaxLength),
+                                LengthLimitingTextInputFormatter(
+                                  _phoneMaxLength,
+                                ),
                               ],
                               decoration: _inputDecoration(
                                 hint: 'Enter phone number',
@@ -410,8 +402,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               onChanged: (phone) {
                                 setState(() {
                                   _phoneError = null;
-                                  _phoneNumber =
-                                      phone.completeNumber.replaceAll(' ', '');
+                                  _phoneNumber = phone.completeNumber
+                                      .replaceAll(' ', '');
                                   _countryCode = phone.countryCode;
                                 });
                               },
@@ -431,8 +423,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   return 'Phone number is required';
                                 }
 
-                                final digits =
-                                    phone.number.replaceAll(RegExp(r'\D'), '');
+                                final digits = phone.number.replaceAll(
+                                  RegExp(r'\D'),
+                                  '',
+                                );
                                 if (digits.length < _phoneMinLength ||
                                     digits.length > _phoneMaxLength) {
                                   return 'Enter a valid phone number for ${phone.countryISOCode}';
@@ -493,7 +487,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               SizedBox(height: 12.h),
                             ],
 
-                            // ── Terms checkbox ─────────────────────────────
+                            // ── Terms checkbox ─────────────────────────
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -519,8 +513,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 ),
                                 SizedBox(width: 10.w),
                                 Expanded(
-                                  child: Text.rich(
-                                    TextSpan(
+                                  child: RichText(
+                                    text: TextSpan(
                                       style: TextStyles.captionRegular.copyWith(
                                         fontSize: 13.sp,
                                         color: AppTheme.textSecondary,
@@ -536,6 +530,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                                 fontWeight: FontWeight.w500,
                                                 fontSize: 13.sp,
                                               ),
+                                          recognizer: TapGestureRecognizer()
+                                            ..onTap = () {
+                                              Navigator.pushNamed(
+                                                context,
+                                                AppRoutes.policyDetails,
+                                                arguments: 'terms',
+                                              );
+                                            },
                                         ),
                                         const TextSpan(text: ' and '),
                                         TextSpan(
@@ -546,6 +548,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                                 fontWeight: FontWeight.w500,
                                                 fontSize: 13.sp,
                                               ),
+                                          recognizer: TapGestureRecognizer()
+                                            ..onTap = () {
+                                              Navigator.pushNamed(
+                                                context,
+                                                AppRoutes.policyDetails,
+                                                arguments: 'privacy',
+                                              );
+                                            },
                                         ),
                                         const TextSpan(text: '.'),
                                       ],

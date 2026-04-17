@@ -16,8 +16,7 @@ AccessRequest _$AccessRequestFromJson(Map<String, dynamic> json) =>
       requesterName: json['requesterName'] as String?,
       requesterUsername: json['requesterUsername'] as String?,
       isFavorite: json['is_favorite'] as bool? ?? false,
-      requestAccessType:
-          json['request_access_type'] as String? ?? 'full',
+      requestAccessType: json['request_access_type'] as String? ?? 'full',
       approvedAccessType: json['approved_access_type'] as String?,
     );
 

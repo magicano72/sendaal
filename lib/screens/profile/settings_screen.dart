@@ -203,6 +203,100 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
+                SizedBox(height: 24.h),
+                // Privacy & Policy Section
+                Text(
+                  'Privacy & Legal',
+                  style: TextStyles.bodyBold.copyWith(
+                    fontSize: 14.sp,
+                    color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                // Privacy Policy
+                _SettingsSectionCard(
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 42.w,
+                      height: 42.w,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      child: const Icon(
+                        Icons.privacy_tip_outlined,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    title: Text(
+                      'Privacy Policy',
+                      style: TextStyles.bodyBold.copyWith(
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'View our privacy practices.',
+                      style: TextStyles.bodySmall.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppTheme.textSecondary,
+                    ),
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.policyDetails,
+                        arguments: 'privacy',
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                // Terms & Conditions
+                _SettingsSectionCard(
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 42.w,
+                      height: 42.w,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      child: const Icon(
+                        Icons.description_outlined,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    title: Text(
+                      'Terms & Conditions',
+                      style: TextStyles.bodyBold.copyWith(
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Read our terms of service.',
+                      style: TextStyles.bodySmall.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppTheme.textSecondary,
+                    ),
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.policyDetails,
+                        arguments: 'terms',
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
     );
