@@ -26,7 +26,7 @@ class PolicyService {
 
     try {
       final response = await _apiClient
-          .getPublic(
+          .getNoAuth(
             '/items/policies',
             queryParams: {
               'filter[type][_eq]': type,

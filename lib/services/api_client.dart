@@ -116,9 +116,7 @@ class ApiClient {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    final staticToken = dotenv.env['PHONE_VALIDATOR_TOKEN'] ??
-        dotenv.env['PUBLIC_STATIC_TOKEN'] ??
-        dotenv.env['PUBLIC_TOKEN'];
+    final staticToken = dotenv.env['PHONE_VALIDATOR_TOKEN'];
     if (staticToken != null && staticToken.isNotEmpty) {
       headers['Authorization'] = 'Bearer $staticToken';
     }
@@ -290,7 +288,33 @@ class ApiClient {
       throw const ApiException('Request timed out. Please try again.');
     }
   }
-
+  /// GET for truly public endpoints (no authentication required)
+  /// Example: /items/policies endpoint that accepts requests without any token
+  Future<dynamic> getNoAuth(
+      String path, {
+        Map<String, String>? queryParams,
+      }) async {
+    print('[ApiClient] NO AUTH GET request: $_baseUrl$path');
+    try {
+      await _ensureOnline();
+      final response = await http
+          .get(
+        _buildUri(path, queryParams),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      )
+          .timeout(_timeout);
+      return _parseResponse(response);
+    } on SocketException {
+      throw const ApiException(
+        'No internet connection. Please check your network.',
+      );
+    } on TimeoutException {
+      throw const ApiException('Request timed out. Please try again.');
+    }
+  }
   // ── POST ──────────────────────────────────────────────────────────────────
   /// POST – accepts either a map or a list (for bulk inserts)
   Future<dynamic> post(String path, {dynamic body}) async {

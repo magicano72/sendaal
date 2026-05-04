@@ -18,7 +18,7 @@ class PasswordResetService {
   /// Network/timeouts still bubble up so the UI can show a retry message.
   Future<void> requestPasswordReset(String email) async {
     try {
-      await _api.postPublic(
+      await _api.post(
         Endpoints.requestPasswordReset,
         body: {'email': email, 'reset_url': _resetUrl},
       );

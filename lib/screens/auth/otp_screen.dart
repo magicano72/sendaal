@@ -255,6 +255,17 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F6FB),
+      appBar: AppBar(
+backgroundColor: const Color(0xFFF2F6FB),
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Color(0xFF0F192A),
+          ),
+        ),
+        ),
       body: SafeArea(
         child: Container(
           width: double.infinity,

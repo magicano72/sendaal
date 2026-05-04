@@ -100,9 +100,9 @@ PolicyService.getPolicyByType(type)
     ↓
 Check Cache (24-hour)
     ↓
-If Not Cached: ApiClient.getPublic('/items/policies?filter...')
+If Not Cached: ApiClient.getnoauth('/items/policies?filter...')
     ↓
-Parse PolicyModel
+Parse PolicyModel~~~~
     ↓
 Cache & Return
     ↓
