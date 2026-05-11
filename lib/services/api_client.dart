@@ -55,7 +55,8 @@ class ApiClient {
     required String accessToken,
     required String refreshToken,
     DateTime? expiresAt,
-  })? _sessionPersistenceCallback;
+  })?
+  _sessionPersistenceCallback;
 
   void setToken(
     String token, {
@@ -80,7 +81,8 @@ class ApiClient {
       required String accessToken,
       required String refreshToken,
       DateTime? expiresAt,
-    }) callback,
+    })
+    callback,
   ) {
     _sessionPersistenceCallback = callback;
   }
@@ -116,7 +118,7 @@ class ApiClient {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    final staticToken = dotenv.env['PHONE_VALIDATOR_TOKEN'];
+    final staticToken = dotenv.env['PUBLIC_TOKEN'];
     if (staticToken != null && staticToken.isNotEmpty) {
       headers['Authorization'] = 'Bearer $staticToken';
     }
@@ -157,10 +159,7 @@ class ApiClient {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-              'refresh_token': _refreshToken,
-              'mode': 'json',
-            }),
+            body: jsonEncode({'refresh_token': _refreshToken, 'mode': 'json'}),
           )
           .timeout(_timeout);
 
@@ -213,8 +212,7 @@ class ApiClient {
         if (errors is List && errors.isNotEmpty) {
           final first = errors.first;
           final msg = first['message']?.toString().toLowerCase();
-          final code =
-              first['extensions']?['code']?.toString().toLowerCase();
+          final code = first['extensions']?['code']?.toString().toLowerCase();
           if (msg != null && msg.contains('token expired')) return true;
           if (code != null && code.contains('token_expired')) return true;
         }
@@ -288,23 +286,24 @@ class ApiClient {
       throw const ApiException('Request timed out. Please try again.');
     }
   }
+
   /// GET for truly public endpoints (no authentication required)
   /// Example: /items/policies endpoint that accepts requests without any token
   Future<dynamic> getNoAuth(
-      String path, {
-        Map<String, String>? queryParams,
-      }) async {
+    String path, {
+    Map<String, String>? queryParams,
+  }) async {
     print('[ApiClient] NO AUTH GET request: $_baseUrl$path');
     try {
       await _ensureOnline();
       final response = await http
           .get(
-        _buildUri(path, queryParams),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      )
+            _buildUri(path, queryParams),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          )
           .timeout(_timeout);
       return _parseResponse(response);
     } on SocketException {
@@ -315,6 +314,7 @@ class ApiClient {
       throw const ApiException('Request timed out. Please try again.');
     }
   }
+
   // ── POST ──────────────────────────────────────────────────────────────────
   /// POST – accepts either a map or a list (for bulk inserts)
   Future<dynamic> post(String path, {dynamic body}) async {
