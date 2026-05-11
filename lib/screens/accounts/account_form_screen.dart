@@ -9,8 +9,8 @@ import '../../models/financial_account_model.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/account_service.dart';
-import '../../widgets/app_widgets.dart';
 import '../../widgets/account_type_badge.dart';
+import '../../widgets/app_widgets.dart';
 import '../../widgets/country_flag_icon.dart';
 import '../../widgets/provider_logo.dart';
 
@@ -394,8 +394,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                   else
                     ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxHeight:
-                            MediaQuery.of(context).size.height * 0.6,
+                        maxHeight: MediaQuery.of(context).size.height * 0.6,
                       ),
                       child: ListView.separated(
                         shrinkWrap: true,
@@ -423,7 +422,10 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                             title: Text(country.name),
                             subtitle: Text(country.code),
                             trailing: isSelected
-                                ? const Icon(Icons.check, color: AppTheme.primary)
+                                ? const Icon(
+                                    Icons.check,
+                                    color: AppTheme.primary,
+                                  )
                                 : null,
                           );
                         },
@@ -500,8 +502,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                   else
                     ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxHeight:
-                            MediaQuery.of(context).size.height * 0.6,
+                        maxHeight: MediaQuery.of(context).size.height * 0.6,
                       ),
                       child: ListView.separated(
                         shrinkWrap: true,
@@ -527,7 +528,10 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                             ),
                             title: Text(provider.name),
                             trailing: isSelected
-                                ? const Icon(Icons.check, color: AppTheme.primary)
+                                ? const Icon(
+                                    Icons.check,
+                                    color: AppTheme.primary,
+                                  )
                                 : null,
                           );
                         },
@@ -819,13 +823,12 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       orElse: () =>
           const CountryOption(id: '', name: '', code: '', isActive: true),
     );
-    final selectedCode =
-        selected.code.isNotEmpty ? selected.code : widget.account?.countryCode;
+    final selectedCode = selected.code.isNotEmpty
+        ? selected.code
+        : widget.account?.countryCode;
     final selectedName = selected.name.isNotEmpty
         ? selected.name
-        : (widget.account?.countryName ??
-            selectedCode ??
-            '');
+        : (widget.account?.countryName ?? selectedCode ?? '');
 
     return _StepCard(
       title: 'Step 1 — Country',
@@ -848,9 +851,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               )
             : Text(
                 'Tap to choose',
-                style: TextStyles.label.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
+                style: TextStyles.label.copyWith(color: AppTheme.textSecondary),
               ),
         onTap: _loadingCountries ? null : _openCountrySheet,
       ),
@@ -892,9 +893,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                   backgroundColor: AppTheme.surface,
                   shape: StadiumBorder(
                     side: BorderSide(
-                      color: selected
-                          ? AppTheme.primary
-                          : AppTheme.divider,
+                      color: selected ? AppTheme.primary : AppTheme.divider,
                     ),
                   ),
                 );
@@ -929,18 +928,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                   ),
                   SizedBox(width: 10.w),
                   Expanded(
-                    child: Text(
-                      selected.name,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    child: Text(selected.name, overflow: TextOverflow.ellipsis),
                   ),
                 ],
               )
             : Text(
                 'Tap to choose',
-                style: TextStyles.label.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
+                style: TextStyles.label.copyWith(color: AppTheme.textSecondary),
               ),
         onTap: enabled && !_loadingProviders ? _openProviderSheet : null,
       ),
@@ -1020,8 +1014,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         },
         decoration: InputDecoration(
           labelText: 'Default Limit',
-          helperText:
-              'Auto-fetched from system limits. You can keep it or override it.',
+          helperText: 'Standard limits. You can keep it or override it.',
           hintText: _defaultLimit != null
               ? 'Default: ${_defaultLimit!.toStringAsFixed(0)}'
               : null,

@@ -1,9 +1,9 @@
+import 'package:Sendaal/utils/snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/models/split_suggestion_model.dart';
 import '../../core/models/user_model.dart';
 import '../../core/router/app_router.dart';
@@ -25,7 +25,8 @@ class TransferScreen extends ConsumerWidget {
     final suggestions = args.suggestions;
     final recipient = args.recipient;
     final total = suggestions.fold<double>(0, (s, e) => s + e.amount);
-    final currency = (args.accounts.isNotEmpty &&
+    final currency =
+        (args.accounts.isNotEmpty &&
             args.accounts.first.currency?.isNotEmpty == true)
         ? args.accounts.first.currency!
         : 'EGP';
@@ -55,9 +56,7 @@ class TransferScreen extends ConsumerWidget {
               SizedBox(height: 6.h),
               Text(
                 'Complete your transfer manually in the payment app.',
-                style: TextStyles.label.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
+                style: TextStyles.label.copyWith(color: AppTheme.textSecondary),
               ),
               SizedBox(height: 16.h),
               ...suggestions.asMap().entries.map(
@@ -65,6 +64,19 @@ class TransferScreen extends ConsumerWidget {
                   step: entry.key + 1,
                   suggestion: entry.value,
                   currency: currency,
+                  providerName: args.accounts
+                      .where(
+                        (account) =>
+                            account.accountIdentifier ==
+                                entry.value.accountIdentifier &&
+                            account.type == entry.value.type,
+                      )
+                      .map((account) => account.providerName)
+                      .cast<String?>()
+                      .firstWhere(
+                        (name) => name != null && name.trim().isNotEmpty,
+                        orElse: () => null,
+                      ),
                 ),
               ),
               SizedBox(height: 24.h),
@@ -126,14 +138,14 @@ class _TransferHeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.r),
         color: AppTheme.surface,
-        border: Border.all(color: AppTheme.border.withOpacity(0.8)),
+        border: Border.all(color: AppTheme.border.withValues(alpha: 0.8)),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 24.r,
-            backgroundColor: AppTheme.primary.withOpacity(0.1),
-            backgroundImage: hasAvatar ? NetworkImage(avatarUrl!) : null,
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+            backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
             child: hasAvatar
                 ? null
                 : Text(
@@ -203,16 +215,20 @@ class _TransferStepCard extends StatelessWidget {
   final int step;
   final SplitSuggestion suggestion;
   final String currency;
+  final String? providerName;
 
   const _TransferStepCard({
     required this.step,
     required this.suggestion,
     required this.currency,
+    this.providerName,
   });
 
-  String get _label =>
-      AppConstants.accountTypeLabels[suggestion.type.name] ??
-      suggestion.type.name;
+  String get _label {
+    final name = providerName?.trim();
+    if (name != null && name.isNotEmpty) return name;
+    return suggestion.type.name;
+  }
 
   String get _amountStr {
     final v = suggestion.amount;
@@ -221,13 +237,7 @@ class _TransferStepCard extends StatelessWidget {
 
   void _copy(BuildContext context, String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$label copied'),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    AppSnackbar.show(context, '$label copied');
   }
 
   @override
@@ -238,10 +248,10 @@ class _TransferStepCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppTheme.border.withOpacity(0.7)),
+        border: Border.all(color: AppTheme.border.withValues(alpha: 0.7)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),
@@ -260,7 +270,7 @@ class _TransferStepCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Open $_label & enter details',
+                      'Open $_label & Enter details',
                       style: TextStyles.bodySmallBold.copyWith(
                         fontSize: 15.sp,
                         color: AppTheme.textPrimary,
@@ -279,14 +289,12 @@ class _TransferStepCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.12),
+                  color: AppTheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Text(
                   _amountStr,
-                  style: TextStyles.labelBold.copyWith(
-                    color: AppTheme.primary,
-                  ),
+                  style: TextStyles.labelBold.copyWith(color: AppTheme.primary),
                 ),
               ),
             ],
@@ -367,7 +375,7 @@ class _CopyPill extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 10,
                     offset: const Offset(0, 6),
                   ),
@@ -408,9 +416,7 @@ class _StepBadge extends StatelessWidget {
       child: Center(
         child: Text(
           '$step',
-          style: TextStyles.labelBold.copyWith(
-            color: Colors.white,
-          ),
+          style: TextStyles.labelBold.copyWith(color: Colors.white),
         ),
       ),
     );
