@@ -12,6 +12,7 @@ import '../../providers/account_provider.dart';
 import '../../providers/access_request_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_widgets.dart';
+import '../../widgets/user_avatar.dart';
 import '../requests/status_banar.dart';
 
 class ContactDetailsScreen extends ConsumerWidget {
@@ -24,9 +25,7 @@ class ContactDetailsScreen extends ConsumerWidget {
     final currentUser = ref.watch(authProvider).user;
     final latestRequestAsync = currentUser == null
         ? const AsyncValue<AccessRequest?>.data(null)
-        : ref.watch(
-            latestRequestBetweenProvider((currentUser.id, contact.id)),
-          );
+        : ref.watch(latestRequestBetweenProvider((currentUser.id, contact.id)));
     final accountsAsync = ref.watch(approvedAccountsProvider(contact.id));
 
     return Scaffold(
@@ -126,7 +125,6 @@ class ContactDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader() {
-    final avatarUrl = contact.avatarUrl;
     final subtitle = contact.phoneNumber?.isNotEmpty == true
         ? contact.phoneNumber!
         : '@${contact.username}';
@@ -141,21 +139,16 @@ class ContactDetailsScreen extends ConsumerWidget {
         padding: EdgeInsets.all(14.w),
         child: Row(
           children: [
-            CircleAvatar(
+            UserAvatar(
+              avatarUrl: contact.avatarUrl,
+              name: title,
               radius: 28.r,
-              backgroundColor: AppTheme.primary.withOpacity(0.12),
-              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: (avatarUrl == null || avatarUrl.isEmpty)
-                  ? Text(
-                      contact.initials,
-                      style: TextStyles.bodyBold.copyWith(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    )
-                  : null,
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+              textColor: AppTheme.primary,
+              textStyle: TextStyles.bodyBold.copyWith(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             SizedBox(width: 14.w),
             Expanded(

@@ -16,6 +16,7 @@ import '../providers/user_provider.dart';
 import '../utils/format_util.dart';
 import 'delete_confirmation_dialog.dart';
 import 'shimmer_widgets.dart';
+import 'user_avatar.dart';
 
 /// Compact card to display access request on home/search screens.
 /// Matches the high-fidelity design with avatar, status chip, and actions.
@@ -311,8 +312,6 @@ class AccessRequestCard extends ConsumerWidget {
   }
 
   Widget _buildAvatar(String? avatarUrl, String name) {
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
-
     return Container(
       width: 52.r,
       height: 52.r,
@@ -327,19 +326,17 @@ class AccessRequestCard extends ConsumerWidget {
           ),
         ],
       ),
-      child: ClipOval(
-        child: avatarUrl != null && avatarUrl!.isNotEmpty
-            ? Image.network(avatarUrl, fit: BoxFit.cover)
-            : Center(
-                child: Text(
-                  initial,
-                  style: TextStyles.bodyBold.copyWith(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1F2C3B),
-                  ),
-                ),
-              ),
+      child: UserAvatar(
+        avatarUrl: avatarUrl,
+        name: name,
+        radius: 26.r,
+        backgroundColor: const Color(0xFFF0E7DA),
+        textColor: const Color(0xFF1F2C3B),
+        textStyle: TextStyles.bodyBold.copyWith(
+          fontSize: 20.sp,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF1F2C3B),
+        ),
       ),
     );
   }

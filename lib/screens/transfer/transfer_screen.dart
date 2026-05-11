@@ -10,6 +10,7 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/text_style.dart';
 import '../../widgets/app_widgets.dart';
+import '../../widgets/user_avatar.dart';
 
 /// Transfer Instructions Screen
 ///
@@ -125,11 +126,6 @@ class _TransferHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarUrl = recipient.avatarUrl;
-    final hasAvatar = avatarUrl != null && avatarUrl.startsWith('http');
-    final initials = _displayName.isNotEmpty
-        ? _displayName[0].toUpperCase()
-        : '?';
     final amountLabel =
         '${total.toStringAsFixed(total.truncateToDouble() == total ? 0 : 2)} $currency';
 
@@ -142,19 +138,16 @@ class _TransferHeroCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          UserAvatar(
+            avatarUrl: recipient.avatarUrl,
+            name: _displayName,
             radius: 24.r,
             backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-            backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
-            child: hasAvatar
-                ? null
-                : Text(
-                    initials,
-                    style: TextStyles.bodySmallBold.copyWith(
-                      color: AppTheme.primary,
-                      fontSize: 16.sp,
-                    ),
-                  ),
+            textColor: AppTheme.primary,
+            textStyle: TextStyles.bodySmallBold.copyWith(
+              color: AppTheme.primary,
+              fontSize: 16.sp,
+            ),
           ),
           SizedBox(width: 12.w),
           Expanded(

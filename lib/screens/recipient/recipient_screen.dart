@@ -4,7 +4,6 @@ import 'package:Sendaal/providers/auth_provider.dart';
 import 'package:Sendaal/widgets/account_card.dart';
 import 'package:Sendaal/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -16,6 +15,7 @@ import '../../providers/account_provider.dart';
 import '../../services/smart_split_service.dart';
 import '../../widgets/access_request_widget.dart';
 import '../../widgets/app_widgets.dart';
+import '../../widgets/user_avatar.dart';
 import '../requests/status_banar.dart';
 
 String _preferredName(User user) {
@@ -1041,38 +1041,25 @@ class _RecipientHeader extends StatelessWidget {
     // 🔍 DEBUG: trace every value before touching NetworkImage
     debugPrint('╔══ _RecipientHeader.build() ════════════════');
     debugPrint('║  recipient.avatar    : ${recipient.avatar}');
-    debugPrint('║  dotenv BASE_URL     : "${dotenv.env['BASE_URL']}"');
     debugPrint('║  recipient.avatarUrl : ${recipient.avatarUrl}');
     debugPrint('╚════════════════════════════════════════════');
-
-    final String? avatarUrl = recipient.avatarUrl;
-    final bool hasValidAvatar = () {
-      if (avatarUrl == null || avatarUrl.isEmpty) return false;
-      final uri = Uri.tryParse(avatarUrl);
-      if (uri == null) return false;
-      final scheme = uri.scheme.toLowerCase();
-      return scheme == 'http' || scheme == 'https';
-    }();
 
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Row(
           children: [
-            CircleAvatar(
+            UserAvatar(
+              avatarUrl: recipient.avatarUrl,
+              name: _preferredName(recipient),
               radius: 30.r,
               backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-              backgroundImage: hasValidAvatar ? NetworkImage(avatarUrl!) : null,
-              child: hasValidAvatar
-                  ? null
-                  : Text(
-                      recipient.initials,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.primary,
-                      ),
-                    ),
+              textColor: AppTheme.primary,
+              textStyle: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primary,
+              ),
             ),
             SizedBox(width: 14.w),
             Expanded(

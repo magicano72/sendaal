@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../core/models/notification_model.dart' as notification_model;
 import '../core/theme/app_theme.dart';
 import '../core/theme/text_style.dart';
+import 'user_avatar.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PrimaryButton
@@ -421,36 +422,22 @@ class UserTile extends StatelessWidget {
     this.onTap,
   });
 
-  ImageProvider<Object>? _buildAvatarProvider() {
-    if (profileImage == null || profileImage!.isEmpty) return null;
-    final uri = Uri.tryParse(profileImage!);
-    if (uri == null) return null;
-    final scheme = uri.scheme.toLowerCase();
-    if (scheme != 'http' && scheme != 'https') return null;
-    return NetworkImage(profileImage!);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final avatarProvider = _buildAvatarProvider();
-
     return ListTile(
       onTap: onTap,
       contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 4.h),
-      leading: CircleAvatar(
+      leading: UserAvatar(
+        avatarUrl: profileImage,
+        name: displayName,
         radius: 24.r,
-        backgroundColor: AppTheme.primary.withOpacity(0.1),
-        backgroundImage: avatarProvider,
-        child: avatarProvider == null
-            ? Text(
-                displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                style: TextStyles.bodyBold.copyWith(
-                  color: AppTheme.primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16.sp,
-                ),
-              )
-            : null,
+        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+        textColor: AppTheme.primary,
+        textStyle: TextStyles.bodyBold.copyWith(
+          color: AppTheme.primary,
+          fontWeight: FontWeight.w700,
+          fontSize: 16.sp,
+        ),
       ),
       title: Text(displayName, style: TextStyles.bodySmallBold),
       subtitle: Text(

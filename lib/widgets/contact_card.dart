@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../core/models/user_model.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/text_style.dart';
+import 'user_avatar.dart';
 
 class ContactCard extends StatelessWidget {
   final User user;
@@ -31,14 +32,9 @@ class ContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarUrl = user.avatarUrl;
-    final initials = (user.firstName?.trim().isNotEmpty ?? false)
-        ? user.firstName!.trim()[0].toUpperCase()
-        : user.displayName.isNotEmpty
-        ? user.displayName[0].toUpperCase()
-        : user.username.isNotEmpty
-        ? user.username[0].toUpperCase()
-        : '?';
+    final avatarName = (user.firstName?.trim().isNotEmpty ?? false)
+        ? user.firstName!.trim()
+        : (user.displayName.isNotEmpty ? user.displayName : user.username);
 
     final primary = showFullName
         ? (user.firstName?.trim().isNotEmpty == true
@@ -72,21 +68,16 @@ class ContactCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
+                  UserAvatar(
+                    avatarUrl: user.avatarUrl,
+                    name: avatarName,
                     radius: 22.r,
-                    backgroundColor: AppTheme.primary.withOpacity(0.12),
-                    backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    child: (avatarUrl == null || avatarUrl.isEmpty)
-                        ? Text(
-                            initials,
-                            style: TextStyles.bodyBold.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primary,
-                            ),
-                          )
-                        : null,
+                    backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+                    textColor: AppTheme.primary,
+                    textStyle: TextStyles.bodyBold.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primary,
+                    ),
                   ),
                   const Spacer(),
                   if (onFavoriteToggle != null)

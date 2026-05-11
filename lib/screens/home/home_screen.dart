@@ -19,6 +19,7 @@ import '../../providers/contacts_provider.dart';
 import '../../providers/search_provider.dart';
 import '../../widgets/access_request_card.dart';
 import '../../widgets/app_widgets.dart';
+import '../../widgets/user_avatar.dart';
 
 /// Home Screen — shows access requests or empty state, with search
 class HomeScreen extends ConsumerStatefulWidget {
@@ -338,15 +339,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Row(
         children: [
           // Avatar
-          CircleAvatar(
+          UserAvatar(
+            avatarUrl: user?.avatarUrl,
+            name: user?.firstName?.trim().isNotEmpty == true
+                ? user!.firstName!
+                : (user?.displayName.isNotEmpty == true
+                      ? user!.displayName
+                      : (user?.username ?? 'User')),
             radius: 22.r,
             backgroundColor: const Color(0xFFE8D5C4),
-            backgroundImage: user?.avatarUrl != null
-                ? NetworkImage(user!.avatarUrl!)
-                : null,
-            child: user?.avatarUrl == null
-                ? Icon(Icons.person, size: 22.r, color: Colors.white)
-                : null,
+            textColor: Colors.white,
+            textStyle: TextStyles.bodyBold.copyWith(
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontSize: 18.sp,
+            ),
           ),
           SizedBox(width: 10.w),
 
@@ -885,7 +892,6 @@ class _ContactCircleTile extends StatelessWidget {
     final name = showFullName && (user.firstName?.isNotEmpty ?? false)
         ? user.firstName!
         : (user.displayName.isNotEmpty ? user.displayName : user.username);
-    final initials = user.initials;
     final double outer = 68.r;
 
     return Column(
@@ -917,21 +923,19 @@ class _ContactCircleTile extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: EdgeInsets.all(3.w),
-                  child: CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
-                    backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    child: (avatarUrl == null || avatarUrl.isEmpty)
-                        ? Text(
-                            initials,
-                            style: TextStyles.bodyBold.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primaryColor,
-                              fontSize: 18.sp,
-                            ),
-                          )
-                        : null,
+                  child: UserAvatar(
+                    avatarUrl: avatarUrl,
+                    name: name,
+                    radius: (outer - (6.w)) / 2,
+                    backgroundColor: AppTheme.primaryColor.withValues(
+                      alpha: 0.08,
+                    ),
+                    textColor: AppTheme.primaryColor,
+                    textStyle: TextStyles.bodyBold.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primaryColor,
+                      fontSize: 18.sp,
+                    ),
                   ),
                 ),
               ),
@@ -1113,26 +1117,17 @@ class _ApprovedContactsScreenState
                                 horizontal: 8.w,
                                 vertical: 6.h,
                               ),
-                              leading: CircleAvatar(
+                              leading: UserAvatar(
+                                avatarUrl: user.avatarUrl,
+                                name: fullName,
                                 radius: 24.r,
                                 backgroundColor: AppTheme.primaryColor
-                                    .withOpacity(0.12),
-                                backgroundImage:
-                                    user.avatarUrl != null &&
-                                        user.avatarUrl!.isNotEmpty
-                                    ? NetworkImage(user.avatarUrl!)
-                                    : null,
-                                child:
-                                    (user.avatarUrl == null ||
-                                        user.avatarUrl!.isEmpty)
-                                    ? Text(
-                                        user.initials,
-                                        style: TextStyles.bodyBold.copyWith(
-                                          color: AppTheme.primaryColor,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      )
-                                    : null,
+                                    .withValues(alpha: 0.12),
+                                textColor: AppTheme.primaryColor,
+                                textStyle: TextStyles.bodyBold.copyWith(
+                                  color: AppTheme.primaryColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                               title: Text(
                                 fullName,
@@ -1186,9 +1181,6 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
         ? user.displayName
         : user.username;
     final avatarUrl = user.avatarUrl;
-    final initials = displayName.isNotEmpty
-        ? displayName[0].toUpperCase()
-        : '?';
     final currentUser = ref.watch(authProvider).user;
 
     if (currentUser == null) {
@@ -1196,7 +1188,6 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
         context,
         displayName: displayName,
         avatarUrl: avatarUrl,
-        initials: initials,
         subtitle: '@${user.username}',
         canTap: true,
       );
@@ -1211,7 +1202,6 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
         context,
         displayName: displayName,
         avatarUrl: avatarUrl,
-        initials: initials,
         subtitle: '@${user.username}',
         canTap: false,
         showSpinner: true,
@@ -1220,7 +1210,6 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
         context,
         displayName: displayName,
         avatarUrl: avatarUrl,
-        initials: initials,
         subtitle: '@${user.username}',
         canTap: true,
       ),
@@ -1233,7 +1222,6 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
           context,
           displayName: displayName,
           avatarUrl: avatarUrl,
-          initials: initials,
           subtitle: subtitle,
           canTap: !isRevoked || isRevoker,
           isRevoked: isRevoked,
@@ -1248,7 +1236,6 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
     BuildContext context, {
     required String displayName,
     required String? avatarUrl,
-    required String initials,
     required String subtitle,
     required bool canTap,
     bool showSpinner = false,
@@ -1270,22 +1257,19 @@ class _UserResultCardState extends ConsumerState<_UserResultCard> {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
+                  UserAvatar(
+                    avatarUrl: avatarUrl,
+                    name: displayName,
                     radius: 24.r,
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
-                    backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    child: (avatarUrl == null || avatarUrl.isEmpty)
-                        ? Text(
-                            initials,
-                            style: TextStyles.bodyBold.copyWith(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16.sp,
-                            ),
-                          )
-                        : null,
+                    backgroundColor: AppTheme.primaryColor.withValues(
+                      alpha: 0.12,
+                    ),
+                    textColor: AppTheme.primaryColor,
+                    textStyle: TextStyles.bodyBold.copyWith(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16.sp,
+                    ),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(

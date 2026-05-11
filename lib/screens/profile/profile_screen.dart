@@ -17,6 +17,7 @@ import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/user_service.dart';
 import '../../widgets/app_widgets.dart';
+import '../../widgets/user_avatar.dart';
 
 /// My Profile screen styled to match the provided fintech design.
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -359,15 +360,11 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasAvatar =
-        user?.avatarUrl != null && (user.avatarUrl as String).isNotEmpty;
-    final initials = user == null
-        ? '?'
+    final displayName = user == null
+        ? ''
         : (user.firstName?.isNotEmpty ?? false)
-        ? user.firstName![0].toUpperCase()
-        : (user.displayName.isNotEmpty
-              ? user.displayName[0].toUpperCase()
-              : user.username[0].toUpperCase());
+        ? user.firstName!
+        : (user.displayName.isNotEmpty ? user.displayName : user.username);
 
     return Column(
       children: [
@@ -387,21 +384,17 @@ class _ProfileHeader extends StatelessWidget {
                 children: [
                   // The actual avatar image / initials
                   Positioned.fill(
-                    child: CircleAvatar(
+                    child: UserAvatar(
+                      avatarUrl: user?.avatarUrl,
+                      name: displayName,
+                      radius: 49.w,
                       backgroundColor: Colors.white,
-                      backgroundImage: hasAvatar
-                          ? NetworkImage(user.avatarUrl)
-                          : null,
-                      child: hasAvatar
-                          ? null
-                          : Text(
-                              initials,
-                              style: TextStyles.h1Semi.copyWith(
-                                fontSize: 30.sp,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.primary,
-                              ),
-                            ),
+                      textColor: AppTheme.primary,
+                      textStyle: TextStyles.h1Semi.copyWith(
+                        fontSize: 30.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primary,
+                      ),
                     ),
                   ),
 

@@ -17,6 +17,7 @@ import '../../providers/user_provider.dart';
 import '../../widgets/app_widgets.dart';
 import '../../widgets/country_flag_icon.dart';
 import '../../widgets/provider_logo.dart';
+import '../../widgets/user_avatar.dart';
 
 enum _ActionType { approve, reject }
 
@@ -313,30 +314,23 @@ class _RequesterDetailsScreenState
 
   Widget _buildRevokedProfileHeader(User user) {
     final name = _displayName(user);
-    final avatarUrl = user.avatarUrl;
-    final initials = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Row(
           children: [
-            CircleAvatar(
+            UserAvatar(
+              avatarUrl: user.avatarUrl,
+              name: name,
               radius: 36.r,
-              backgroundColor: AppTheme.primary.withOpacity(0.1),
-              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: (avatarUrl == null || avatarUrl.isEmpty)
-                  ? Text(
-                      initials,
-                      style: TextStyle(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18.sp,
-                      ),
-                    )
-                  : null,
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+              textColor: AppTheme.primary,
+              textStyle: TextStyle(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 18.sp,
+              ),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -355,8 +349,6 @@ class _RequesterDetailsScreenState
 
   Widget _buildProfileHeader(User user) {
     final name = _displayName(user);
-    final avatarUrl = user.avatarUrl;
-    final initials = name.isNotEmpty ? name[0].toUpperCase() : '?';
     final phone = (user.phoneNumber ?? '').trim();
     final email = (user.email ?? '').trim();
 
@@ -380,22 +372,17 @@ class _RequesterDetailsScreenState
         padding: EdgeInsets.all(16.w),
         child: Column(
           children: [
-            CircleAvatar(
+            UserAvatar(
+              avatarUrl: user.avatarUrl,
+              name: name,
               radius: 40.r,
-              backgroundColor: AppTheme.primary.withOpacity(0.1),
-              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: (avatarUrl == null || avatarUrl.isEmpty)
-                  ? Text(
-                      initials,
-                      style: TextStyle(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18.sp,
-                      ),
-                    )
-                  : null,
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+              textColor: AppTheme.primary,
+              textStyle: TextStyle(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 18.sp,
+              ),
             ),
             SizedBox(height: 10.h),
             Text(

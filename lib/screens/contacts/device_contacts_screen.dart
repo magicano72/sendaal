@@ -14,6 +14,7 @@ import '../../providers/access_request_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/contacts_provider.dart';
 import '../../services/user_service.dart';
+import '../../widgets/user_avatar.dart';
 
 class DeviceContactsScreen extends ConsumerStatefulWidget {
   const DeviceContactsScreen({super.key});
@@ -57,7 +58,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
     if (_searchQuery.isEmpty) return contacts;
     return contacts.where((c) {
       final name = c.contact.name.toLowerCase();
-      final phone = (c.contact.phone ?? '').toLowerCase();
+      final phone = c.contact.phone.toLowerCase();
       final username = c.matchedUser?.username.toLowerCase() ?? '';
       return name.contains(_searchQuery) ||
           phone.contains(_searchQuery) ||
@@ -378,9 +379,7 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
     final isCancelling =
         matchedUser != null && (_cancelling[matchedUser.id] ?? false);
     final latestRequest =
-        (currentUser != null &&
-            matchedUser != null &&
-            !isCurrentUserMatch)
+        (currentUser != null && matchedUser != null && !isCurrentUserMatch)
         ? ref.watch(
             latestRequestBetweenProvider((currentUser.id, matchedUser.id)),
           )
@@ -415,13 +414,13 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
       final user = matchedUser!;
       name = contact.contact.name.isNotEmpty
           ? contact.contact.name
-          : (user.displayName ?? user.username);
+          : (user.displayName.isNotEmpty ? user.displayName : user.username);
       phone = contact.contact.phone.isNotEmpty
           ? contact.contact.phone
           : (user.phoneNumber?.isNotEmpty == true
                 ? user.phoneNumber
                 : '@${user.username}');
-      avatarUrl = user.avatar;
+      avatarUrl = user.avatarUrl;
       if (isCurrentUserMatch) {
         actionLabel = 'You';
         onAction = _showSelfProfileMessage;
@@ -441,10 +440,6 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
       }
     }
 
-    final initials = name.isNotEmpty
-        ? name.trim().split(' ').map((w) => w[0]).take(2).join().toUpperCase()
-        : '?';
-
     Widget tile = InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12.r),
@@ -453,21 +448,16 @@ class _DeviceContactsScreenState extends ConsumerState<DeviceContactsScreen> {
         child: Row(
           children: [
             // Avatar
-            CircleAvatar(
+            UserAvatar(
+              avatarUrl: avatarUrl,
+              name: name,
               radius: 24.r,
-              backgroundColor: Colors.blue[50],
-              backgroundImage: avatarUrl != null
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: avatarUrl == null
-                  ? Text(
-                      initials,
-                      style: TextStyles.bodySmallBold.copyWith(
-                        fontSize: 15.sp,
-                        color: Colors.blue[700],
-                      ),
-                    )
-                  : null,
+              backgroundColor: Colors.blue[50]!,
+              textColor: Colors.blue[700]!,
+              textStyle: TextStyles.bodySmallBold.copyWith(
+                fontSize: 15.sp,
+                color: Colors.blue[700],
+              ),
             ),
             SizedBox(width: 12.w),
             // Name + phone
