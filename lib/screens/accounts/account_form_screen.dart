@@ -422,7 +422,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                             title: Text(country.name),
                             subtitle: Text(country.code),
                             trailing: isSelected
-                                ? const Icon(
+                                ? Icon(
                                     Icons.check,
                                     color: AppTheme.primary,
                                   )
@@ -528,7 +528,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                             ),
                             title: Text(provider.name),
                             trailing: isSelected
-                                ? const Icon(
+                                ? Icon(
                                     Icons.check,
                                     color: AppTheme.primary,
                                   )
@@ -759,6 +759,10 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
               TextFormField(
                 controller: _titleCtrl,
+                cursorColor: AppTheme.primary,
+                style: TextStyles.bodySmall.copyWith(
+                  color: AppTheme.textPrimary,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Account Title',
                   hintText: 'e.g. Travel Wallet',
@@ -769,10 +773,14 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
               TextFormField(
                 controller: _identifierCtrl,
+                cursorColor: AppTheme.primary,
+                style: TextStyles.bodySmall.copyWith(
+                  color: AppTheme.textPrimary,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Account Identifier',
                   hintText: 'Enter the identifier provided by your provider',
-                  prefixIcon: const Icon(Icons.tag),
+                  prefixIcon: Icon(Icons.tag),
                   errorText: _identifierError,
                 ),
                 keyboardType: TextInputType.text,
@@ -952,6 +960,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       child: DropdownButtonFormField<String>(
         value: _currency,
         isExpanded: true,
+        dropdownColor: AppTheme.surfaceElevated,
+        style: TextStyles.bodySmall.copyWith(color: AppTheme.textPrimary),
         decoration: InputDecoration(
           labelText: enabled ? 'Select currency' : 'Complete previous steps',
           suffixIcon: _loadingCurrencies
@@ -968,7 +978,15 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         items: _currencies
             .map(
               (c) =>
-                  DropdownMenuItem(value: c.currency, child: Text(c.currency)),
+                  DropdownMenuItem(
+                    value: c.currency,
+                    child: Text(
+                      c.currency,
+                      style: TextStyles.bodySmall.copyWith(
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ),
             )
             .toList(),
         onChanged: enabled && !_loadingCurrencies
@@ -1006,6 +1024,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       title: 'Step 5 — Limit',
       child: TextFormField(
         controller: _limitCtrl,
+        cursorColor: AppTheme.primary,
+        style: TextStyles.bodySmall.copyWith(color: AppTheme.textPrimary),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         onChanged: (_) {
           if (_limitError != null) {
@@ -1018,7 +1038,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
           hintText: _defaultLimit != null
               ? 'Default: ${_defaultLimit!.toStringAsFixed(0)}'
               : null,
-          prefixIcon: const Icon(Icons.payments_outlined),
+          prefixIcon: Icon(Icons.payments_outlined),
           suffixText: _currency ?? '',
           errorText: _limitError,
           suffixIcon: _loadingLimit
@@ -1114,7 +1134,7 @@ class _SelectorField extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 )
-              : const Icon(Icons.arrow_drop_down),
+              : Icon(Icons.arrow_drop_down),
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 6.h),

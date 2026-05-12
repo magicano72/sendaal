@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/app_theme.dart';
+import '../core/theme/theme_provider.dart';
 import 'accounts/accounts_screen.dart';
 import 'profile/profile_screen.dart';
 
@@ -23,11 +24,12 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final _ = ref.watch(themeModeProvider);
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
-          indicatorColor: const Color(0xFFE7F0FF),
+          indicatorColor: AppTheme.colors.navIndicator,
           indicatorShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),

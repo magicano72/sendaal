@@ -34,7 +34,7 @@ class ConnectivityBanner extends ConsumerWidget {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12.w),
                   child: Material(
-                    color: AppColors.error.withOpacity(0.08),
+                    color: AppTheme.error.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12.r),
                     elevation: 0,
                     child: Container(
@@ -45,7 +45,7 @@ class ConnectivityBanner extends ConsumerWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: AppColors.error.withOpacity(0.35),
+                          color: AppTheme.error.withOpacity(0.35),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -59,7 +59,7 @@ class ConnectivityBanner extends ConsumerWidget {
                         children: [
                           Icon(
                             Icons.wifi_off_rounded,
-                            color: AppColors.error,
+                            color: AppTheme.error,
                             size: 20.r,
                           ),
                           SizedBox(width: 10.w),
@@ -67,7 +67,7 @@ class ConnectivityBanner extends ConsumerWidget {
                             child: Text(
                               'No internet connection. Please check your network.',
                               style: TextStyles.labelBold.copyWith(
-                                color: AppColors.error,
+                                color: AppTheme.error,
                               ),
                             ),
                           ),

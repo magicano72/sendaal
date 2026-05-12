@@ -333,9 +333,19 @@ class _AccountTypeSheetState extends State<_AccountTypeSheet> {
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: TextField(
                 controller: _searchCtrl,
+                cursorColor: AppTheme.primary,
+                style: TextStyles.bodySmall.copyWith(
+                  color: AppTheme.textPrimary,
+                ),
                 decoration: InputDecoration(
                   hintText: 'Search account types',
-                  prefixIcon: const Icon(Icons.search_rounded),
+                  hintStyle: TextStyles.bodySmall.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: AppTheme.primary,
+                  ),
                   filled: true,
                   contentPadding: EdgeInsets.symmetric(vertical: 12.h),
                 ),

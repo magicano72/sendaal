@@ -270,9 +270,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final auth = ref.watch(authProvider);
     final isSubmitting =
         auth.isRegisterLoading || _isRequestingOtp || _isCheckingAvailability;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppTheme.background : Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -286,7 +287,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppTheme.surface,
                         borderRadius: BorderRadius.circular(20.r),
                         boxShadow: [
                           BoxShadow(
@@ -309,7 +310,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             Text(
                               'Join Sendaal',
                               style: TextStyles.h1Semi.copyWith(
-                                color: const Color(0xFF1A1A2E),
+                                color: isDark
+                                    ? AppTheme.textPrimary
+                                    : const Color(0xFF1A1A2E),
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -317,7 +320,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             Text(
                               'Fill in your details to get started with\nyour new account.',
                               style: TextStyles.bodySmall.copyWith(
-                                color: const Color(0xFF8A94A6),
+                                color: isDark
+                                    ? AppTheme.textSecondary
+                                    : const Color(0xFF8A94A6),
                                 height: 1.5,
                               ),
                             ),
@@ -333,7 +338,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               textCapitalization: TextCapitalization.words,
                               style: TextStyles.bodySmall.copyWith(
                                 fontSize: 15.sp,
-                                color: const Color(0xFF1A1A2E),
+                                color: isDark
+                                    ? AppTheme.textPrimary
+                                    : const Color(0xFF1A1A2E),
                               ),
                               decoration: _inputDecoration(hint: 'e.g. John'),
                               validator: (v) => ValidationService.validateName(
@@ -351,7 +358,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               controller: _usernameCtrl,
                               style: TextStyles.bodySmall.copyWith(
                                 fontSize: 15.sp,
-                                color: const Color(0xFF1A1A2E),
+                                color: isDark
+                                    ? AppTheme.textPrimary
+                                    : const Color(0xFF1A1A2E),
                               ),
                               decoration: _inputDecoration(
                                 hint: 'Enter your username',
@@ -371,7 +380,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               keyboardType: TextInputType.emailAddress,
                               style: TextStyles.bodySmall.copyWith(
                                 fontSize: 15.sp,
-                                color: const Color(0xFF1A1A2E),
+                                color: isDark
+                                    ? AppTheme.textPrimary
+                                    : const Color(0xFF1A1A2E),
                               ),
                               decoration: _inputDecoration(
                                 hint: 'email@example.com',
@@ -387,6 +398,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             _FieldLabel(label: 'Phone Number'),
                             SizedBox(height: 8.h),
                             IntlPhoneField(
+                              style: TextStyles.bodySmall.copyWith(
+                                fontSize: 15.sp,
+                                color: isDark
+                                    ? AppTheme.textPrimary
+                                    : const Color(0xFF1A1A2E),
+                              ),
+                              dropdownTextStyle: TextStyles.bodySmall.copyWith(
+                                fontSize: 15.sp,
+                                color: isDark
+                                    ? AppTheme.textPrimary
+                                    : const Color(0xFF1A1A2E),
+                              ),
+                              cursorColor: AppTheme.primary,
                               initialCountryCode: 'EG',
                               disableLengthCheck:
                                   false, // respect per-country lengths
@@ -448,7 +472,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               obscureText: _obscure,
                               style: TextStyles.bodySmall.copyWith(
                                 fontSize: 15.sp,
-                                color: const Color(0xFF1A1A2E),
+                                color: isDark
+                                    ? AppTheme.textPrimary
+                                    : const Color(0xFF1A1A2E),
                               ),
                               decoration:
                                   _inputDecoration(
@@ -460,7 +486,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                             ? Icons.visibility_outlined
                                             : Icons.visibility_off_outlined,
                                         size: 20.r,
-                                        color: const Color(0xFF8A94A6),
+                                        color: isDark
+                                            ? AppTheme.textSecondary
+                                            : const Color(0xFF8A94A6),
                                       ),
                                       onPressed: () =>
                                           setState(() => _obscure = !_obscure),
@@ -574,8 +602,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               child: ElevatedButton.icon(
                                 onPressed: isSubmitting ? null : _register,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  disabledBackgroundColor: AppColors.primary
+                                  backgroundColor: AppTheme.primary,
+                                  disabledBackgroundColor: AppTheme.primary
                                       .withOpacity(0.5),
                                   foregroundColor: Colors.white,
                                   elevation: 0,
@@ -613,7 +641,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 Text(
                                   'Already have an account?',
                                   style: TextStyles.bodySmall.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: AppTheme.textSecondary,
                                   ),
                                 ),
                                 SizedBox(width: 4.w),
@@ -622,7 +650,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   child: Text(
                                     'Login',
                                     style: TextStyles.bodySmall.copyWith(
-                                      color: AppColors.primary,
+                                      color: AppTheme.primary,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -647,19 +675,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   InputDecoration _inputDecoration({required String hint, String? errorText}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyles.bodySmall.copyWith(color: const Color(0xFFB0BAC8)),
+      hintStyle: TextStyles.bodySmall.copyWith(
+        color: AppTheme.isDark
+            ? AppTheme.textSecondary
+            : const Color(0xFFB0BAC8),
+      ),
       errorText: errorText,
       errorStyle: TextStyles.captionRegular.copyWith(fontSize: 11.sp),
       contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppTheme.isDark ? AppTheme.surface : Colors.white,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.r),
-        borderSide: BorderSide(color: const Color(0xFFE2E8F0), width: 1.5.w),
+        borderSide: BorderSide(
+          color: AppTheme.isDark ? AppTheme.border : const Color(0xFFE2E8F0),
+          width: 1.5.w,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.r),
-        borderSide: BorderSide(color: const Color(0xFF2563EB), width: 1.5.w),
+        borderSide: BorderSide(
+          color: AppTheme.isDark ? AppTheme.primary : const Color(0xFF2563EB),
+          width: 1.5.w,
+        ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.r),
@@ -685,7 +723,9 @@ class _FieldLabel extends StatelessWidget {
       label,
       style: TextStyles.bodySmall.copyWith(
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF1A1A2E),
+        color: AppTheme.isDark
+            ? AppTheme.textPrimary
+            : const Color(0xFF1A1A2E),
       ),
     );
   }
@@ -706,9 +746,14 @@ class _PasswordStrengthIndicator extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: AppTheme.isDark
+            ? AppTheme.surfaceElevated
+            : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.w),
+        border: Border.all(
+          color: AppTheme.isDark ? AppTheme.border : const Color(0xFFE2E8F0),
+          width: 1.w,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -719,7 +764,9 @@ class _PasswordStrengthIndicator extends StatelessWidget {
               Text(
                 'Password Strength',
                 style: TextStyles.captionMedium.copyWith(
-                  color: const Color(0xFF1A1A2E),
+                  color: AppTheme.isDark
+                      ? AppTheme.textPrimary
+                      : const Color(0xFF1A1A2E),
                 ),
               ),
               Text(

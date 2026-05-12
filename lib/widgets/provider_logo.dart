@@ -54,7 +54,7 @@ class ProviderLogo extends StatelessWidget {
           ? SizedBox(
               width: radius,
               height: radius,
-              child: const CircularProgressIndicator(
+              child:  CircularProgressIndicator(
                 strokeWidth: 2,
                 valueColor: AlwaysStoppedAnimation<Color>(AppTheme.textSecondary),
               ),

@@ -401,7 +401,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: Icon(
                     Icons.notifications_outlined,
                     size: 20.r,
-                    color: Colors.black87,
+                    color: Theme.of(context).iconTheme.color,
                   ),
                   onPressed: () =>
                       Navigator.pushNamed(context, AppRoutes.notifications),
@@ -417,7 +417,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     decoration: BoxDecoration(
                       color: Colors.red,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
+                      border: Border.all(color: AppTheme.surface, width: 1.5),
                     ),
                   ),
                 ),
@@ -563,7 +563,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 style: TextStyles.h2Medium.copyWith(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: AppTheme.textPrimary,
                 ),
               ),
               const Spacer(),
@@ -573,7 +573,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Text(
                   'View all',
                   style: TextStyles.bodySmallBold.copyWith(
-                    color: AppColors.primary,
+                    color: AppTheme.primary,
                   ),
                 ),
               ),
@@ -643,7 +643,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Text(
                   'View all',
                   style: TextStyles.bodySmallBold.copyWith(
-                    color: AppColors.primary,
+                    color: AppTheme.primary,
                   ),
                 ),
               ),
@@ -737,7 +737,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: AppTheme.primaryColor.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.contacts, color: AppColors.primary),
+              child: Icon(Icons.contacts, color: AppTheme.primary),
             ),
             SizedBox(width: 12.w),
             Expanded(
@@ -787,13 +787,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Icon(
             icon,
             size: 18.r,
-            color: pendingCount > 0 ? pendingColor : Colors.grey,
+            color: pendingCount > 0
+                ? pendingColor
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.52),
           ),
           SizedBox(width: 6.w),
           Expanded(
             child: Text(
               label,
-              style: TextStyles.labelBold.copyWith(color: Colors.black87),
+              style: TextStyles.labelBold.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
           if (pendingCount > 0)
@@ -829,8 +833,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Container(
               width: 90.r,
               height: 90.r,
-              decoration: const BoxDecoration(
-                color: Color(0xFFDCE8F9),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -852,7 +856,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: TextStyles.h2Medium.copyWith(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w800,
-                color: Colors.black,
+                color: AppTheme.textPrimary,
               ),
             ),
             SizedBox(height: 10.h),
@@ -860,7 +864,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               'No pending access requests. New requests will appear here when others share their accounts with you.',
               textAlign: TextAlign.center,
               style: TextStyles.bodySmall.copyWith(
-                color: Colors.grey[600],
+                color: AppTheme.textSecondary,
                 height: 1.6,
               ),
             ),
@@ -949,7 +953,7 @@ class _ContactCircleTile extends StatelessWidget {
                   width: 22.r,
                   height: 22.r,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppTheme.surface,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -1094,7 +1098,7 @@ class _ApprovedContactsScreenState
                           separatorBuilder: (_, __) => Divider(
                             height: 1,
                             thickness: 0.6,
-                            color: AppColors.divider,
+                            color: AppTheme.divider,
                           ),
                           itemBuilder: (_, i) {
                             final contact = filtered[i];

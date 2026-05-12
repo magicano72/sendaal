@@ -151,9 +151,14 @@ class SearchField extends StatelessWidget {
         return TextField(
           controller: controller,
           onChanged: onChanged,
+          cursorColor: AppTheme.primary,
+          style: TextStyles.bodySmall.copyWith(color: AppTheme.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
+            hintStyle: TextStyles.bodySmall.copyWith(
+              color: AppTheme.textSecondary,
+            ),
+            prefixIcon: Icon(Icons.search, color: AppTheme.primary),
             suffixIconConstraints: const BoxConstraints(
               minWidth: 0,
               minHeight: 0,
@@ -163,12 +168,12 @@ class SearchField extends StatelessWidget {
               children: [
                 if (onContactsTap != null)
                   IconButton(
-                    icon: const Icon(Icons.contacts, color: AppTheme.primary),
+                    icon: Icon(Icons.contacts, color: AppTheme.primary),
                     onPressed: onContactsTap,
                   ),
                 if (hasText)
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppTheme.primary),
+                    icon: Icon(Icons.close, color: AppTheme.primary),
                     onPressed: () {
                       controller.clear();
                       onClear?.call();
@@ -260,7 +265,7 @@ class NotificationTile extends StatelessWidget {
                 width: 8.w,
                 height: 8.w,
                 margin: EdgeInsets.only(top: 4.h),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppTheme.primary,
                   shape: BoxShape.circle,
                 ),
@@ -333,6 +338,7 @@ class AmountInputField extends StatelessWidget {
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: onChanged,
+          cursorColor: AppTheme.primary,
           style: TextStyles.h1Bold.copyWith(
             fontSize: 28.sp,
             color: AppTheme.textPrimary,
@@ -464,18 +470,18 @@ class ErrorBanner extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.error.withOpacity(0.4), width: 1),
+        border: Border.all(color: AppTheme.error.withOpacity(0.4), width: 1),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+          Icon(Icons.error_outline, color: AppTheme.error, size: 20),
           SizedBox(width: 10.w),
           Expanded(
             child: Text(
               message,
-              style: TextStyles.label.copyWith(color: AppColors.error),
+              style: TextStyles.label.copyWith(color: AppTheme.error),
             ),
           ),
           if (onRetry != null)

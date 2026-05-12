@@ -62,7 +62,7 @@ class AccessRequestCard extends ConsumerWidget {
       error: (_, __) => _buildCard(
         context,
         ref,
-        displayName: 'User ${userIdToFetch.substring(0, 6)}',
+        displayName: _fallbackUserName(userIdToFetch),
         firstName: null,
         avatarUrl: null,
         canOpenDetails: canOpenDetails,
@@ -90,6 +90,15 @@ class AccessRequestCard extends ConsumerWidget {
         isRevoker: isRevoker,
       ),
     );
+  }
+
+  String _fallbackUserName(String userId) {
+    if (userId.isEmpty) {
+      return 'Unknown user';
+    }
+
+    final previewLength = userId.length < 6 ? userId.length : 6;
+    return 'User ${userId.substring(0, previewLength)}';
   }
 
   Widget _buildCard(
@@ -171,7 +180,7 @@ class AccessRequestCard extends ConsumerWidget {
                             style: TextStyles.bodyBold.copyWith(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF111827),
+                              color: AppTheme.textPrimary,
                             ),
                           ),
                           SizedBox(height: 4.h),
@@ -180,7 +189,7 @@ class AccessRequestCard extends ConsumerWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyles.label.copyWith(
-                              color: const Color(0xFF6B7280),
+                              color: AppTheme.textSecondary,
                             ),
                           ),
                         ],
@@ -312,12 +321,19 @@ class AccessRequestCard extends ConsumerWidget {
   }
 
   Widget _buildAvatar(String? avatarUrl, String name) {
+    final avatarBackground = AppTheme.isDark
+        ? AppTheme.secondary
+        : const Color(0xFFF0E7DA);
+    final avatarText = AppTheme.isDark
+        ? AppTheme.textPrimary
+        : const Color(0xFF1F2C3B);
+
     return Container(
       width: 52.r,
       height: 52.r,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFF0E7DA),
+        color: avatarBackground,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -330,12 +346,12 @@ class AccessRequestCard extends ConsumerWidget {
         avatarUrl: avatarUrl,
         name: name,
         radius: 26.r,
-        backgroundColor: const Color(0xFFF0E7DA),
-        textColor: const Color(0xFF1F2C3B),
+        backgroundColor: avatarBackground,
+        textColor: avatarText,
         textStyle: TextStyles.bodyBold.copyWith(
           fontSize: 20.sp,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF1F2C3B),
+          color: avatarText,
         ),
       ),
     );
@@ -390,16 +406,16 @@ class AccessRequestCard extends ConsumerWidget {
         label: Text(
           'Manage',
           style: TextStyles.bodySmallBold.copyWith(
-            color: const Color(0xFF1F2C3B),
+            color: AppTheme.textPrimary,
           ),
         ),
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFFD1D9E6)),
+          side: BorderSide(color: AppTheme.border),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.r),
           ),
           padding: EdgeInsets.symmetric(vertical: 12.h),
-          backgroundColor: const Color(0xFFF9FBFF),
+          backgroundColor: AppTheme.surfaceElevated,
         ),
       ),
     );
@@ -421,20 +437,20 @@ class AccessRequestCard extends ConsumerWidget {
               ? () => _openRequesterDetails(context, request)
               : null,
           style: OutlinedButton.styleFrom(
-            side: const BorderSide(
-              color: Color(0xFFD1D9E6),
+            side: BorderSide(
+              color: AppTheme.border,
               style: BorderStyle.solid,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16.r),
             ),
             padding: EdgeInsets.symmetric(vertical: 12.h),
-            backgroundColor: const Color(0xFFF9FBFF),
+            backgroundColor: AppTheme.surfaceElevated,
           ),
           child: Text(
             'View Log Details',
             style: TextStyles.bodySmallBold.copyWith(
-              color: const Color(0xFF4B5563),
+              color: AppTheme.textPrimary,
             ),
           ),
         ),
@@ -595,7 +611,7 @@ class AccessRequestCard extends ConsumerWidget {
     bool isSaving = false;
 
     await showModalBottomSheet(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppTheme.background,
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -622,7 +638,7 @@ class AccessRequestCard extends ConsumerWidget {
                     width: 42.w,
                     height: 4.h,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: AppTheme.border,
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                   ),

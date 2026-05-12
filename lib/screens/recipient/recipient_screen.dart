@@ -509,7 +509,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
                     value: c,
                     child: Text(
                       c,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
                       ),
@@ -520,7 +520,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
             decoration: InputDecoration(
               labelText: 'Currency',
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppTheme.surface,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 12.w,
                 vertical: 12.h,
@@ -529,7 +529,10 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
                 borderRadius: BorderRadius.circular(12.r),
               ),
             ),
-            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+            icon: Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: AppTheme.textSecondary,
+            ),
             onChanged: (value) {
               setState(() {
                 _selectedCurrency = value;
@@ -664,7 +667,8 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     BuildContext context, {
     required bool isPending,
   }) {
-    final accentColor = isPending ? AppColors.warning : AppTheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accentColor = isPending ? AppTheme.warning : AppTheme.primary;
     final title = isPending ? 'Request Sent' : 'Accounts Not Visible';
     final description = isPending
         ? 'We sent your access request to ${_preferredName(widget.recipient)}. Their visible accounts will appear here automatically once they approve it.'
@@ -678,7 +682,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
           end: Alignment.bottomRight,
           colors: [
             accentColor.withValues(alpha: isPending ? 0.18 : 0.12),
-            Colors.white,
+            isDark ? AppTheme.surfaceElevated : Colors.white,
           ],
         ),
         borderRadius: BorderRadius.circular(24.r),
@@ -716,7 +720,9 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
             width: 64.w,
             height: 64.w,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.92),
+              color: isDark
+                  ? AppTheme.surface
+                  : Colors.white.withValues(alpha: 0.92),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -746,9 +752,15 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.88),
+              color: isDark
+                  ? AppTheme.surface
+                  : Colors.white.withValues(alpha: 0.88),
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: accentColor.withValues(alpha: 0.14)),
+              border: Border.all(
+                color: isDark
+                    ? AppTheme.border
+                    : accentColor.withValues(alpha: 0.14),
+              ),
             ),
             child: Row(
               children: [
@@ -911,7 +923,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
           style: OutlinedButton.styleFrom(
             foregroundColor: AppTheme.error,
             side: BorderSide(color: AppTheme.error.withValues(alpha: 0.24)),
-            backgroundColor: Colors.white,
+            backgroundColor: AppTheme.surface,
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16.r),
@@ -987,8 +999,8 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
     return filled
         ? FilledButton(
             onPressed: null,
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.grey.shade400,
+          style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.textSecondary.withOpacity(0.35),
             ),
             child: child,
           )
@@ -996,7 +1008,7 @@ class _RecipientScreenState extends ConsumerState<RecipientScreen> {
             onPressed: null,
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.grey,
-              side: BorderSide(color: Colors.grey.shade400),
+              side: BorderSide(color: AppTheme.border),
             ),
             child: child,
           );

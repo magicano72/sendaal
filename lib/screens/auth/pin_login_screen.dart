@@ -369,7 +369,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                       _error!,
                       textAlign: TextAlign.center,
                       style: TextStyles.bodySmall.copyWith(
-                        color: AppColors.error,
+                        color: AppTheme.error,
                         fontWeight: FontWeight.w600,
                       ),
                     )
@@ -377,7 +377,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                     Text(
                       'Enter your 4-digit PIN',
                       style: TextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                   if (_attemptsRemaining < AuthSessionService.kMaxAttempts &&
@@ -386,7 +386,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                     Text(
                       '$_attemptsRemaining attempts remaining',
                       style: TextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppTheme.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -418,9 +418,9 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
                     child: Text(
                       'Forgot PIN / Log out',
                       style: TextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppTheme.textSecondary,
                         decoration: TextDecoration.underline,
-                        decorationColor: AppColors.textSecondary,
+                        decorationColor: AppTheme.textSecondary,
                       ),
                     ),
                   ),

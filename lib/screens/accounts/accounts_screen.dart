@@ -98,7 +98,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
         );
 
     showModalBottomSheet(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppTheme.background,
       context: context,
       isScrollControlled: true,
       shape: RoundedRectangleBorder(
@@ -415,7 +415,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openAccountForm(),
         backgroundColor: AppTheme.primary,
-        child: const Icon(Icons.add, color: AppTheme.surface),
+        child: Icon(Icons.add, color: AppTheme.surface),
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -428,7 +428,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
             if (state.isLoading && accounts.isEmpty)
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 40.h),
-                child: const Center(
+                child: Center(
                   child: CircularProgressIndicator(color: AppTheme.primary),
                 ),
               )
@@ -606,7 +606,7 @@ class _SearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(14.r),
         boxShadow: [
           BoxShadow(
@@ -621,12 +621,17 @@ class _SearchBar extends StatelessWidget {
         controller: controller,
         autofocus: autofocus,
         onChanged: (_) => onChanged(),
+        cursorColor: AppTheme.primary,
+        style: TextStyles.bodySmall.copyWith(color: AppTheme.textPrimary),
         decoration: InputDecoration(
           hintText: 'Search by provider or country...',
-          prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
+          hintStyle: TextStyles.bodySmall.copyWith(
+            color: AppTheme.textSecondary,
+          ),
+          prefixIcon: Icon(Icons.search, color: AppTheme.primary),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close, color: AppTheme.primary),
+                  icon: Icon(Icons.close, color: AppTheme.primary),
                   onPressed: onClear,
                 )
               : null,
@@ -635,7 +640,7 @@ class _SearchBar extends StatelessWidget {
             borderSide: BorderSide.none,
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppTheme.surface,
           contentPadding: EdgeInsets.symmetric(vertical: 12.h),
         ),
       ),

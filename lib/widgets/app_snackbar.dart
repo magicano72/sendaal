@@ -7,7 +7,7 @@ class AppSnackBar {
   static void show(
     BuildContext context, {
     required String message,
-    Color backgroundColor = AppColors.textPrimary,
+    Color? backgroundColor,
     IconData icon = Icons.info_outline,
     Duration duration = const Duration(seconds: 3),
   }) {
@@ -21,7 +21,7 @@ class AppSnackBar {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
           ),
-          backgroundColor: backgroundColor,
+          backgroundColor: backgroundColor ?? AppTheme.textPrimary,
           content: Row(
             children: [
               Icon(icon, color: Colors.white, size: 20.r),
@@ -45,7 +45,7 @@ class AppSnackBar {
     show(
       context,
       message: message,
-      backgroundColor: AppColors.error,
+      backgroundColor: AppTheme.error,
       icon: Icons.error_outline,
     );
   }
@@ -54,7 +54,7 @@ class AppSnackBar {
     show(
       context,
       message: message,
-      backgroundColor: AppColors.success,
+      backgroundColor: AppTheme.success,
       icon: Icons.check_circle_outline,
     );
   }
@@ -63,7 +63,7 @@ class AppSnackBar {
     show(
       context,
       message: message,
-      backgroundColor: AppColors.warning,
+      backgroundColor: AppTheme.warning,
       icon: Icons.warning_amber_rounded,
     );
   }
@@ -72,7 +72,7 @@ class AppSnackBar {
     show(
       context,
       message: message,
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppTheme.primary,
       icon: Icons.info_outline,
     );
   }

@@ -402,7 +402,7 @@ class _StepBadge extends StatelessWidget {
     return Container(
       width: 28.w,
       height: 28.w,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppTheme.primary,
         shape: BoxShape.circle,
       ),

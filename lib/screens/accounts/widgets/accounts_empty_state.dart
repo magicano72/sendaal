@@ -54,7 +54,7 @@ class _Graphic extends StatelessWidget {
               gradient: RadialGradient(
                 colors: [
                   AppTheme.primary.withOpacity(0.07),
-                  Colors.white,
+                  AppTheme.surface,
                 ],
               ),
             ),
@@ -63,7 +63,7 @@ class _Graphic extends StatelessWidget {
             size: 120.w,
             icon: Icons.account_balance_wallet,
             iconColor: AppTheme.primary,
-            background: Colors.white,
+            background: AppTheme.surface,
             elevation: 10,
           ),
           Positioned(
@@ -84,7 +84,7 @@ class _Graphic extends StatelessWidget {
               size: 56.w,
               icon: Icons.savings_outlined,
               iconColor: AppTheme.primary.withOpacity(0.9),
-              background: Colors.white,
+              background: AppTheme.surface,
               elevation: 4,
             ),
           ),

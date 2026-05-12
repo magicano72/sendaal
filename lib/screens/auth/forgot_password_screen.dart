@@ -74,7 +74,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Forgot Password'),
         leading: IconButton(
@@ -96,7 +96,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 24.h),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(20.r),
                 boxShadow: [
                   BoxShadow(
@@ -112,7 +112,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   Text(
                     'Reset your password',
                     style: TextStyles.h1Semi.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppTheme.textPrimary,
                       fontSize: 24.sp,
                     ),
                   ),
@@ -120,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   Text(
                     'Enter the email associated with your account and we\'ll send you a link to reset your password.',
                     style: TextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppTheme.textSecondary,
                       height: 1.5,
                     ),
                   ),
@@ -129,18 +129,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     'Email Address',
                     style: TextStyles.bodySmall.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   SizedBox(height: 8.h),
                   TextFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
+                    cursorColor: AppTheme.primary,
+                    style: TextStyles.bodySmall.copyWith(
+                      color: AppTheme.textPrimary,
+                    ),
+                    decoration: InputDecoration(
                       hintText: 'name@example.com',
                       prefixIcon: Icon(
                         Icons.mail_outline,
-                        color: AppColors.textSecondary,
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                     validator: _emailValidator,

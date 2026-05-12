@@ -16,6 +16,7 @@ class PinDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(length, (index) {
@@ -27,15 +28,15 @@ class PinDots extends StatelessWidget {
           height: 18.r,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isFilled ? AppColors.primary : Colors.white,
+            color: isFilled ? AppTheme.primary : colorScheme.surface,
             border: Border.all(
-              color: isFilled ? AppColors.primary : AppColors.border,
+              color: isFilled ? AppTheme.primary : AppTheme.border,
               width: 1.8,
             ),
             boxShadow: isFilled
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.18),
+                      color: AppTheme.primary.withOpacity(0.18),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -112,14 +113,17 @@ class PinScreenScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppTheme.background,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF9FBFD), Color(0xFFEFF4FA)],
+            colors: isDark
+                ? [AppTheme.background, AppTheme.secondary]
+                : const [Color(0xFFF9FBFD), Color(0xFFEFF4FA)],
           ),
         ),
         child: SafeArea(
@@ -131,7 +135,7 @@ class PinScreenScaffold extends StatelessWidget {
                 constraints: BoxConstraints(maxWidth: 420.w),
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(28.r),
                   boxShadow: [
                     BoxShadow(
@@ -171,7 +175,7 @@ class PinSectionTitle extends StatelessWidget {
           style: TextStyles.h1Semi.copyWith(
             fontSize: 28.sp,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: AppTheme.textPrimary,
           ),
         ),
         SizedBox(height: 10.h),
@@ -179,7 +183,7 @@ class PinSectionTitle extends StatelessWidget {
           subtitle,
           textAlign: TextAlign.center,
           style: TextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+            color: AppTheme.textSecondary,
             height: 1.5,
           ),
         ),
@@ -196,11 +200,12 @@ class _PinKey extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       width: 84.w,
       height: 72.h,
       child: Material(
-        color: const Color(0xFFF5F8FC),
+        color: isDark ? AppTheme.surfaceElevated : const Color(0xFFF5F8FC),
         borderRadius: BorderRadius.circular(22.r),
         child: InkWell(
           borderRadius: BorderRadius.circular(22.r),
@@ -210,7 +215,7 @@ class _PinKey extends StatelessWidget {
               label,
               style: TextStyles.h2Semi.copyWith(
                 fontSize: 30.sp,
-                color: AppColors.textPrimary,
+                color: AppTheme.textPrimary,
               ),
             ),
           ),
@@ -233,12 +238,15 @@ class _ActionKey extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       width: 84.w,
       height: 72.h,
       child: visible
           ? Material(
-              color: const Color(0xFFF5F8FC),
+              color: isDark
+                  ? AppTheme.surfaceElevated
+                  : const Color(0xFFF5F8FC),
               borderRadius: BorderRadius.circular(22.r),
               child: InkWell(
                 borderRadius: BorderRadius.circular(22.r),
@@ -246,7 +254,7 @@ class _ActionKey extends StatelessWidget {
                 child: Center(
                   child: Icon(
                     icon,
-                    color: AppColors.primary,
+                    color: AppTheme.primary,
                     size: 30.r,
                   ),
                 ),

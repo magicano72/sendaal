@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/error/exceptions.dart';
 import '../../core/router/app_router.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/services/validation_service.dart';
 import '../../core/theme/text_style.dart';
 import '../../providers/auth_provider.dart';
@@ -249,32 +250,44 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final pageBackground = isDark
+        ? AppTheme.background
+        : const Color(0xFFF2F6FB);
+    final cardBackground = isDark ? AppTheme.surface : Colors.white;
+    final otpFill = isDark ? AppTheme.surfaceElevated : Colors.white;
+    final otpBorder = isDark ? AppTheme.border : const Color(0xFFE3E8F0);
+    final otpText = colorScheme.onSurface;
     final phoneToShow = _session.phoneNumber.isNotEmpty
         ? _session.phoneNumber
         : widget.args.registerPayload.phoneNumber;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F6FB),
+      backgroundColor: pageBackground,
       appBar: AppBar(
-backgroundColor: const Color(0xFFF2F6FB),
+        backgroundColor: pageBackground,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios,
-            color: Color(0xFF0F192A),
+            color: otpText,
           ),
         ),
-        ),
+      ),
       body: SafeArea(
         child: Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: RadialGradient(
-              center: Alignment(-0.3, -0.4),
+              center: const Alignment(-0.3, -0.4),
               radius: 1.2,
-              colors: [Color(0xFFEFF4FB), Color(0xFFF6F9FD)],
-              stops: [0.2, 1],
+              colors: isDark
+                  ? [AppTheme.secondary, AppTheme.background]
+                  : const [Color(0xFFEFF4FB), Color(0xFFF6F9FD)],
+              stops: const [0.2, 1],
             ),
           ),
           child: Center(
@@ -283,7 +296,7 @@ backgroundColor: const Color(0xFFF2F6FB),
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardBackground,
                   borderRadius: BorderRadius.circular(26.r),
                   boxShadow: [
                     BoxShadow(
@@ -313,7 +326,7 @@ backgroundColor: const Color(0xFFF2F6FB),
                     Text(
                       'Verification Code',
                       style: TextStyles.h1Semi.copyWith(
-                        color: const Color(0xFF0F192A),
+                        color: otpText,
                         fontSize: 22.sp,
                       ),
                     ),
@@ -322,7 +335,7 @@ backgroundColor: const Color(0xFFF2F6FB),
                       'Enter the 4-digit code sent to your\nphone number ${_maskPhone(phoneToShow)}',
                       textAlign: TextAlign.center,
                       style: TextStyles.bodySmall.copyWith(
-                        color: const Color(0xFF6B7380),
+                        color: AppTheme.textSecondary,
                         height: 1.5,
                         fontSize: 14.sp,
                       ),
@@ -339,27 +352,31 @@ backgroundColor: const Color(0xFFF2F6FB),
                             focusNode: _digitNodes[index],
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
+                            cursorColor: AppTheme.primary,
                             maxLength: 1,
                             style: TextStyles.h2Semi.copyWith(
                               fontSize: 24.sp,
-                              color: const Color(0xFF0F192A),
+                              color: otpText,
                             ),
                             decoration: InputDecoration(
                               counterText: '',
                               contentPadding: EdgeInsets.zero,
                               filled: true,
-                              fillColor: Colors.white,
+                              fillColor: otpFill,
+                              hintStyle: TextStyles.h2Semi.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14.r),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE3E8F0),
+                                borderSide: BorderSide(
+                                  color: otpBorder,
                                   width: 1.6,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14.r),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF0B63CE),
+                                borderSide: BorderSide(
+                                  color: AppTheme.primary,
                                   width: 2,
                                 ),
                               ),
@@ -422,7 +439,7 @@ backgroundColor: const Color(0xFFF2F6FB),
                         Text(
                           "Didn't receive the code? ",
                           style: TextStyles.bodySmall.copyWith(
-                            color: const Color(0xFF8A94A6),
+                            color: AppTheme.textSecondary,
                             fontSize: 14.sp,
                           ),
                         ),

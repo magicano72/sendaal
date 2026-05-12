@@ -263,19 +263,19 @@ class _PriorityBadge extends StatelessWidget {
     String label;
     switch (priority) {
       case AccountPriority.high:
-        bg = AppColors.error.withOpacity(0.15);
-        fg = AppColors.error;
+        bg = AppTheme.error.withOpacity(0.15);
+        fg = AppTheme.error;
         label = 'High';
         break;
       case AccountPriority.low:
-        bg = AppColors.primary.withOpacity(0.15);
-        fg = AppColors.primary;
+        bg = AppTheme.primary.withOpacity(0.15);
+        fg = AppTheme.primary;
         label = 'Low';
         break;
       case AccountPriority.medium:
       default:
-        bg = AppColors.warning.withOpacity(0.15);
-        fg = AppColors.warning;
+        bg = AppTheme.warning.withOpacity(0.15);
+        fg = AppTheme.warning;
         label = 'Medium';
     }
     return Container(

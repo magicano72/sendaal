@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/dark_theme.dart';
+import 'core/theme/theme_provider.dart';
 import 'services/local_notification_service.dart';
 import 'services/system_limits_service.dart';
 import 'widgets/app_lifecycle_observer.dart';
@@ -19,34 +22,46 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env');
   await LocalNotificationService.initialize();
   await SystemLimitsService().loadAndCache();
+  final preferences = await SharedPreferences.getInstance();
   runApp(
     // ProviderScope wraps the entire app for Riverpod
-    const ProviderScope(child: SendaalApp()),
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+      child: const SendaalApp(),
+    ),
   );
 }
 
-class SendaalApp extends StatefulWidget {
+class SendaalApp extends ConsumerStatefulWidget {
   const SendaalApp({super.key});
 
   @override
-  State<SendaalApp> createState() => _SendaalAppState();
+  ConsumerState<SendaalApp> createState() => _SendaalAppState();
 }
 
-class _SendaalAppState extends State<SendaalApp> {
+class _SendaalAppState extends ConsumerState<SendaalApp>
+    with WidgetsBindingObserver {
   late final AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSub;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _appLinks = AppLinks();
     _initDeepLinks();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _linkSub?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    setState(() {});
   }
 
   Future<void> _initDeepLinks() async {
@@ -85,6 +100,17 @@ class _SendaalAppState extends State<SendaalApp> {
 
   @override
   Widget build(BuildContext context) {
+    final appThemeMode = ref.watch(themeModeProvider);
+    final platformBrightness =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    final effectiveBrightness = switch (appThemeMode) {
+      AppThemeMode.light => Brightness.light,
+      AppThemeMode.dark => Brightness.dark,
+      AppThemeMode.system => platformBrightness,
+    };
+
+    AppTheme.setActiveBrightness(effectiveBrightness);
+
     return ScreenUtilInit(
       designSize: const Size(390, 844),
       minTextAdapt: true,
@@ -96,10 +122,20 @@ class _SendaalAppState extends State<SendaalApp> {
             debugShowCheckedModeBanner: false,
             navigatorKey: LocalNotificationService.navigatorKey,
             theme: AppTheme.lightTheme,
+            darkTheme: buildDarkTheme(),
+            themeMode: appThemeMode.materialMode,
+            themeAnimationDuration: const Duration(milliseconds: 280),
+            themeAnimationCurve: Curves.easeOutCubic,
             onGenerateRoute: AppRouter.generateRoute,
             initialRoute: AppRoutes.splash,
-            builder: (context, child) =>
-                ConnectivityBanner(child: child ?? const SizedBox.shrink()),
+            builder: (context, child) => ConnectivityBanner(
+              child: KeyedSubtree(
+                key: ValueKey(
+                  '${appThemeMode.storageValue}-${effectiveBrightness.name}',
+                ),
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
           ),
         );
       },

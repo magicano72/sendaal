@@ -27,29 +27,29 @@ InputDecoration dropdownDecoration({
         EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
     suffixIcon:
         suffixIcon ??
-        const Icon(
+        Icon(
           Icons.keyboard_arrow_down_rounded,
           color: AppTheme.textSecondary,
         ),
     border: OutlineInputBorder(
       borderRadius: radius,
-      borderSide: const BorderSide(color: AppTheme.border),
+      borderSide: BorderSide(color: AppTheme.border),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: radius,
-      borderSide: const BorderSide(color: AppTheme.border),
+      borderSide: BorderSide(color: AppTheme.border),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: radius,
-      borderSide: const BorderSide(color: AppTheme.primary, width: 1.4),
+      borderSide: BorderSide(color: AppTheme.primary, width: 1.4),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: radius,
-      borderSide: const BorderSide(color: AppTheme.error),
+      borderSide: BorderSide(color: AppTheme.error),
     ),
     focusedErrorBorder: OutlineInputBorder(
       borderRadius: radius,
-      borderSide: const BorderSide(color: AppTheme.error, width: 1.2),
+      borderSide: BorderSide(color: AppTheme.error, width: 1.2),
     ),
   );
 }

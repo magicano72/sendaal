@@ -144,11 +144,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Reset Password'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pushReplacementNamed(
             context,
             AppRoutes.login,
@@ -164,7 +164,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 24.h),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(20.r),
               boxShadow: [
                 BoxShadow(
@@ -185,7 +185,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   Text(
                     'Create a new password',
                     style: TextStyles.h1Semi.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppTheme.textPrimary,
                       fontSize: 24.sp,
                     ),
                   ),
@@ -193,7 +193,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   Text(
                     'Your new password must be at least 8 characters long and include an uppercase letter and a number.',
                     style: TextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppTheme.textSecondary,
                       height: 1.5,
                     ),
                   ),
@@ -215,7 +215,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     'New password',
                     style: TextStyles.bodySmall.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -224,18 +224,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     obscureText: _obscurePassword,
                     enableSuggestions: false,
                     autocorrect: false,
+                    cursorColor: AppTheme.primary,
+                    style: TextStyles.bodySmall.copyWith(
+                      color: AppTheme.textPrimary,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Enter new password',
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         Icons.lock_outline,
-                        color: AppColors.textSecondary,
+                        color: AppTheme.textSecondary,
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                          color: AppColors.textSecondary,
+                          color: AppTheme.textSecondary,
                         ),
                         onPressed: () => setState(
                           () => _obscurePassword = !_obscurePassword,
@@ -250,7 +254,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     'Confirm password',
                     style: TextStyles.bodySmall.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -259,18 +263,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     obscureText: _obscureConfirm,
                     enableSuggestions: false,
                     autocorrect: false,
+                    cursorColor: AppTheme.primary,
+                    style: TextStyles.bodySmall.copyWith(
+                      color: AppTheme.textPrimary,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Re-enter new password',
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         Icons.lock_reset_outlined,
-                        color: AppColors.textSecondary,
+                        color: AppTheme.textSecondary,
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureConfirm
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
-                          color: AppColors.textSecondary,
+                          color: AppTheme.textSecondary,
                         ),
                         onPressed: () => setState(
                           () => _obscureConfirm = !_obscureConfirm,

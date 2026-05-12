@@ -264,7 +264,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen>
                         ? 'Re-enter your 4-digit PIN'
                         : 'Enter a 4-digit PIN',
                     style: TextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                   if (_error != null) ...[
@@ -273,7 +273,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen>
                       _error!,
                       textAlign: TextAlign.center,
                       style: TextStyles.bodySmall.copyWith(
-                        color: AppColors.error,
+                        color: AppTheme.error,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

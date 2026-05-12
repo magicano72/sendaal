@@ -548,7 +548,7 @@ class _RequesterDetailsScreenState
       double width,
     ) {
       final selected = _receiverAccessType == value;
-      final bg = selected ? AppTheme.primary : Colors.white;
+      final bg = selected ? AppTheme.primary : AppTheme.surfaceElevated;
       final fg = selected ? Colors.white : AppTheme.textPrimary;
       final subFg = selected
           ? Colors.white.withOpacity(0.9)
@@ -569,7 +569,7 @@ class _RequesterDetailsScreenState
               color: bg,
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(
-                color: selected ? AppTheme.primary : Colors.grey.shade300,
+                color: selected ? AppTheme.primary : AppTheme.border,
               ),
               boxShadow: [
                 BoxShadow(
@@ -587,7 +587,7 @@ class _RequesterDetailsScreenState
                   decoration: BoxDecoration(
                     color: selected
                         ? Colors.white.withOpacity(0.18)
-                        : Colors.grey.shade100,
+                        : AppTheme.secondary,
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Icon(
@@ -724,10 +724,10 @@ class _RequesterDetailsScreenState
         decoration: BoxDecoration(
           color: selected
               ? AppTheme.primary.withOpacity(0.08)
-              : Colors.grey.shade50,
+              : AppTheme.surfaceElevated,
           borderRadius: BorderRadius.circular(10.r),
           border: Border.all(
-            color: selected ? AppTheme.primary : Colors.grey.shade300,
+            color: selected ? AppTheme.primary : AppTheme.border,
           ),
         ),
         child: Row(
@@ -773,7 +773,7 @@ class _RequesterDetailsScreenState
                           vertical: 4.h,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
+                          color: AppTheme.secondary,
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
@@ -978,9 +978,9 @@ class _RequesterDetailsScreenState
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: AppTheme.surfaceElevated,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Row(
         children: [
@@ -1024,7 +1024,7 @@ class _RequesterDetailsScreenState
                         vertical: 4.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
+                        color: AppTheme.secondary,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -1234,7 +1234,7 @@ class _RequesterDetailsScreenState
     bool isSaving = false;
 
     await showModalBottomSheet(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.surface,
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -1430,7 +1430,7 @@ class _RequesterDetailsScreenState
               side: BorderSide(
                 color: accessType == 'full'
                     ? AppTheme.primary
-                    : Colors.grey.shade300,
+                    : AppTheme.border,
               ),
               padding: EdgeInsets.symmetric(vertical: 12.h),
             ),
@@ -1456,7 +1456,7 @@ class _RequesterDetailsScreenState
               side: BorderSide(
                 color: accessType == 'custom'
                     ? AppTheme.primary
-                    : Colors.grey.shade300,
+                    : AppTheme.border,
               ),
               padding: EdgeInsets.symmetric(vertical: 12.h),
             ),

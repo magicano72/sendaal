@@ -98,7 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
@@ -114,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     vertical: 28.h,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: AppTheme.surface,
                     borderRadius: BorderRadius.circular(24.r),
                     boxShadow: [
                       BoxShadow(
@@ -149,7 +149,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             style: TextStyles.bodyRegular.copyWith(
                               fontWeight: FontWeight.w700,
                               fontSize: 18.sp,
-                              color: AppColors.textPrimary,
+                              color: AppTheme.textPrimary,
                             ),
                           ),
                           const Spacer(),
@@ -161,7 +161,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         'Welcome back',
                         style: TextStyles.h1Semi.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: AppTheme.textPrimary,
                           fontSize: 28.sp,
                         ),
                       ),
@@ -169,7 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Text(
                         'Log in to manage your finances.',
                         style: TextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: AppTheme.textSecondary,
                           height: 1.5,
                         ),
                       ),
@@ -179,18 +179,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         'Email Address',
                         style: TextStyles.bodySmall.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       SizedBox(height: 8.h),
                       TextFormField(
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
+                        cursorColor: AppTheme.primary,
+                        style: TextStyles.bodySmall.copyWith(
+                          color: AppTheme.textPrimary,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'name@example.com',
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.mail_outline,
-                            color: AppColors.textSecondary,
+                            color: AppTheme.textSecondary,
                           ),
                         ),
                         validator: (v) => ValidationService.validateEmail(v),
@@ -204,7 +208,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             'Password',
                             style: TextStyles.bodySmall.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: AppTheme.textPrimary,
                             ),
                           ),
                           TextButton(
@@ -221,7 +225,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               'Forgot password?',
                               style: TextStyles.bodySmall.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
+                                color: AppTheme.primary,
                               ),
                             ),
                           ),
@@ -231,18 +235,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _passwordCtrl,
                         obscureText: _obscurePassword,
+                        cursorColor: AppTheme.primary,
+                        style: TextStyles.bodySmall.copyWith(
+                          color: AppTheme.textPrimary,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Enter your password',
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.lock_outline,
-                            color: AppColors.textSecondary,
+                            color: AppTheme.textSecondary,
                           ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
-                              color: AppColors.textSecondary,
+                              color: AppTheme.textSecondary,
                             ),
                             onPressed: () => setState(
                               () => _obscurePassword = !_obscurePassword,
@@ -268,7 +276,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: _login,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: AppTheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(28.r),
                             ),
@@ -293,7 +301,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Text(
                             "Don't have an account? ",
                             style: TextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+                              color: AppTheme.textSecondary,
                             ),
                           ),
                           GestureDetector(
@@ -305,7 +313,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               'Register',
                               style: TextStyles.bodySmall.copyWith(
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
+                                color: AppTheme.primary,
                               ),
                             ),
                           ),

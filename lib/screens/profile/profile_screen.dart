@@ -292,21 +292,27 @@ class _ShareLinkButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextButton.icon(
       onPressed: () {
         Clipboard.setData(ClipboardData(text: 'sendaal.com/@$username'));
         AppSnackBar.success(context, 'Profile link copied to clipboard!');
       },
-      icon: const Icon(Icons.share, color: AppTheme.primary),
+      icon: Icon(Icons.share, color: AppTheme.primary),
       label: Text(
         'Share Account Link',
         style: TextStyles.bodyBold.copyWith(color: AppTheme.textPrimary),
       ),
       style: TextButton.styleFrom(
         padding: EdgeInsets.symmetric(vertical: 14.h),
-        backgroundColor: const Color(0xFFEFF2F6),
+        backgroundColor: isDark
+            ? AppTheme.surfaceElevated
+            : const Color(0xFFEFF2F6),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18.r),
+          side: BorderSide(
+            color: isDark ? AppTheme.border : Colors.transparent,
+          ),
         ),
       ),
     );
@@ -324,7 +330,7 @@ class _LogoutButton extends StatelessWidget {
       width: double.infinity,
       child: TextButton.icon(
         onPressed: onPressed,
-        icon: const Icon(Icons.logout_outlined, color: AppTheme.error),
+        icon: Icon(Icons.logout_outlined, color: AppTheme.error),
         label: Text(
           'Log Out',
           style: TextStyles.bodySmallBold.copyWith(
@@ -388,7 +394,7 @@ class _ProfileHeader extends StatelessWidget {
                       avatarUrl: user?.avatarUrl,
                       name: displayName,
                       radius: 49.w,
-                      backgroundColor: Colors.white,
+                      backgroundColor: AppTheme.surface,
                       textColor: AppTheme.primary,
                       textStyle: TextStyles.h1Semi.copyWith(
                         fontSize: 30.sp,
