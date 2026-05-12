@@ -422,10 +422,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                             title: Text(country.name),
                             subtitle: Text(country.code),
                             trailing: isSelected
-                                ? Icon(
-                                    Icons.check,
-                                    color: AppTheme.primary,
-                                  )
+                                ? Icon(Icons.check, color: AppTheme.primary)
                                 : null,
                           );
                         },
@@ -528,10 +525,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                             ),
                             title: Text(provider.name),
                             trailing: isSelected
-                                ? Icon(
-                                    Icons.check,
-                                    color: AppTheme.primary,
-                                  )
+                                ? Icon(Icons.check, color: AppTheme.primary)
                                 : null,
                           );
                         },
@@ -977,16 +971,15 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         ),
         items: _currencies
             .map(
-              (c) =>
-                  DropdownMenuItem(
-                    value: c.currency,
-                    child: Text(
-                      c.currency,
-                      style: TextStyles.bodySmall.copyWith(
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
+              (c) => DropdownMenuItem(
+                value: c.currency,
+                child: Text(
+                  c.currency,
+                  style: TextStyles.bodySmall.copyWith(
+                    color: AppTheme.textPrimary,
                   ),
+                ),
+              ),
             )
             .toList(),
         onChanged: enabled && !_loadingCurrencies

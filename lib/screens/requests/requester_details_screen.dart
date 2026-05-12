@@ -78,7 +78,6 @@ class _RequesterDetailsScreenState
 
     try {
       final notifier = ref.read(accessRequestProvider.notifier);
-      final currentUser = ref.read(authProvider).user;
 
       // For custom access, fetch selected accounts from the request
       if (_request.requestAccessType == 'custom') {
@@ -110,12 +109,10 @@ class _RequesterDetailsScreenState
               _request.requesterId,
             );
 
-            // Fetch all accounts for current user (receiver)
-            if (currentUser != null) {
-              _currentUserAllAccounts = await accountService.getAccountsForUser(
-                currentUser.id,
-              );
-            }
+            // Fetch all accounts for the receiver side of the request
+            _currentUserAllAccounts = await accountService.getAccountsForUser(
+              _request.receiverId,
+            );
           } catch (e) {
             print('[RequesterDetailsScreen] Error fetching full accounts: $e');
             _accountsError = 'Unable to load account details';

@@ -141,7 +141,7 @@ class AccountService {
     final list = response['data'] as List<dynamic>? ?? [];
     return list
         .map((e) => CurrencyOption.fromJson(e as Map<String, dynamic>))
-        .where((c) => c.currency.isNotEmpty)
+        .where((c) => c.providerAvailabilityId.isNotEmpty)
         .toList();
   }
 
