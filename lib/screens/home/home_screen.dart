@@ -573,7 +573,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Text(
                   'View all',
                   style: TextStyles.bodySmallBold.copyWith(
-                    color: AppTheme.primary,
+                    color: AppPalettes.dark.primary,
                   ),
                 ),
               ),
@@ -643,7 +643,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Text(
                   'View all',
                   style: TextStyles.bodySmallBold.copyWith(
-                    color: AppTheme.primary,
+                    color: AppPalettes.dark.primary,
                   ),
                 ),
               ),
