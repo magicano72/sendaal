@@ -41,6 +41,13 @@ class SystemLimitsService {
 
   /// Load limits at app startup and persist them in memory with fallback asset.
   Future<Map<String, double>> loadAndCache() async {
+    final fallbackLimits = await _loadFallbackFromAsset();
+    if (fallbackLimits.isNotEmpty) {
+      AppConstants.updateAccountTypeLimits(_mapLimits(fallbackLimits));
+      AppConstants.updateSystemLimits(fallbackLimits);
+      _cached = fallbackLimits;
+    }
+
     try {
       final limits = await fetchSystemLimits();
       if (limits.isNotEmpty) {
@@ -52,12 +59,6 @@ class SystemLimitsService {
       // Swallow and fall through to fallback.
     }
 
-    final fallbackLimits = await _loadFallbackFromAsset();
-    if (fallbackLimits.isNotEmpty) {
-      AppConstants.updateAccountTypeLimits(_mapLimits(fallbackLimits));
-      AppConstants.updateSystemLimits(fallbackLimits);
-      _cached = fallbackLimits;
-    }
     return AppConstants.accountTypeLimits;
   }
 
@@ -82,7 +83,9 @@ class SystemLimitsService {
 
   Future<List<SystemLimit>> _loadFallbackFromAsset() async {
     try {
-      final jsonStr = await rootBundle.loadString('assets/images/app-logo.png');
+      final jsonStr = await rootBundle.loadString(
+        'assets/config/system_limits_fallback.json',
+      );
       final decoded = jsonDecode(jsonStr);
       final data = decoded is Map ? decoded['data'] : null;
       return _extractSystemLimitsFromData(data);

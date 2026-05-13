@@ -92,6 +92,7 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/config/system_limits_fallback.json
     - assets/images/
 
 # Flutter Launcher Icons configuration

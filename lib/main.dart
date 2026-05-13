@@ -19,10 +19,19 @@ import 'widgets/connectivity_banner.dart';
 /// Entry point — loads .env before running the app
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
-  await LocalNotificationService.initialize();
-  await SystemLimitsService().loadAndCache();
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    Zone.current.handleUncaughtError(
+      details.exception,
+      details.stack ?? StackTrace.current,
+    );
+  };
+
+  await _loadEnvironment();
+  await _initializeLocalNotifications();
   final preferences = await SharedPreferences.getInstance();
+
   runApp(
     // ProviderScope wraps the entire app for Riverpod
     ProviderScope(
@@ -30,6 +39,35 @@ Future<void> main() async {
       child: const SendaalApp(),
     ),
   );
+
+  unawaited(_warmSystemLimits());
+}
+
+Future<void> _loadEnvironment() async {
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e, st) {
+    debugPrint('[Startup] Failed to load .env: $e');
+    debugPrintStack(stackTrace: st);
+  }
+}
+
+Future<void> _initializeLocalNotifications() async {
+  try {
+    await LocalNotificationService.initialize();
+  } catch (e, st) {
+    debugPrint('[Startup] Failed to initialize notifications: $e');
+    debugPrintStack(stackTrace: st);
+  }
+}
+
+Future<void> _warmSystemLimits() async {
+  try {
+    await SystemLimitsService().loadAndCache();
+  } catch (e, st) {
+    debugPrint('[Startup] Failed to warm system limits: $e');
+    debugPrintStack(stackTrace: st);
+  }
 }
 
 class SendaalApp extends ConsumerStatefulWidget {
@@ -72,13 +110,13 @@ class _SendaalAppState extends ConsumerState<SendaalApp>
         _handleUri(initialUri);
       }
     } catch (e) {
-      print('[DeepLinks] Failed to process initial link: $e');
+      debugPrint('[DeepLinks] Failed to process initial link: $e');
     }
 
     // Listen for links while the app is in foreground/background
     _linkSub = _appLinks.uriLinkStream.listen(
       _handleUri,
-      onError: (err) => print('[DeepLinks] Stream error: $err'),
+      onError: (err) => debugPrint('[DeepLinks] Stream error: $err'),
     );
   }
 
