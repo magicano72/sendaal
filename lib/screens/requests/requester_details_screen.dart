@@ -81,49 +81,38 @@ class _RequesterDetailsScreenState
 
     try {
       final notifier = ref.read(accessRequestProvider.notifier);
+      final accountService = ref.read(accountServiceProvider);
 
-      // For custom access, fetch selected accounts from the request
       if (_request.requestAccessType == 'custom') {
         _requesterSharedAccounts = await notifier.getRequestAccounts(
           requestId: _request.id,
           side: 'requester',
         );
+        _otherUserAllAccounts = [];
       } else {
         _requesterSharedAccounts = [];
+        _otherUserAllAccounts = _request.status == AccessStatus.approved
+            ? await accountService.getAccountsForUser(_request.requesterId)
+            : [];
       }
 
-      // If approved, fetch receiver's side accounts
       if (_request.status == AccessStatus.approved) {
-        if (_request.approvedAccessType == 'custom') {
+        final receiverAccessType =
+            _request.approvedAccessType ?? _receiverAccessType;
+        if (receiverAccessType == 'custom') {
           _receiverSharedAccounts = await notifier.getRequestAccounts(
             requestId: _request.id,
             side: 'receiver',
           );
-        } else if (_request.approvedAccessType == 'full') {
-          // For full access, fetch all accounts for both users
+          _currentUserAllAccounts = [];
+        } else {
           _receiverSharedAccounts = [];
-
-          try {
-            // Access account service via provider
-            final accountService = ref.read(accountServiceProvider);
-
-            // Fetch all accounts for the requester (other user)
-            _otherUserAllAccounts = await accountService.getAccountsForUser(
-              _request.requesterId,
-            );
-
-            // Fetch all accounts for the receiver side of the request
-            _currentUserAllAccounts = await accountService.getAccountsForUser(
-              _request.receiverId,
-            );
-          } catch (e) {
-            print('[RequesterDetailsScreen] Error fetching full accounts: $e');
-            _accountsError = 'Unable to load account details';
-          }
+          _currentUserAllAccounts = await accountService.getAccountsForUser(
+            _request.receiverId,
+          );
         }
       } else {
         _receiverSharedAccounts = [];
-        _otherUserAllAccounts = [];
         _currentUserAllAccounts = [];
       }
     } catch (e) {
@@ -1183,7 +1172,11 @@ class _RequesterDetailsScreenState
   }
 
   Future<void> _navigateToTransfer() async {
-    final userAsync = ref.read(userProvider(_request.requesterId));
+    final currentUser = ref.read(authProvider).user;
+    final targetUserId = currentUser?.id == _request.requesterId
+        ? _request.receiverId
+        : _request.requesterId;
+    final userAsync = ref.read(userProvider(targetUserId));
     await userAsync.when(
       data: (user) {
         Navigator.pushNamed(context, AppRoutes.recipient, arguments: user);
