@@ -1043,7 +1043,7 @@ class _ApprovedContactsScreenState
                         color: AppTheme.textSecondaryColor,
                       ),
                       filled: true,
-                      fillColor: const Color(0xFFEFF2F6),
+                      fillColor: AppTheme.surfaceColor,
                       contentPadding: EdgeInsets.symmetric(
                         vertical: 14.h,
                         horizontal: 14.w,
