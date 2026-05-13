@@ -15,6 +15,8 @@ class LocalNotificationService {
   LocalNotificationService._();
 
   static const String _androidLargeIconAsset = 'assets/images/app-logo.png';
+  static const String _androidSmallIcon = 'ic_stat_sendaal';
+  static const Color _androidNotificationColor = Color(0xFF1773CF);
 
   static final navigatorKey = GlobalKey<NavigatorState>();
   static final FlutterLocalNotificationsPlugin _plugin =
@@ -28,7 +30,7 @@ class LocalNotificationService {
   );
 
   static Future<void> initialize() async {
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidInit = AndroidInitializationSettings(_androidSmallIcon);
     const iosInit = DarwinInitializationSettings();
     const initSettings = InitializationSettings(
       android: androidInit,
@@ -65,8 +67,10 @@ class LocalNotificationService {
       _channel.id,
       _channel.name,
       channelDescription: _channel.description,
+      icon: _androidSmallIcon,
       importance: Importance.max,
       priority: Priority.high,
+      color: _androidNotificationColor,
       largeIcon: largeIcon,
     );
     const iosDetails = DarwinNotificationDetails();

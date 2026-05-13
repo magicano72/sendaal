@@ -37,6 +37,7 @@ class _RequesterDetailsScreenState
   bool _isProcessing = false;
   _ActionType? _pendingAction;
   AccessStatus? _localStatus;
+  String? _localRequestAccessType;
   String? _localApprovedAccessType;
   String _receiverAccessType = 'full';
   final Set<String> _receiverSelectedAccounts = {};
@@ -49,6 +50,8 @@ class _RequesterDetailsScreenState
 
   AccessRequest get _request => widget.request.copyWith(
     status: _localStatus ?? widget.request.status,
+    requestAccessType:
+        _localRequestAccessType ?? widget.request.requestAccessType,
     approvedAccessType:
         _localApprovedAccessType ?? widget.request.approvedAccessType,
   );
@@ -1337,8 +1340,14 @@ class _RequesterDetailsScreenState
                                   if (context.mounted) {
                                     Navigator.pop(sheetContext);
                                     if (updated != null) {
-                                      setState(() {
-                                        _receiverAccessType = accessType;
+                                      this.setState(() {
+                                        _localRequestAccessType =
+                                            updated.requestAccessType;
+                                        _localApprovedAccessType =
+                                            updated.approvedAccessType;
+                                        _receiverAccessType =
+                                            updated.approvedAccessType ??
+                                            _receiverAccessType;
                                         _accountsLoading = false;
                                       });
                                       await _fetchRequestAccounts();
@@ -1355,7 +1364,7 @@ class _RequesterDetailsScreenState
                                     }
                                   }
                                 } finally {
-                                  if (context.mounted) {
+                                  if (sheetContext.mounted) {
                                     setState(() => isSaving = false);
                                   }
                                 }
