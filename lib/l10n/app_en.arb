@@ -1,0 +1,149 @@
+{
+  "@@locale": "en",
+  "common_sendaal": "Sendaal",
+  "common_username": "Username",
+  "common_email": "Email Address",
+  "common_password": "Password",
+  "common_cancel": "Cancel",
+  "common_confirm": "Confirm",
+  "common_save": "Save",
+  "common_delete": "Delete",
+  "common_loading": "Loading...",
+  "common_error": "Error",
+  "common_success": "Success",
+  "common_retry": "Retry",
+  "common_close": "Close",
+  "common_back": "Back",
+  "common_next": "Next",
+  "common_continue": "Continue",
+  "common_noInternetConnection": "No internet connection. Please try again later.",
+  "common_welcomeBack": "Welcome back",
+  "common_welcomeBackName": "Welcome back, {firstName}",
+  "@common_welcomeBackName": {
+    "placeholders": {
+      "firstName": {"type": "String"}
+    }
+  },
+  "auth_login": "Log In",
+  "auth_loginTitle": "Welcome back",
+  "auth_loginSubtitle": "Log in to manage your finances.",
+  "auth_loggingIn": "Logging in...",
+  "auth_dontHaveAccount": "Don't have an account? ",
+  "auth_register": "Register",
+  "auth_forgotPassword": "Forgot password?",
+  "auth_passwordRequired": "Password is required",
+  "auth_hintEmail": "name@example.com",
+  "auth_hintPassword": "Enter your password",
+  "profile_myProfile": "My Profile",
+  "profile_favoriteAccounts": "Favorite Accounts",
+  "profile_noAccountsYet": "No accounts yet",
+  "profile_addAccountsToSeeHere": "Add accounts to see them here.",
+  "profile_noFavoriteAccounts": "No favorite accounts",
+  "profile_tapHeartOnAccount": "Tap the heart on an account to pin it here.",
+  "profile_logout": "Log Out",
+  "profile_shareAccountLink": "Share Account Link",
+  "profile_profileLinkCopied": "Profile link copied to clipboard!",
+  "recipient_paymentAccounts": "Payment Accounts",
+  "recipient_currency": "Currency",
+  "recipient_noVisibleAccounts": "No visible accounts",
+  "recipient_userNoVisibleAccounts": "This user has no visible payment accounts.",
+  "recipient_noAccountsForCurrency": "No accounts available for this currency.",
+  "recipient_splitAutomatically": "Split Automatically",
+  "recipient_accountsNotVisible": "Accounts Not Visible",
+  "recipient_requestSent": "Request Sent",
+  "recipient_recipientKeepsPrivate": "{recipientName} keeps their accounts private until they approve your request.",
+  "@recipient_recipientKeepsPrivate": {
+    "placeholders": {
+      "recipientName": {"type": "String"}
+    }
+  },
+  "recipient_accessSentMessage": "We sent your access request to {recipientName}. Their visible accounts will appear here automatically once they approve it.",
+  "@recipient_accessSentMessage": {
+    "placeholders": {
+      "recipientName": {"type": "String"}
+    }
+  },
+  "recipient_sendOneRequest": "Send one request to get started",
+  "recipient_askPermissionBefore": "Ask {recipientName} for permission before sending money.",
+  "@recipient_askPermissionBefore": {
+    "placeholders": {
+      "recipientName": {"type": "String"}
+    }
+  },
+  "recipient_accountsAppearAfter": "Accounts appear automatically after approval",
+  "recipient_youDontNeedRefresh": "You do not need to refresh this flow manually once access is granted.",
+  "recipient_onlyApprovedVisible": "Only approved accounts become visible",
+  "recipient_onlyShowShareAccounts": "Sendaal only shows the payment accounts they decide to share with you.",
+  "recipient_needToStop": "Need to stop it? Cancel anytime",
+  "recipient_cancelBeforeApproved": "If you sent it by mistake, cancel the request before it is approved.",
+  "recipient_accessKeepsTransfers": "Access keeps transfers clearer and safer",
+  "recipient_chooseDirectlyAndSplit": "Once approved, you can choose an account directly and split payments with confidence.",
+  "recipient_whatHappensNext": "What Happens Next",
+  "recipient_howAccessWorks": "How Access Works",
+  "recipient_recipientReviews": "The recipient reviews your request",
+  "recipient_recipientWillSee": "{recipientName} will see your request in their access inbox.",
+  "@recipient_recipientWillSee": {
+    "placeholders": {
+      "recipientName": {"type": "String"}
+    }
+  },
+  "recipient_requestAccess": "Request Access",
+  "recipient_requestAccountAccess": "Request Account Access",
+  "recipient_cancelRequest": "Cancel Request",
+  "recipient_approvalStillPending": "Approval is still pending. You can cancel the request any time before it is accepted.",
+  "recipient_requestAccessToUnlock": "Request access to unlock available payment accounts for future transfers.",
+  "recipient_accessDenied": "Access Denied",
+  "recipient_youRevokedConnection": "You revoked this connection. Cancel revoke to restore access and visibility.",
+  "recipient_connectionRevoked": "This connection has been revoked. You cannot view any accounts.",
+  "recipient_cancelRevoke": "Cancel Revoke",
+  "recipient_accessRestored": "Access restored",
+  "recipient_viewYourAccountProfile": "View your account from your profile",
+  "errors_validation": "Validation error",
+  "errors_apiError": "API error",
+  "errors_networkError": "Network error",
+  "errors_unknownError": "An unknown error occurred",
+  "errors_couldNotLoadStatus": "Could not load status: {error}",
+  "@errors_couldNotLoadStatus": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "errors_couldNotLoadAccounts": "Could not load accounts: {error}",
+  "@errors_couldNotLoadAccounts": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "errors_failedToCancelRequest": "Failed to cancel request",
+  "errors_error": "Error: {message}",
+  "@errors_error": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+  "home_sendaal": "Sendaal",
+  "home_searchUsernameOrPhone": "Search username or phone",
+  "home_noUsersFound": "No users found",
+  "home_trySearchingDifferently": "Try searching for \"{query}\" differently. Your profile lives in the Profile tab.",
+  "@home_trySearchingDifferently": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "home_accessRequests": "Access Requests",
+  "home_viewAll": "View all",
+  "home_incomingRequests": "Incoming Requests",
+  "home_myRequests": "My Requests",
+  "home_contacts": "Contacts",
+  "home_allowContactsToSync": "Allow contacts to sync",
+  "home_noContactsYet": "No contacts yet",
+  "home_grantAccessFindFriends": "Grant access to find friends from your phone book.",
+  "home_enableContactsSettings": "Enable contacts in Settings to find friends from your phone book.",
+  "home_approvedContactsWillAppear": "Approved contacts will appear here automatically.",
+  "home_thisIsYouProfile": "This is you! Your profile is in the Profile tab.",
+  "home_pending": " Pending",
+  "settings_language": "Language",
+  "settings_currentLanguage": "Current language",
+  "settings_english": "English",
+  "settings_arabic": "العربية"
+}
